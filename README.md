@@ -47,6 +47,16 @@ En VS Code elijan el entorno en la barra inferior (`env:...`) y usen Upload y Mo
 
 En el monitor, escriban el comando y presionen **Enter**.
 
+**Guardado automático de evidencia:** cada vez que abren el monitor serial (desde el ícono de enchufe en VS Code o con `pio run -e ... -t monitor`), el filtro `evidencia` guarda automáticamente en `pruebas/`:
+- `pruebas/<programa>_<AAAAMMDD_HHMMSS>.log` con toda la sesión serial (comandos, mensajes de calibración y lecturas).
+- `pruebas/<programa>_<AAAAMMDD_HHMMSS>.csv` limpio con las filas `ms,temp_C,ph_mV,pH,tds_mV,tds_ppm,validez` listas para abrir en Excel o Python (cuando el programa emite datos CSV, como `sensores`).
+
+Para etiquetar una prueba desde la consola, definan `PRUEBA` antes del comando:
+```bash
+PRUEBA=calibracion_ph pio run -e sensores -t monitor
+```
+Esto genera `pruebas/sensores_<AAAAMMDD_HHMMSS>_calibracion_ph.csv` y `.log`.
+
 ## Nodo y gateway
 
 1. En `gateway/src/` copiar `config.example.h` como `config.h` y completar WiFi (hotspot del celular) y token de ThingsBoard. `config.h` **no se sube** a GitHub.

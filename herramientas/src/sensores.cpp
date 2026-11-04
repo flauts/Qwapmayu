@@ -1,17 +1,19 @@
 // =============================================================
-// QawapMayu - Herramienta de sensores: pH + TDS + temperatura
+// QawapMayu - Herramienta de sensores + decision de anomalia (Paso 1 y 2)
 //
 // Imprime una linea CSV por segundo:
-//   ms,temp_C,ph_mV,pH,tds_mV,tds_ppm,validez
-// (copien el monitor a un .csv en /pruebas para tener evidencia)
+//   ms,temp_C,ph_mV,pH,tds_mV,tds_ppm,validez,tds0_ppm,anomalias,c_ph,c_tds,solicitud_captura
+// (el monitor guarda automaticamente pruebas/sensores_<fecha_hora>.csv y .log)
 //
-// Asistente de calibracion de pH (escribir la letra + Enter):
+// Comandos (escribir la letra + Enter):
 //   4 -> captura el voltaje actual como buffer 4.01
 //   7 -> captura el voltaje actual como buffer 6.86
 //   9 -> captura el voltaje actual como buffer 9.18
 //   c -> calcula la recta pH = m*mV + b con los puntos capturados
 //   s -> guarda m y b en la NVS de ESTE ESP32
 //   b -> borra la calibracion guardada
+//   0 -> fija la referencia base TDS0 al valor actual de tds_ppm
+//   r -> reinicia los contadores de anomalia y baja solicitud_captura
 //   p -> pausa / reanuda la impresion CSV
 //   h -> ayuda
 //
@@ -22,10 +24,12 @@
 #include <OneWire.h>
 #include <DallasTemperature.h>
 #include <Preferences.h>
+#include "anomalia.h"
 
-#define PIN_PH    35   // ADC1
-#define PIN_TDS   34   // ADC1
-#define PIN_TEMP  4    // 1-Wire (pull-up 4.7k a 3.3V)
+#define PIN_PH      35   // ADC1
+#define PIN_TDS     34   // ADC1
+#define PIN_TEMP    33   // 1-Wire (pull-up 4.7k a 3.3V)
+#define PIN_LED_SIM  2   // LED integrado del ESP32 (bomba simulada para Paso 2)
 
 #define N_MUESTRAS 31        // lecturas rapidas por canal; se usa la mediana
 #define MV_MIN_VALIDO 20     // por debajo: sonda desconectada o en corto
@@ -42,6 +46,11 @@ const float BUF_PH[3] = {4.01f, 6.86f, 9.18f};
 float cap_mV[3];
 bool  cap_ok[3] = {false, false, false};
 bool  imprimir = true;
+
+// Detector de anomalia persistente
+DetectorAnomalia det;
+float ult_tds_ppm = NAN;
+bool  solicitud_prev = false;
 
 // ---------- utilidades ----------
 uint32_t mediana_mV(int pin, int n) {
@@ -70,10 +79,12 @@ float calcular_tds(float volt, float tempC) {
 
 void ayuda() {
   Serial.println();
-  Serial.println("--- Comandos: 4/7/9 capturar buffer | c calcular | s guardar | b borrar | p pausa | h ayuda ---");
+  Serial.println("--- Comandos: 4/7/9 buffer | c calcular | s guardar | b borrar | 0 fijar TDS0 | r reiniciar contadores | p pausa | h ayuda ---");
   if (ph_calibrado) Serial.printf("Calibracion actual: pH = %.6f * mV + %.4f\n", ph_m, ph_b);
-  else Serial.println("pH SIN calibrar (la columna pH sale como nan)");
-  Serial.println("ms,temp_C,ph_mV,pH,tds_mV,tds_ppm,validez");
+  else Serial.println("pH SIN calibrar (la columna pH sale como nan y VAL_PH = 0)");
+  if (det.tds0_fijado) Serial.printf("Referencia TDS0 actual: %.0f ppm (umbral disparo > %.0f ppm)\n", det.tds0, det.tds0 + UMBRAL_DELTA_TDS);
+  else Serial.printf("Referencia TDS0 pendiente (se auto-fija al superar %.0f ppm o con tecla '0')\n", TDS_MIN_AGUA_PPM);
+  Serial.println("ms,temp_C,ph_mV,pH,tds_mV,tds_ppm,validez,tds0_ppm,anomalias,c_ph,c_tds,solicitud_captura");
 }
 
 void capturar(int idx) {
@@ -110,12 +121,15 @@ void calcular() {
 void setup() {
   Serial.begin(115200);
   delay(500);
+  pinMode(PIN_LED_SIM, OUTPUT);
+  digitalWrite(PIN_LED_SIM, LOW);
   analogReadResolution(12);
   ds.begin();
   nvs.begin("cal", false);
   ph_calibrado = nvs.getBool("ph_ok", false);
   ph_m = nvs.getFloat("ph_m", 0);
   ph_b = nvs.getFloat("ph_b", 0);
+  detector_iniciar(&det);
   Serial.printf("\nQawapMayu - sensores. DS18B20 encontrados: %d\n", ds.getDeviceCount());
   ayuda();
 }
@@ -137,6 +151,23 @@ void loop() {
         nvs.clear(); ph_calibrado = false;
         Serial.println(">> Calibracion borrada.");
         break;
+      case '0':
+        if (isnan(ult_tds_ppm)) {
+          Serial.println(">> Aun no hay lectura valida de TDS para fijar TDS0.");
+        } else {
+          detector_fijar_tds0(&det, ult_tds_ppm);
+          solicitud_prev = det.solicitud_captura;
+          digitalWrite(PIN_LED_SIM, det.solicitud_captura ? HIGH : LOW);
+          Serial.printf(">> TDS0 fijado manualmente en %.0f ppm (umbral disparo > %.0f ppm).\n",
+                        det.tds0, det.tds0 + UMBRAL_DELTA_TDS);
+        }
+        break;
+      case 'r':
+        detector_reiniciar_contadores(&det);
+        solicitud_prev = false;
+        digitalWrite(PIN_LED_SIM, LOW);
+        Serial.println(">> Contadores de anomalia y solicitud_captura reiniciados.");
+        break;
       case 'p': imprimir = !imprimir; break;
       case 'h': ayuda(); break;
       default: break;  // ignora \r, \n y otros
@@ -156,12 +187,42 @@ void loop() {
   uint32_t tds_mv = mediana_mV(PIN_TDS, N_MUESTRAS);
   bool ph_ok  = mv_valido(ph_mv);
   bool tds_ok = mv_valido(tds_mv) || tds_mv < MV_MIN_VALIDO;  // agua destilada puede dar ~0 V
+  bool ph_valido = ph_calibrado && ph_ok;
 
-  float ph  = (ph_calibrado && ph_ok) ? ph_m * ph_mv + ph_b : NAN;
+  float ph  = ph_valido ? ph_m * ph_mv + ph_b : NAN;
   float tds = tds_ok ? calcular_tds(tds_mv / 1000.0f, temp_ok ? temp : 25.0f) : NAN;
+  ult_tds_ppm = tds;
 
-  uint8_t validez = (ph_ok ? 1 : 0) | (tds_ok ? 2 : 0) | (temp_ok ? 8 : 0);
-  Serial.printf("%lu,%.2f,%lu,%.2f,%lu,%.0f,%u\n",
+  // Turbidez queda con bit VAL_TURB en 0 (valido = false) hasta conectar el TS-300B
+  uint8_t validez = (ph_valido ? VAL_PH : 0) |
+                    (tds_ok    ? VAL_TDS : 0) |
+                    (temp_ok   ? VAL_TEMP : 0);
+
+  LecturaSensores lec = {
+    .temp_c  = temp,
+    .ph      = ph,
+    .tds_ppm = tds,
+    .it      = 0.0f,
+    .validez = validez
+  };
+
+  bool tds0_antes = det.tds0_fijado;
+  detector_evaluar(&det, &lec);
+  if (!tds0_antes && det.tds0_fijado) {
+    Serial.printf(">> [AUTO] TDS0 fijado en %.0f ppm (umbral disparo > %.0f ppm)\n",
+                  det.tds0, det.tds0 + UMBRAL_DELTA_TDS);
+  }
+
+  digitalWrite(PIN_LED_SIM, det.solicitud_captura ? HIGH : LOW);
+  if (det.solicitud_captura && !solicitud_prev) {
+    Serial.printf(">> [DISPARO] solicitud_captura = 1 (c_tds=%u, c_ph=%u, anomalias=0x%02X)\n",
+                  det.c_tds, det.c_ph, det.anomalias);
+  }
+  solicitud_prev = det.solicitud_captura;
+
+  Serial.printf("%lu,%.2f,%lu,%.2f,%lu,%.0f,%u,%.0f,%u,%u,%u,%u\n",
                 (unsigned long)millis(), temp, (unsigned long)ph_mv, ph,
-                (unsigned long)tds_mv, tds, validez);
+                (unsigned long)tds_mv, tds, validez,
+                det.tds0, det.anomalias, det.c_ph, det.c_tds,
+                det.solicitud_captura ? 1U : 0U);
 }
