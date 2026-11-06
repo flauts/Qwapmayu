@@ -18,6 +18,7 @@
 #define UMBRAL_PH_MAX       8.5f     // UpH (anomalia si pH > 8.5)
 #define UMBRAL_IT_MAX       0.200f   // Indice de turbidez maximo (para cuando llegue TS-300B)
 #define CICLOS_PERSISTENCIA 3        // Ciclos anomalos consecutivos para levantar solicitud_captura
+#define VALOR_INVALIDO_I16  INT16_MIN // Centinela entero (-32768) cuando el bit de validez es 0
 
 typedef struct {
   float   temp_c;
@@ -146,10 +147,10 @@ static inline void detector_llenar_trama(Trama* t, const LecturaSensores* lec, c
   bool turb_valido = ((lec->validez & VAL_TURB) != 0) && !isnan(lec->it);
   bool temp_valido = ((lec->validez & VAL_TEMP) != 0) && !isnan(lec->temp_c);
 
-  t->ph_x100   = ph_valido   ? (int16_t)lroundf(lec->ph * 100.0f)      : 0;
+  t->ph_x100   = ph_valido   ? (int16_t)lroundf(lec->ph * 100.0f)      : VALOR_INVALIDO_I16;
   t->tds_ppm   = (tds_valido && lec->tds_ppm >= 0.0f) ? (uint16_t)lroundf(lec->tds_ppm) : 0;
-  t->it_x1000  = turb_valido ? (int16_t)lroundf(lec->it * 1000.0f)     : 0;
-  t->temp_x100 = temp_valido ? (int16_t)lroundf(lec->temp_c * 100.0f)  : 0;
+  t->it_x1000  = turb_valido ? (int16_t)lroundf(lec->it * 1000.0f)     : VALOR_INVALIDO_I16;
+  t->temp_x100 = temp_valido ? (int16_t)lroundf(lec->temp_c * 100.0f)  : VALOR_INVALIDO_I16;
   t->validez   = lec->validez;
   t->anomalias = d->anomalias;
 }

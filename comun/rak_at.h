@@ -10,7 +10,20 @@
 // Frecuencia:SF:BW:CR:preambulo:potencia  -> IGUAL en nodo y gateway.
 // Grupo 5 -> 923.5 MHz (formato del lab: 923X00000, X = numero de grupo).
 // Misma configuracion usada en el LAB 4. Si el BW "125" da AT_PARAM_ERROR, probar "0".
-#define P2P_CONFIG "923500000:7:125:0:10:14"
+#ifndef LORA_SF
+#define LORA_SF 7
+#endif
+
+#define _RAK_STR(x) #x
+#define RAK_STR(x)  _RAK_STR(x)
+#define P2P_CONFIG  "923500000:" RAK_STR(LORA_SF) ":125:0:10:14"
+
+// Timeout de fin de transmision (TXP2P) derivado del SF configurado con margen.
+// En SF7 el ToA de 27 bytes es ~60 ms; cada incremento de SF duplica el tiempo en aire.
+static inline uint32_t rak_timeout_tx_ms(uint8_t sf) {
+  uint8_t shift = (sf >= 7 && sf <= 12) ? (sf - 7) : 0;
+  return (160UL << shift) + 150UL;
+}
 
 static bool rak_eco = true;  // imprime lo que responde el RAK en Serial
 
@@ -62,6 +75,6 @@ static bool rak_configurar_p2p(HardwareSerial& s, bool receptor) {
 
 // Envia un payload ya convertido a hex. Espera el OK y el evento de fin de TX.
 static bool rak_enviar_hex(HardwareSerial& s, const char* hex) {
-  if (!rak_cmd(s, String("AT+PSEND=") + hex, "OK", 2000)) return false;
-  return rak_esperar(s, "TXP2P", 2000);  // "+EVT:TXP2P DONE"
+  if (!rak_cmd(s, String("AT+PSEND=") + hex, "OK", 200)) return false;
+  return rak_esperar(s, "TXP2P", rak_timeout_tx_ms(LORA_SF));  // "+EVT:TXP2P DONE"
 }
