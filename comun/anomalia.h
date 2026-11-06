@@ -14,11 +14,20 @@
 // - Pizca de sal: sube por encima de 400-450 ppm
 #define TDS_MIN_AGUA_PPM    100.0f   // Evita fijar TDS0 cuando la sonda sigue en el aire (~59 ppm)
 #define UMBRAL_DELTA_TDS    100.0f   // Anomalia si TDS > TDS0 + 100 ppm
-#define UMBRAL_PH_MIN       6.5f     // LpH (anomalia si pH < 6.5)
-#define UMBRAL_PH_MAX       8.5f     // UpH (anomalia si pH > 8.5)
-#define UMBRAL_IT_MAX       0.200f   // Indice de turbidez maximo (para cuando llegue TS-300B)
-#define CICLOS_PERSISTENCIA 3        // Ciclos anomalos consecutivos para levantar solicitud_captura
-#define VALOR_INVALIDO_I16  INT16_MIN // Centinela entero (-32768) cuando el bit de validez es 0
+#define UMBRAL_PH_MIN            6.5f     // LpH (anomalia si pH < 6.5)
+#define UMBRAL_PH_MAX            8.5f     // UpH (anomalia si pH > 8.5)
+#define UMBRAL_IT_MAX            0.200f   // Indice de turbidez maximo (TS-300B: IT > 0.200)
+#define TURB_MIN_CONECTADO_MV    300      // Descarta pin ADC flotante (~142 mV) cuando TS-300B no esta conectado
+#define TURB_MIN_AGUA_CLARA_MV   1000     // Voltaje minimo en agua clara (con divisor 2/3 da ~2000-3000 mV)
+#define CICLOS_PERSISTENCIA      3        // Ciclos anomalos consecutivos para levantar solicitud_captura
+#define VALOR_INVALIDO_I16       INT16_MIN // Centinela entero (-32768) cuando el bit de validez es 0
+
+// Indice relativo de turbidez IT = (V_T0 - V_T) / V_T0, acotado a >= 0.0
+static inline float calcular_it(uint32_t turb_mv, float vt0_mv) {
+  if (vt0_mv <= 0.0f) return NAN;
+  float it = (vt0_mv - (float)turb_mv) / vt0_mv;
+  return (it < 0.0f) ? 0.0f : it;
+}
 
 typedef struct {
   float   temp_c;

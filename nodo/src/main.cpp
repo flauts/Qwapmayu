@@ -21,6 +21,7 @@
 //   x -> simula corte de seguridad durante el bombeo (-> EST_FALLO)
 //   n -> simula fallo de escritura NVS en la proxima captura (-> EST_FALLO)
 //   0 -> fija referencia TDS0 al valor actual de TDS
+//   t -> fija referencia de agua clara VT0 (mV) del TS-300B y la guarda en NVS
 //   e -> imprime estado detallado
 //   z -> borra la NVS de muestreo (reiniciar para empezar limpio)
 // =============================================================
@@ -35,6 +36,7 @@
 // ---------- pines ----------
 #define PIN_PH           35
 #define PIN_TDS          34
+#define PIN_TURB         32
 #define PIN_TEMP         33
 #define PIN_RELE         23
 #define PIN_LED          2
@@ -67,8 +69,11 @@ uint32_t seq      = 0;
 bool     radio_ok = false;
 
 float ph_m = 0.0f, ph_b = 0.0f;
-bool  ph_calibrado = false;
-float ult_tds_ppm  = NAN;
+bool  ph_calibrado  = false;
+float vt0_mv        = NAN;
+bool  vt0_calibrado = false;
+float ult_tds_ppm   = NAN;
+uint32_t ult_turb_mv = 0;
 
 DetectorAnomalia det;
 LecturaSensores  ult_lec = {NAN, NAN, NAN, 0.0f, 0};
@@ -96,10 +101,10 @@ void cambiar_estado(EstadoNodo nuevo, const char* motivo) {
 }
 
 void imprimir_estado() {
-  Serial.printf("[%8lu] estado=%s ev=%u val=0x%02X ano=0x%02X c_tds=%u c_ph=%u c_norm=%u tds0=%.0f sim_ano=%d sim_nvs=%d\n",
+  Serial.printf("[%8lu] estado=%s ev=%u val=0x%02X ano=0x%02X c_tds=%u c_ph=%u c_turb=%u c_norm=%u tds0=%.0f vt0=%.0f sim_ano=%d sim_nvs=%d\n",
                 (unsigned long)millis(), NOMBRE_ESTADO[estado], evento_id,
-                ult_lec.validez, det.anomalias, det.c_tds, det.c_ph, det.c_normales,
-                det.tds0, anomalia_sim ? 1 : 0, fallo_nvs_sim ? 1 : 0);
+                ult_lec.validez, det.anomalias, det.c_tds, det.c_ph, det.c_turb, det.c_normales,
+                det.tds0, vt0_mv, anomalia_sim ? 1 : 0, fallo_nvs_sim ? 1 : 0);
 }
 
 // ---------- lectura de sensores ----------
@@ -137,20 +142,32 @@ LecturaSensores leer_sensores() {
   bool temp_ok = (temp_raw != DEVICE_DISCONNECTED_C) && (temp_raw > -10.0f) && (temp_raw < 60.0f);
   float temp = temp_ok ? temp_raw : NAN;
 
-  uint32_t ph_mv  = mediana_mV(PIN_PH, N_MUESTRAS);
-  uint32_t tds_mv = mediana_mV(PIN_TDS, N_MUESTRAS);
+  uint32_t ph_mv   = mediana_mV(PIN_PH, N_MUESTRAS);
+  uint32_t tds_mv  = mediana_mV(PIN_TDS, N_MUESTRAS);
+  uint32_t turb_mv = mediana_mV(PIN_TURB, N_MUESTRAS);
+  ult_turb_mv      = turb_mv;
 
   bool ph_ok     = mv_valido(ph_mv);
   bool tds_ok    = mv_valido(tds_mv) || tds_mv < MV_MIN_VALIDO;
+  bool turb_ok   = (turb_mv >= TURB_MIN_CONECTADO_MV) && (turb_mv <= MV_MAX_VALIDO);
   bool ph_valido = ph_calibrado && ph_ok;
 
-  float ph  = ph_valido ? (ph_m * ph_mv + ph_b) : NAN;
-  float tds = tds_ok    ? calcular_tds(tds_mv / 1000.0f, temp_ok ? temp : 25.0f) : NAN;
+  if (!vt0_calibrado && turb_ok && turb_mv >= TURB_MIN_AGUA_CLARA_MV) {
+    vt0_mv = (float)turb_mv;
+    vt0_calibrado = true;
+    Serial.printf(">> [AUTO] VT0 de turbidez fijado en %.0f mV (usa 't' para guardar en NVS)\n", vt0_mv);
+  }
+  bool turb_valido = vt0_calibrado && turb_ok;
+
+  float ph  = ph_valido   ? (ph_m * ph_mv + ph_b) : NAN;
+  float tds = tds_ok      ? calcular_tds(tds_mv / 1000.0f, temp_ok ? temp : 25.0f) : NAN;
+  float it  = turb_valido ? calcular_it(turb_mv, vt0_mv) : NAN;
   ult_tds_ppm = tds;
 
-  uint8_t validez = (ph_valido ? VAL_PH   : 0) |
-                    (tds_ok    ? VAL_TDS  : 0) |
-                    (temp_ok   ? VAL_TEMP : 0);
+  uint8_t validez = (ph_valido   ? VAL_PH   : 0) |
+                    (tds_ok      ? VAL_TDS  : 0) |
+                    (turb_valido ? VAL_TURB : 0) |
+                    (temp_ok     ? VAL_TEMP : 0);
 
   if (anomalia_sim) {
     float base = det.tds0_fijado ? det.tds0 : 250.0f;
@@ -163,7 +180,7 @@ LecturaSensores leer_sensores() {
     .temp_c  = temp,
     .ph      = ph,
     .tds_ppm = tds,
-    .it      = NAN,
+    .it      = it,
     .validez = validez
   };
   return lec;
@@ -331,6 +348,23 @@ void leer_serial() {
                         det.tds0, det.tds0 + UMBRAL_DELTA_TDS);
         }
         break;
+      case 't': {
+        uint32_t mv = mediana_mV(PIN_TURB, N_MUESTRAS);
+        if (mv < TURB_MIN_CONECTADO_MV || mv > MV_MAX_VALIDO) {
+          Serial.printf(">> Lectura TS-300B fuera de rango (%lu mV); revisar conexion y divisor 10k/20k en GPIO32.\n",
+                        (unsigned long)mv);
+        } else {
+          vt0_mv = (float)mv;
+          vt0_calibrado = true;
+          nvs_cal.putFloat("vt0_mv", vt0_mv);
+          nvs_cal.putBool("vt0_ok", true);
+          det.c_turb = 0;
+          det.anomalias &= (uint8_t)~ANO_TURB;
+          Serial.printf(">> VT0 de agua clara guardado en NVS: %.0f mV (umbral IT > %.3f)\n",
+                        vt0_mv, UMBRAL_IT_MAX);
+        }
+        break;
+      }
       case 'e':
         imprimir_estado();
         break;
@@ -369,10 +403,15 @@ void setup() {
   boot_id = nvs_nodo.getUShort("boot", 0) + 1;
   nvs_nodo.putUShort("boot", boot_id);
 
-  nvs_cal.begin("cal", true);
-  ph_calibrado = nvs_cal.getBool("ph_ok", false);
-  ph_m = nvs_cal.getFloat("ph_m", 0.0f);
-  ph_b = nvs_cal.getFloat("ph_b", 0.0f);
+  nvs_cal.begin("cal", false);
+  ph_calibrado  = nvs_cal.getBool("ph_ok", false);
+  ph_m          = nvs_cal.getFloat("ph_m", 0.0f);
+  ph_b          = nvs_cal.getFloat("ph_b", 0.0f);
+  vt0_calibrado = nvs_cal.getBool("vt0_ok", false);
+  vt0_mv        = nvs_cal.getFloat("vt0_mv", NAN);
+  if (vt0_calibrado && (isnan(vt0_mv) || vt0_mv < TURB_MIN_CONECTADO_MV)) {
+    vt0_calibrado = false;
+  }
 
   nvs_muestreo.begin("muestreo", false);
   bool bloqueado = nvs_muestreo.getBool("bloqueado", false);
@@ -392,8 +431,8 @@ void setup() {
     Serial.println("Estado inicial -> ARMADO");
   }
 
-  Serial.printf("boot_id=%u evento_id=%u ph_cal=%d DS18B20=%d\n",
-                boot_id, evento_id, ph_calibrado ? 1 : 0, ds.getDeviceCount());
+  Serial.printf("boot_id=%u evento_id=%u ph_cal=%d vt0_cal=%d DS18B20=%d\n",
+                boot_id, evento_id, ph_calibrado ? 1 : 0, vt0_calibrado ? 1 : 0, ds.getDeviceCount());
 
   // 4) Radio LoRa P2P
   radio_ok = rak_configurar_p2p(Serial2, false);

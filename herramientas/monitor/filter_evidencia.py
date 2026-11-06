@@ -22,7 +22,11 @@ CSV_HEADER_V2 = (
     "ms,temp_C,ph_mV,pH,tds_mV,tds_ppm,validez,"
     "tds0_ppm,anomalias,c_ph,c_tds,solicitud_captura"
 )
-CSV_HEADER = CSV_HEADER_V2
+CSV_HEADER_V3 = (
+    "ms,temp_C,ph_mV,pH,tds_mV,tds_ppm,turb_mV,it,validez,"
+    "tds0_ppm,vt0_mV,anomalias,c_ph,c_tds,c_turb,solicitud_captura"
+)
+CSV_HEADER = CSV_HEADER_V3
 _NUM_OR_NAN = r"(?:-?\d+(?:\.\d+)?|nan|-?inf)"
 CSV_ROW_V1_RE = re.compile(
     rf"^\d+,-?\d+(?:\.\d+)?,\d+,{_NUM_OR_NAN},\d+,{_NUM_OR_NAN},\d+$",
@@ -30,6 +34,10 @@ CSV_ROW_V1_RE = re.compile(
 )
 CSV_ROW_V2_RE = re.compile(
     rf"^\d+,-?\d+(?:\.\d+)?,\d+,{_NUM_OR_NAN},\d+,{_NUM_OR_NAN},\d+,{_NUM_OR_NAN},\d+,\d+,\d+,\d+$",
+    re.IGNORECASE,
+)
+CSV_ROW_V3_RE = re.compile(
+    rf"^\d+,-?\d+(?:\.\d+)?,\d+,{_NUM_OR_NAN},\d+,{_NUM_OR_NAN},\d+,{_NUM_OR_NAN},\d+,{_NUM_OR_NAN},{_NUM_OR_NAN},\d+,\d+,\d+,\d+,\d+$",
     re.IGNORECASE,
 )
 
@@ -77,12 +85,19 @@ class SessionRecorder:
         log_fh.flush()
 
         stripped = line.strip()
-        if stripped in (CSV_HEADER_V1, CSV_HEADER_V2):
+        if stripped in (CSV_HEADER_V1, CSV_HEADER_V2, CSV_HEADER_V3):
             csv_fh = self._ensure_csv_open()
             if not self._csv_header_written:
                 csv_fh.write(stripped + "\n")
                 csv_fh.flush()
                 self._csv_header_written = True
+        elif CSV_ROW_V3_RE.match(stripped):
+            csv_fh = self._ensure_csv_open()
+            if not self._csv_header_written:
+                csv_fh.write(CSV_HEADER_V3 + "\n")
+                self._csv_header_written = True
+            csv_fh.write(stripped + "\n")
+            csv_fh.flush()
         elif CSV_ROW_V2_RE.match(stripped):
             csv_fh = self._ensure_csv_open()
             if not self._csv_header_written:

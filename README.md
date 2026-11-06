@@ -40,7 +40,7 @@ En VS Code elijan el entorno en la barra inferior (`env:...`) y usen Upload y Mo
 
 | Programa | Comando | Para qué |
 |---|---|---|
-| `sensores` | `pio run -e sensores -t upload -t monitor` | pH + TDS + temperatura en CSV; asistente de calibración de pH (`4`, `7`, `9`, `c`, `s`) |
+| `sensores` | `pio run -e sensores -t upload -t monitor` | pH + TDS + turbidez (TS-300B) + temperatura en CSV; calibración (`4`, `7`, `9`, `c`, `s`, `0`, `t`) |
 | `puente_rak` | `pio run -e puente_rak -t upload -t monitor` | Escribir comandos AT al RAK a mano |
 | `rele_arranque` | `pio run -e rele_arranque -t upload -t monitor` | Ver si el relé es activo en bajo y si hace clic al arrancar |
 | `fsm_led` | `pio run -e fsm_led -t upload -t monitor` | Máquina de estados del muestreador con LED y NVS (`a`, `r`, `x`, `e`, `z`) |
@@ -61,7 +61,7 @@ Esto genera `pruebas/sensores_<AAAAMMDD_HHMMSS>_calibracion_ph.csv` y `.log`.
 
 1. En `gateway/src/` copiar `config.example.h` como `config.h` y completar WiFi (hotspot del celular) y token de ThingsBoard. `config.h` **no se sube** a GitHub.
 2. Subir `nodo` a un ESP32 y `gateway` al otro, cada uno con su RAK.
-3. El firmware de `nodo` lee sensores reales (pH, TDS, DS18B20 asíncrono), evalúa persistencia de anomalías, gestiona la FSM de la bomba en NVS (`muestreo`) y emite telemetría LoRa P2P cada 5 s sin deriva.
+3. El firmware de `nodo` lee sensores reales (pH, TDS, turbidez TS-300B en GPIO32, DS18B20 asíncrono en GPIO33), evalúa persistencia de anomalías, gestiona la FSM de la bomba en NVS (`muestreo`) y emite telemetría LoRa P2P cada 5 s sin deriva.
    - La bomba o relé se refleja en `PIN_LED` (GPIO2) para pruebas en mesa.
    - Durante `MUESTREANDO`, la CPU no muestrea sensores ni usa la radio, dedicándose exclusivamente a la temporización de corte de la bomba.
    - Comandos por consola serial (`115200` baudios):
@@ -70,6 +70,7 @@ Esto genera `pruebas/sensores_<AAAAMMDD_HHMMSS>_calibracion_ph.csv` y `.log`.
      - `x`: simula corte de seguridad durante el bombeo (`FALLO`).
      - `n`: simula fallo de escritura NVS en la próxima captura (`FALLO`).
      - `0`: fija la línea base TDS0 al valor medido actual.
+     - `t`: captura y guarda en NVS la referencia de agua clara $V_{T0}$ del TS-300B.
      - `e`: imprime estado detallado de sensores, detector y FSM.
      - `z`: borra la memoria NVS de muestreo para pruebas limpias.
 
