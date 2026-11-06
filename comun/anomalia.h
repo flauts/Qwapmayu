@@ -18,7 +18,7 @@
 #define UMBRAL_PH_MAX            8.5f     // UpH (anomalia si pH > 8.5)
 #define UMBRAL_IT_MAX            0.200f   // Indice de turbidez maximo (TS-300B: IT > 0.200)
 #define TURB_MIN_CONECTADO_MV    300      // Descarta pin ADC flotante (~142 mV) cuando TS-300B no esta conectado
-#define TURB_MIN_AGUA_CLARA_MV   1000     // Voltaje minimo en agua clara (con divisor 2/3 da ~2000-3000 mV)
+#define TURB_MIN_AGUA_CLARA_MV   2000     // Voltaje minimo en agua clara (con divisor 2/3 da ~2000-3000 mV)
 #define CICLOS_PERSISTENCIA      3        // Ciclos anomalos consecutivos para levantar solicitud_captura
 #define VALOR_INVALIDO_I16       INT16_MIN // Centinela entero (-32768) cuando el bit de validez es 0
 

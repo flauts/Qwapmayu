@@ -35,7 +35,7 @@
 
 #define N_MUESTRAS 31        // lecturas rapidas por canal; se usa la mediana
 #define MV_MIN_VALIDO 20     // por debajo: sonda desconectada o en corto
-#define MV_MAX_VALIDO 3100   // por encima: ADC saturado (rango util ~0-3.1 V)
+#define MV_MAX_VALIDO 3250   // por encima: ADC saturado (rango util ~0-3.25 V)
 
 OneWire oneWire(PIN_TEMP);
 DallasTemperature ds(&oneWire);

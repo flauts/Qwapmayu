@@ -49,7 +49,7 @@
 #define NODO_ID          1
 #define N_MUESTRAS       31
 #define MV_MIN_VALIDO    20
-#define MV_MAX_VALIDO    3100
+#define MV_MAX_VALIDO    3250
 
 const uint32_t TA_MS                  = 5000;
 const uint8_t  CICLOS_NORMALES_REARME = 3;
