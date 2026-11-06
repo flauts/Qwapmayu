@@ -7,7 +7,7 @@ Actualizado: radio EBYTE E32 reemplazado por RAK3272S y turbidez SEN0189 por TS-
 | pH (PH-4502C, salida Po) | 35 (ADC1) | 5 V | **Medir Po con multímetro antes de conectar.** Si supera 3.1 V, ajustar offset o poner divisor 10k/20k |
 | TDS (Keyestudio KS0429) | 34 (ADC1) | 3.3 V | Salida 0–2.3 V, conexión directa |
 | Turbidez (TS-300B) | 32 (ADC1) | 5 V | Salida hasta ~4.5 V → **divisor obligatorio**: 10k arriba, 20k abajo (×2/3) |
-| Temperatura (DS18B20) | 4 (1-Wire) | 3.3 V | Pull-up 4.7 kΩ entre DATA y 3.3 V |
+| Temperatura (DS18B20) | 33 (1-Wire) | 3.3 V | Pull-up 4.7 kΩ entre DATA y 3.3 V |
 | Relé (entrada IN) | 23 | 5 V (VIN) | Verificar si es activo en bajo (`rele_arranque`) |
 | Pulsador de rearme | 25 | — | Entre GPIO25 y GND, pull-up interno |
 | RAK3272S TX → ESP32 RX2 | 16 | 3.3 V | Conexión cruzada |
