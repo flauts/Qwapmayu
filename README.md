@@ -8,7 +8,7 @@ CS5055 Internet de las Cosas · UTEC · 2026-2
 ```
 comun/          trama.h (formato del mensaje LoRa) y rak_at.h (comandos AT del RAK)
 herramientas/   programas de prueba para el laboratorio (un entorno por programa)
-nodo/           firmware del nodo QM01 (por ahora: esqueleto con datos falsos)
+nodo/           firmware del nodo QM01 (sensores reales, detector, FSM bomba y LoRa P2P)
 gateway/        firmware del gateway GW01 (LoRa -> MQTT -> ThingsBoard)
 docs/           pines, calibraciones y bitácora de sesiones
 pruebas/        evidencia: CSV, fotos y videos de cada ensayo
@@ -61,7 +61,17 @@ Esto genera `pruebas/sensores_<AAAAMMDD_HHMMSS>_calibracion_ph.csv` y `.log`.
 
 1. En `gateway/src/` copiar `config.example.h` como `config.h` y completar WiFi (hotspot del celular) y token de ThingsBoard. `config.h` **no se sube** a GitHub.
 2. Subir `nodo` a un ESP32 y `gateway` al otro, cada uno con su RAK.
-3. En el monitor del nodo, `a` + Enter activa una anomalía falsa de TDS para verla en ThingsBoard.
+3. El firmware de `nodo` lee sensores reales (pH, TDS, DS18B20 asíncrono), evalúa persistencia de anomalías, gestiona la FSM de la bomba en NVS (`muestreo`) y emite telemetría LoRa P2P cada 5 s sin deriva.
+   - La bomba o relé se refleja en `PIN_LED` (GPIO2) para pruebas en mesa.
+   - Durante `MUESTREANDO`, la CPU no muestrea sensores ni usa la radio, dedicándose exclusivamente a la temporización de corte de la bomba.
+   - Comandos por consola serial (`115200` baudios):
+     - `a`: activa/desactiva anomalía simulada de TDS.
+     - `r`: solicita rearme manual (requiere 3 ciclos normales consecutivos).
+     - `x`: simula corte de seguridad durante el bombeo (`FALLO`).
+     - `n`: simula fallo de escritura NVS en la próxima captura (`FALLO`).
+     - `0`: fija la línea base TDS0 al valor medido actual.
+     - `e`: imprime estado detallado de sensores, detector y FSM.
+     - `z`: borra la memoria NVS de muestreo para pruebas limpias.
 
 Configuración P2P común en `comun/rak_at.h` (`P2P_CONFIG`): **923.5 MHz (grupo 5)**, SF7, BW 125, CR 4/5, preámbulo 10, 14 dBm; la misma del LAB 4. Nunca energizar el RAK sin antena.
 
@@ -85,4 +95,7 @@ Configuración P2P común en `comun/rak_at.h` (`P2P_CONFIG`): **923.5 MHz (grupo
 
 ## Estado
 
-Código de partida: la trama, el CRC y la conversión hex se verificaron en PC, pero el firmware **aún no se compiló ni probó en el hardware**. La primera compilación de cada proyecto puede requerir pequeños ajustes. Los formatos de respuesta del RAK pueden variar según la versión de RUI3: si algo no se reconoce, revisar el texto que imprime el monitor y ajustar `rak_at.h` o `procesar_linea()` del gateway.
+- **Sensores y calibración (`herramientas/`):** Herramienta interactiva de calibración de pH y TDS lista con persistencia NVS y filtro de evidencia automática en CSV/LOG.
+- **Nodo QM01 (`nodo/`):** Integrado con adquisición no bloqueante de sensores (DS18B20 asíncrono en GPIO33), detección de anomalía persistente (3 ciclos), FSM de seguridad de la bomba con enclavamiento en NVS (`ARMADO` -> `MUESTREANDO` -> `CAPTURA_ESTIMADA` -> `BLOQUEADO`), timeouts de RAK acotados y telemetría LoRa P2P. Compilación validada en PlatformIO.
+- **Gateway GW01 (`gateway/`):** Receptor LoRa P2P continuo, verificación CRC-16, deduplicación de tramas, cálculo de PDR y cliente MQTT hacia ThingsBoard. Compilación validada en PlatformIO.
+- **Pendiente inmediato:** Ensayos volumétricos de calibración de caudal ($Q_{\text{cal}}$) para ajustar `T_CAPTURA_MS`, pruebas de validación en mesa del nodo y verificación del enlace punto a punto Nodo -> Gateway -> ThingsBoard.
