@@ -1,0 +1,13 @@
+ (ej: '5', '2.5', '10') [Max: 15.0 s]
+  s / S    : Detiene el bombeo de emergencia
+  h / ?    : Muestra este mensaje de ayuda
+
+Accion fisica:
+  Pulsador (GPIO25): Inicia el ensayo de bombeo
+Configuracion actual: t_bomba = 5000 ms (5.00 s)
+=============================================================
+
+[BOMBA] Iniciando ensayo=1, t_pedido_ms=5000 (5.00 s)
+[BOMBA] ensayo=1, t_pedido_ms=5000, t_real_ms=5000, motivo=normal
+[BOMBA] Iniciando ensayo=2, t_pedido_ms=5000 (5.00 s)
+[BOMBA] ensayo=2, t_pedido_ms=5000, t_real_ms=5000, motivo=normal

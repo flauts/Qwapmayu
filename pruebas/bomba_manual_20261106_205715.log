@@ -1,0 +1,6 @@
+  : Muestra este mensaje de ayuda
+Accion fisica:
+  Pulsador (GPIO25): Inicia el ensayo de bombeo
+Configuracion actual: t_bomba = 5000 ms (5.00 s)
+=============================================================
+

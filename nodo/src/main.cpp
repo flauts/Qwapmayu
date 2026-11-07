@@ -32,6 +32,7 @@
 #include "trama.h"
 #include "anomalia.h"
 #include "rak_at.h"
+#include "hardware.h"
 
 // ---------- pines ----------
 #define PIN_PH           35
@@ -43,7 +44,6 @@
 #define PIN_REARME       25
 #define RAK_RX           16
 #define RAK_TX           17
-#define RELE_ACTIVO_BAJO true
 
 // ---------- parametros ----------
 #define NODO_ID          1
@@ -51,8 +51,8 @@
 
 const uint32_t TA_MS                  = 5000;
 const uint8_t  CICLOS_NORMALES_REARME = 3;
-// T_CAPTURA_MS provisional (10 s); recalibrar como (100.0 / Q_cal) * 1000 con manguera de 6 mm
-const uint32_t T_CAPTURA_MS           = 10000;
+// provisional, pendiente de serie de 10 ensayos con geometria final (punta de manguera en el aire sobre el nivel del origen, 30 cm)
+const uint32_t T_CAPTURA_MS           = 4000;
 const uint32_t T_MAX_BOMBA_MS         = 2 * T_CAPTURA_MS;
 
 // ---------- perifericos y estado ----------

@@ -21,11 +21,11 @@
 #include <Arduino.h>
 #include <Preferences.h>
 #include "trama.h"   // EstadoNodo y NOMBRE_ESTADO compartidos
+#include "hardware.h"
 
 // ---------- configuracion ----------
 #define PIN_RELE         23
 #define PIN_REARME       25     // pulsador a GND, pull-up interno
-#define RELE_ACTIVO_BAJO true   // AJUSTAR segun la prueba rele_arranque
 
 const uint32_t TA_MS                 = 5000;   // periodo de adquisicion
 const uint8_t  CICLOS_PERSISTENCIA   = 3;      // ciclos anomalos para capturar
