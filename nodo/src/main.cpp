@@ -48,8 +48,6 @@
 // ---------- parametros ----------
 #define NODO_ID          1
 #define N_MUESTRAS       31
-#define MV_MIN_VALIDO    20
-#define MV_MAX_VALIDO    3250
 
 const uint32_t TA_MS                  = 5000;
 const uint8_t  CICLOS_NORMALES_REARME = 3;
@@ -124,9 +122,9 @@ uint32_t mediana_mV(int pin, int n) {
   return v[n / 2];
 }
 
-bool mv_valido(uint32_t mv) {
-  return mv >= MV_MIN_VALIDO && mv <= MV_MAX_VALIDO;
-}
+bool ph_mv_valido(uint32_t mv)   { return mv >= PH_MIN_VALIDO_MV && mv <= PH_MAX_VALIDO_MV; }
+bool tds_mv_valido(uint32_t mv)  { return mv <= TDS_MAX_VALIDO_MV; }
+bool turb_mv_valido(uint32_t mv) { return mv >= TURB_MIN_CONECTADO_MV && mv <= TURB_MAX_VALIDO_MV; }
 
 float calcular_tds(float volt, float tempC) {
   float comp = volt / (1.0f + 0.02f * (tempC - 25.0f));
@@ -147,9 +145,9 @@ LecturaSensores leer_sensores() {
   uint32_t turb_mv = mediana_mV(PIN_TURB, N_MUESTRAS);
   ult_turb_mv      = turb_mv;
 
-  bool ph_ok     = mv_valido(ph_mv);
-  bool tds_ok    = mv_valido(tds_mv) || tds_mv < MV_MIN_VALIDO;
-  bool turb_ok   = (turb_mv >= TURB_MIN_CONECTADO_MV) && (turb_mv <= MV_MAX_VALIDO);
+  bool ph_ok     = ph_mv_valido(ph_mv);
+  bool tds_ok    = tds_mv_valido(tds_mv);
+  bool turb_ok   = turb_mv_valido(turb_mv);
   bool ph_valido = ph_calibrado && ph_ok;
 
   if (!vt0_calibrado && turb_ok && turb_mv >= TURB_MIN_AGUA_CLARA_MV) {
@@ -350,9 +348,9 @@ void leer_serial() {
         break;
       case 't': {
         uint32_t mv = mediana_mV(PIN_TURB, N_MUESTRAS);
-        if (mv < TURB_MIN_CONECTADO_MV || mv > MV_MAX_VALIDO) {
-          Serial.printf(">> Lectura TS-300B fuera de rango (%lu mV); revisar conexion y divisor 10k/20k en GPIO32.\n",
-                        (unsigned long)mv);
+        if (mv < TURB_MIN_AGUA_CLARA_MV || mv > TURB_MAX_VALIDO_MV) {
+          Serial.printf(">> Lectura TS-300B fuera de rango de agua clara (%lu mV, esperado %d-%d mV); revisar conexion y divisor 10k/20k en GPIO32.\n",
+                        (unsigned long)mv, TURB_MIN_AGUA_CLARA_MV, TURB_MAX_VALIDO_MV);
         } else {
           vt0_mv = (float)mv;
           vt0_calibrado = true;
@@ -409,7 +407,7 @@ void setup() {
   ph_b          = nvs_cal.getFloat("ph_b", 0.0f);
   vt0_calibrado = nvs_cal.getBool("vt0_ok", false);
   vt0_mv        = nvs_cal.getFloat("vt0_mv", NAN);
-  if (vt0_calibrado && (isnan(vt0_mv) || vt0_mv < TURB_MIN_CONECTADO_MV)) {
+  if (vt0_calibrado && (isnan(vt0_mv) || vt0_mv < TURB_MIN_AGUA_CLARA_MV || vt0_mv > TURB_MAX_VALIDO_MV)) {
     vt0_calibrado = false;
   }
 

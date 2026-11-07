@@ -34,8 +34,6 @@
 #define PIN_LED_SIM  2   // LED integrado del ESP32 (bomba simulada para Paso 2)
 
 #define N_MUESTRAS 31        // lecturas rapidas por canal; se usa la mediana
-#define MV_MIN_VALIDO 20     // por debajo: sonda desconectada o en corto
-#define MV_MAX_VALIDO 3250   // por encima: ADC saturado (rango util ~0-3.25 V)
 
 OneWire oneWire(PIN_TEMP);
 DallasTemperature ds(&oneWire);
@@ -73,7 +71,9 @@ uint32_t mediana_mV(int pin, int n) {
   return v[n / 2];
 }
 
-bool mv_valido(uint32_t mv) { return mv >= MV_MIN_VALIDO && mv <= MV_MAX_VALIDO; }
+bool ph_mv_valido(uint32_t mv)   { return mv >= PH_MIN_VALIDO_MV && mv <= PH_MAX_VALIDO_MV; }
+bool tds_mv_valido(uint32_t mv)  { return mv <= TDS_MAX_VALIDO_MV; }
+bool turb_mv_valido(uint32_t mv) { return mv >= TURB_MIN_CONECTADO_MV && mv <= TURB_MAX_VALIDO_MV; }
 
 // Formula del fabricante (Keyestudio/DFRobot) con compensacion termica
 float calcular_tds(float volt, float tempC) {
@@ -98,7 +98,7 @@ void capturar(int idx) {
   cap_mV[idx] = mv;
   cap_ok[idx] = true;
   Serial.printf(">> Buffer %.2f capturado: %lu mV%s\n", BUF_PH[idx], (unsigned long)mv,
-                mv_valido(mv) ? "" : "  (!! fuera de rango del ADC, revisar divisor/offset)");
+                ph_mv_valido(mv) ? "" : "  (!! fuera de rango del ADC, revisar divisor/offset)");
 }
 
 void calcular() {
@@ -137,7 +137,7 @@ void setup() {
   ph_b = nvs.getFloat("ph_b", 0);
   vt0_calibrado = nvs.getBool("vt0_ok", false);
   vt0_mv = nvs.getFloat("vt0_mv", NAN);
-  if (vt0_calibrado && (isnan(vt0_mv) || vt0_mv < TURB_MIN_CONECTADO_MV)) {
+  if (vt0_calibrado && (isnan(vt0_mv) || vt0_mv < TURB_MIN_AGUA_CLARA_MV || vt0_mv > TURB_MAX_VALIDO_MV)) {
     vt0_calibrado = false;
   }
   detector_iniciar(&det);
@@ -164,9 +164,9 @@ void loop() {
         break;
       case 't': {
         uint32_t mv = mediana_mV(PIN_TURB, 201);
-        if (mv < TURB_MIN_CONECTADO_MV || mv > MV_MAX_VALIDO) {
-          Serial.printf(">> Lectura TS-300B fuera de rango (%lu mV); revisar conexion y divisor 10k/20k en GPIO32.\n",
-                        (unsigned long)mv);
+        if (mv < TURB_MIN_AGUA_CLARA_MV || mv > TURB_MAX_VALIDO_MV) {
+          Serial.printf(">> Lectura TS-300B fuera de rango de agua clara (%lu mV, esperado %d-%d mV); revisar conexion y divisor 10k/20k en GPIO32.\n",
+                        (unsigned long)mv, TURB_MIN_AGUA_CLARA_MV, TURB_MAX_VALIDO_MV);
         } else {
           vt0_mv = (float)mv;
           vt0_calibrado = true;
@@ -214,9 +214,9 @@ void loop() {
   uint32_t ph_mv   = mediana_mV(PIN_PH, N_MUESTRAS);
   uint32_t tds_mv  = mediana_mV(PIN_TDS, N_MUESTRAS);
   uint32_t turb_mv = mediana_mV(PIN_TURB, N_MUESTRAS);
-  bool ph_ok   = mv_valido(ph_mv);
-  bool tds_ok  = mv_valido(tds_mv) || tds_mv < MV_MIN_VALIDO;  // agua destilada puede dar ~0 V
-  bool turb_ok = (turb_mv >= TURB_MIN_CONECTADO_MV) && (turb_mv <= MV_MAX_VALIDO);
+  bool ph_ok   = ph_mv_valido(ph_mv);
+  bool tds_ok  = tds_mv_valido(tds_mv);  // agua destilada puede dar ~0 V
+  bool turb_ok = turb_mv_valido(turb_mv);
   bool ph_valido = ph_calibrado && ph_ok;
 
   if (!vt0_calibrado && turb_ok && turb_mv >= TURB_MIN_AGUA_CLARA_MV) {

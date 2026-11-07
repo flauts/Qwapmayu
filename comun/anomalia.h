@@ -17,8 +17,12 @@
 #define UMBRAL_PH_MIN            6.5f     // LpH (anomalia si pH < 6.5)
 #define UMBRAL_PH_MAX            8.5f     // UpH (anomalia si pH > 8.5)
 #define UMBRAL_IT_MAX            0.200f   // Indice de turbidez maximo (TS-300B: IT > 0.200)
+#define PH_MIN_VALIDO_MV         20       // Por debajo: sonda de pH desconectada o en corto
+#define PH_MAX_VALIDO_MV         3100     // Techo de validez para pH con divisor 10k/20k
+#define TDS_MAX_VALIDO_MV        2500     // Salida nativa KS0429 es 0-2.3 V; >2500 mV indica fallo de cableado
 #define TURB_MIN_CONECTADO_MV    300      // Descarta pin ADC flotante (~142 mV) cuando TS-300B no esta conectado
-#define TURB_MIN_AGUA_CLARA_MV   2000     // Voltaje minimo en agua clara (con divisor 2/3 da ~2000-3000 mV)
+#define TURB_MIN_AGUA_CLARA_MV   2000     // Piso minimo para aceptar referencia VT0 de agua clara (~3000-3150 mV real)
+#define TURB_MAX_VALIDO_MV       3250     // Techo de validez para TS-300B con divisor 10k/20k (~3129 mV en agua clara)
 #define CICLOS_PERSISTENCIA      3        // Ciclos anomalos consecutivos para levantar solicitud_captura
 #define VALOR_INVALIDO_I16       INT16_MIN // Centinela entero (-32768) cuando el bit de validez es 0
 
