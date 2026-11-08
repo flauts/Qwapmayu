@@ -1,0 +1,23 @@
+
+
+=============================================================
+ QawapMayu - Calibracion manual del caudal de la bomba
+
+=============================================================
+Comandos disponibles (escribir y presionar Enter):
+
+  <numero> : Configura la duracion del bombeo en segundos
+
+             (ej: '5', '2.5', '10') [Max: 15.0 s]
+  s / S    : Detiene el bombeo de emergencia
+  h / ?    : Muestra este mensaje de ayuda
+Accion fisica:
+  Pulsador (GPIO25): Inicia el ensayo de bombeo
+Configuracion actual: t_bomba = 3750 ms (3.75 s)
+=============================================================
+
+[BOMBA] Iniciando ensayo=1, t_pedido_ms=3750 (3.75 s)
+[BOMBA] ensayo=1, t_pedido_ms=3750, t_real_ms=3750, motivo=normal
+[BOMBA] Iniciando ensayo=2, t_pedido_ms=3750 (3.75 s)
+[BOMBA] ensayo=2, t_pedido_ms=3750, t_real_ms=3750, motivo=normal
+[BOMBA] Iniciando ensayo=3, t_pedido_ms=3750 (3.75 s)

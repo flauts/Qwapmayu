@@ -1,0 +1,252 @@
+
+
+=============================================================
+ QawapMayu - Calibracion manual del caudal de la bomba
+=============================================================
+
+Comandos disponibles (escribir y presionar Enter):
+  <numero> : Configura la duracion del bombeo en segundos
+             (ej: '5', '2.5', '10') [Max: 15.0 s]
+  s / S    : Detiene el bombeo de emergencia
+  h / ?    : Muestra este mensaje de ayuda
+Accion fisica:
+
+  Pulsador (GPIO25): Inicia el ensayo de bombeo
+Configuracion actual: t_bomba = 3750 ms (3.75 s)
+=============================================================
+
+
+[BOMBA] Iniciando ensayo=1, t_pedido_ms=3750 (3.75 s)
+[BOMBA] ensayo=1, t_pedido_ms=3750, t_real_ms=3750, motivo=normal
+ets Jun  8 2016 00:22:57
+
+rst:0x1 (POWERON_RESET),boot:0x13 (SPI_FAST_FLASH_BOOT)
+configsip: 0, SPIWP:0xee
+clk_drv:0x00,q_drv:0x00,d_drv:0x00,cs0_drv:0x00,hd_drv:0x00,wp_drv:0x00
+mode:DIO, clock div:2
+load:0x3fff0030,len:4640
+
+load:0x40078000,len:15632
+load:0x40080400,len:3164
+entry 0x4008059c
+
+
+=============================================================
+ QawapMayu - Calibracion manual del caudal de la bomba
+
+=============================================================
+Comandos disponibles (escribir y presionar Enter):
+  <numero> : Configura la duracion del bombeo en segundos
+
+             (ej: '5', '2.5', '10') [Max: 15.0 s]
+  s / S    : Detiene el bombeo de emergencia
+  h / ?    : Muestra este mensaje de ayuda
+
+Accion fisica:
+  Pulsador (GPIO25): Inicia el ensayo de bombeo
+Configuracion actual: t_bomba = 3750 ms (3.75 s)
+=============================================================
+
+[BOMBA] Iniciando ensayo=1, t_pedido_ms=3750 (3.75 s)
+[BOMBA] ensayo=1, t_pedido_ms=3750, t_real_ms=3750, motivo=normal
+Tiempo configurado: 4000 ms (4.00 s)
+ets Jun  8 2016 00:22:57
+
+rst:0x1 (POWERON_RESET),boot:0x13 (SPI_FAST_FLASH_BOOT)
+configsip: 0, SPIWP:0xee
+clk_drv:0x00,q_drv:0x00,d_drv:0x00,cs0_drv:0x00,hd_drv:0x00,wp_drv:0x00
+
+mode:DIO, clock div:2
+
+load:0x3fff0030,len:4640
+load:0x40078000,len:15632
+load:0x40080400,len:3164
+entry 0x4008059c
+
+
+=============================================================
+ QawapMayu - Calibracion manual del caudal de la bomba
+
+=============================================================
+Comandos disponibles (escribir y presionar Enter):
+
+  <numero> : Configura la duracion del bombeo en segundos
+
+             (ej: '5', '2.5', '10') [Max: 15.0 s]
+  s / S    : Detiene el bombeo de emergencia
+  h / ?    : Muestra este mensaje de ayuda
+Accion fisica:
+  Pulsador (GPIO25): Inicia el ensayo de bombeo
+Configuracion actual: t_bomba = 3750 ms (3.75 s)
+=============================================================
+
+[BOMBA] Iniciando ensayo=1, t_pedido_ms=3750 (3.75 s)
+[BOMBA] ensayo=1, t_pedido_ms=3750, t_real_ms=3750, motivo=normal
+ets Jun  8 2016 00:22:57
+
+
+rst:0x1 (POWERON_RESET),boot:0x13 (SPI_FAST_FLASH_BOOT)
+configsip: 0, SPIWP:0xee
+
+clk_drv:0x00,q_drv:0x00,d_drv:0x00,cs0_drv:0x00,hd_drv:0x00,wp_drv:0x00
+mode:DIO, clock div:2
+load:0x3fff0030,len:4640
+load:0x40078000,len:15632
+load:0x40080400,len:3164
+entry 0x4008059c
+
+
+=============================================================
+ QawapMayu - Calibracion manual del caudal de la bomba
+=============================================================
+Comandos disponibles (escribir y presionar Enter):
+  <numero> : Configura la duracion del bombeo en segundos
+             (ej: '5', '2.5', '10') [Max: 15.0 s]
+  s / S    : Detiene el bombeo de emergencia
+  h / ?    : Muestra este mensaje de ayuda
+Accion fisica:
+  Pulsador (GPIO25): Inicia el ensayo de bombeo
+
+Configuracion actual: t_bomba = 3750 ms (3.75 s)
+=============================================================
+
+[BOMBA] Iniciando ensayo=1, t_pedido_ms=3750 (3.75 s)
+[BOMBA] ensayo=1, t_pedido_ms=3750, t_real_ms=3750, motivo=normal
+ets Jun  8 2016 00:22:57
+
+rst:0x1 (POWERON_RESET),boot:0x13 (SPI_FAST_FLASH_BOOT)
+configsip: 0, SPIWP:0xee
+clk_drv:0x00,q_drv:0x00,d_drv:0x00,cs0_drv:0x00,hd_drv:0x00,wp_drv:0x00
+mode:DIO, clock div:2
+load:0x3fff0030,len:4640
+load:0x40078000,len:15632
+load:0x40080400,len:3164
+entry 0x4008059c
+
+
+=============================================================
+ QawapMayu - Calibracion manual del caudal de la bomba
+=============================================================
+Comandos disponibles (escribir y presionar Enter):
+  <numero> : Configura la duracion del bombeo en segundos
+             (ej: '5', '2.5', '10') [Max: 15.0 s]
+  s / S    : Detiene el bombeo de emergencia
+
+  h / ?    : Muestra este mensaje de ayuda
+Accion fisica:
+  Pulsador (GPIO25): Inicia el ensayo de bombeo
+Configuracion actual: t_bomba = 3750 ms (3.75 s)
+=============================================================
+
+
+[BOMBA] Iniciando ensayo=1, t_pedido_ms=3750 (3.75 s)
+[BOMBA] ensayo=1, t_pedido_ms=3750, t_real_ms=3750, motivo=normal
+ets Jun  8 2016 00:22:57
+
+
+rst:0x1 (POWERON_RESET),boot:0x13 (SPI_FAST_FLASH_BOOT)
+configsip: 0, SPIWP:0xee
+
+clk_drv:0x00,q_drv:0x00,d_drv:0x00,cs0_drv:0x00,hd_drv:0x00,wp_drv:0x00
+mode:DIO, clock div:2
+load:0x3fff0030,len:4640
+load:0x40078000,len:15632
+load:0x40080400,len:3164
+
+entry 0x4008059c
+
+
+=============================================================
+ QawapMayu - Calibracion manual del caudal de la bomba
+=============================================================
+Comandos disponibles (escribir y presionar Enter):
+  <numero> : Configura la duracion del bombeo en segundos
+             (ej: '5', '2.5', '10') [Max: 15.0 s]
+  s / S    : Detiene el bombeo de emergencia
+  h / ?    : Muestra este mensaje de ayuda
+Accion fisica:
+  Pulsador (GPIO25): Inicia el ensayo de bombeo
+
+Configuracion actual: t_bomba = 3750 ms (3.75 s)
+=============================================================
+
+[BOMBA] Iniciando ensayo=1, t_pedido_ms=3750 (3.75 s)
+[BOMBA] ensayo=1, t_pedido_ms=3750, t_real_ms=3750, motivo=normal
+[BOMBA] Iniciando ensayo=2, t_pedido_ms=3750 (3.75 s)
+[BOMBA] ensayo=2, t_pedido_ms=3750, t_real_ms=3750, motivo=normal
+[BOMBA] Iniciando ensayo=3, t_pedido_ms=3750 (3.75 s)
+[BOMBA] ensayo=3, t_pedido_ms=3750, t_real_ms=3750, motivo=normal
+[BOMBA] Iniciando ensayo=4, t_pedido_ms=3750 (3.75 s)
+[BOMBA] ensayo=4, t_pedido_ms=3750, t_real_ms=3750, motivo=normal
+[BOMBA] Iniciando ensayo=5, t_pedido_ms=3750 (3.75 s)
+[BOMBA] ensayo=5, t_pedido_ms=3750, t_real_ms=3750, motivo=normal
+ets Jun  8 2016 00:22:57
+
+
+rst:0x1 (POWERON_RESET),boot:0x13 (SPI_FAST_FLASH_BOOT)
+configsip: 0, SPIWP:0xee
+
+clk_drv:0x00,q_drv:0x00,d_drv:0x00,cs0_drv:0x00,hd_drv:0x00,wp_drv:0x00
+mode:DIO, clock div:2
+load:0x3fff0030,len:4640
+load:0x40078000,len:15632
+load:0x40080400,len:3164
+
+entry 0x4008059c
+
+
+=============================================================
+ QawapMayu - Calibracion manual del caudal de la bomba
+=============================================================
+Comandos disponibles (escribir y presionar Enter):
+  <numero> : Configura la duracion del bombeo en segundos
+             (ej: '5', '2.5', '10') [Max: 15.0 s]
+  s / S    : Detiene el bombeo de emergencia
+  h / ?    : Muestra este mensaje de ayuda
+Accion fisica:
+  Pulsador (GPIO25): Inicia el ensayo de bombeo
+
+Configuracion actual: t_bomba = 3750 ms (3.75 s)
+=============================================================
+
+ets Jun  8 2016 00:22:57
+
+
+rst:0x1 (POWERON_RESET),boot:0x13 (SPI_FAST_FLASH_BOOT)
+configsip: 0, SPIWP:0xee
+
+clk_drv:0x00,q_drv:0x00,d_drv:0x00,cs0_drv:0x00,hd_drv:0x00,wp_drv:0x00
+mode:DIO, clock div:2
+load:0x3fff0030,len:4640
+load:0x40078000,len:15632
+load:0x40080400,len:3164
+
+entry 0x4008059c
+
+
+=============================================================
+ QawapMayu - Calibracion manual del caudal de la bomba
+=============================================================
+Comandos disponibles (escribir y presionar Enter):
+  <numero> : Configura la duracion del bombeo en segundos
+             (ej: '5', '2.5', '10') [Max: 15.0 s]
+  s / S    : Detiene el bombeo de emergencia
+  h / ?    : Muestra este mensaje de ayuda
+Accion fisica:
+  Pulsador (GPIO25): Inicia el ensayo de bombeo
+
+Configuracion actual: t_bomba = 3750 ms (3.75 s)
+=============================================================
+
+[BOMBA] Iniciando ensayo=1, t_pedido_ms=3750 (3.75 s)
+[BOMBA] ensayo=1, t_pedido_ms=3750, t_real_ms=3750, motivo=normal
+Tiempo configurado: 4000 ms (4.00 s)
+[BOMBA] Iniciando ensayo=2, t_pedido_ms=4000 (4.00 s)
+[BOMBA] ensayo=2, t_pedido_ms=4000, t_real_ms=4000, motivo=normal
+[BOMBA] Iniciando ensayo=3, t_pedido_ms=4000 (4.00 s)
+[BOMBA] ensayo=3, t_pedido_ms=4000, t_real_ms=4000, motivo=normal
+Tiempo configurado: 5000 ms (5.00 s)
+[BOMBA] Iniciando ensayo=4, t_pedido_ms=5000 (5.00 s)
+[BOMBA] ensayo=4, t_pedido_ms=5000, t_real_ms=5000, motivo=normal
+[BOMBA] Iniciando ensayo=5, t_pedido_ms=5000 (5.00 s)
+[BOMBA] ensayo=5, t_pedido_ms=5000, t_real_ms=5000, motivo=normal

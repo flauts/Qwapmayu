@@ -1,0 +1,45 @@
+
+
+=============================================================
+ QawapMayu - Calibracion manual del caudal de la bomba
+=============================================================
+
+Comandos disponibles (escribir y presionar Enter):
+  <numero> : Configura la duracion del bombeo en segundos
+             (ej: '5', '2.5', '10') [Max: 15.0 s]
+  s / S    : Detiene el bombeo de emergencia
+  h / ?    : Muestra este mensaje de ayuda
+Accion fisica:
+
+  Pulsador (GPIO25): Inicia el ensayo de bombeo
+Configuracion actual: t_bomba = 3750 ms (3.75 s)
+=============================================================
+
+
+Tiempo configurado: 5000 ms (5.00 s)
+Tiempo configurado: 3000 ms (3.00 s)
+Tiempo configurado: 2000 ms (2.00 s)
+Tiempo configurado: 3000 ms (3.00 s)
+[BOMBA] Iniciando ensayo=1, t_pedido_ms=3000 (3.00 s)
+[BOMBA] ensayo=1, t_pedido_ms=3000, t_real_ms=3000, motivo=normal
+[BOMBA] Iniciando ensayo=2, t_pedido_ms=3000 (3.00 s)
+[BOMBA] ensayo=2, t_pedido_ms=3000, t_real_ms=3000, motivo=normal
+Tiempo configurado: 5000 ms (5.00 s)
+[BOMBA] Iniciando ensayo=3, t_pedido_ms=5000 (5.00 s)
+[BOMBA] ensayo=3, t_pedido_ms=5000, t_real_ms=5000, motivo=normal
+Tiempo configurado: 8000 ms (8.00 s)
+[BOMBA] Iniciando ensayo=4, t_pedido_ms=8000 (8.00 s)
+[BOMBA] ensayo=4, t_pedido_ms=8000, t_real_ms=8000, motivo=normal
+[BOMBA] Iniciando ensayo=5, t_pedido_ms=8000 (8.00 s)
+[BOMBA] ensayo=5, t_pedido_ms=8000, t_real_ms=8000, motivo=normal
+[BOMBA] Iniciando ensayo=6, t_pedido_ms=8000 (8.00 s)
+[BOMBA] ensayo=6, t_pedido_ms=8000, t_real_ms=8000, motivo=normal
+[BOMBA] Iniciando ensayo=7, t_pedido_ms=8000 (8.00 s)
+[BOMBA] ensayo=7, t_pedido_ms=8000, t_real_ms=8000, motivo=normal
+[BOMBA] Iniciando ensayo=8, t_pedido_ms=8000 (8.00 s)
+[BOMBA] ensayo=8, t_pedido_ms=8000, t_real_ms=8000, motivo=normal
+Tiempo configurado: 6000 ms (6.00 s)
+[BOMBA] Iniciando ensayo=9, t_pedido_ms=6000 (6.00 s)
+[BOMBA] ensayo=9, t_pedido_ms=6000, t_real_ms=6000, motivo=normal
+Tiempo configurado: 8000 ms (8.00 s)
+[BOMBA] Iniciando ensayo=10, t_pedido_ms=8000 (8.00 s)
