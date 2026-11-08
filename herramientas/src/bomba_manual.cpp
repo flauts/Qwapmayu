@@ -26,7 +26,7 @@
 #define PIN_BOTON 25
 #define PIN_LED    2
 
-const uint32_t T_BOMBA_DEFECTO_MS = 3750; // Calibrado: ~3.75 s para 100 mL (cota superior 4.0 s)
+const uint32_t T_BOMBA_DEFECTO_MS = 5000;
 const uint32_t T_MAX_MS = 15000;
 const uint32_t T_DEBOUNCE_MS = 50;
 

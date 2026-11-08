@@ -51,8 +51,8 @@
 
 const uint32_t TA_MS                  = 5000;
 const uint8_t  CICLOS_NORMALES_REARME = 3;
-// provisional, pendiente de serie de 10 ensayos con geometria final (punta de manguera en el aire sobre el nivel del origen, 30 cm)
-const uint32_t T_CAPTURA_MS           = 4000;
+// provisional: ~5 s por 100 mL con manguera de 70 cm y 30 cm de elevacion; el caudal depende de la geometria, recalibrar en el sitio de la expo
+const uint32_t T_CAPTURA_MS           = 5000;
 const uint32_t T_MAX_BOMBA_MS         = 2 * T_CAPTURA_MS;
 
 // ---------- perifericos y estado ----------
