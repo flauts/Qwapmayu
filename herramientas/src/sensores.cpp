@@ -26,10 +26,10 @@
 #include <DallasTemperature.h>
 #include <Preferences.h>
 #include "anomalia.h"
+#include "hardware.h"
 
 #define PIN_PH      35   // ADC1
 #define PIN_TDS     34   // ADC1
-#define PIN_TURB    32   // ADC1 (TS-300B con divisor obligatorio 10k/20k)
 #define PIN_TEMP    33   // 1-Wire (pull-up 4.7k a 3.3V)
 #define PIN_LED_SIM  2   // LED integrado del ESP32 (bomba simulada para Paso 2)
 
@@ -165,7 +165,7 @@ void loop() {
       case 't': {
         uint32_t mv = mediana_mV(PIN_TURB, 201);
         if (mv < TURB_MIN_AGUA_CLARA_MV || mv > TURB_MAX_VALIDO_MV) {
-          Serial.printf(">> Lectura TS-300B fuera de rango de agua clara (%lu mV, esperado %d-%d mV); revisar conexion y divisor 10k/20k en GPIO32.\n",
+          Serial.printf(">> Lectura TS-300B fuera de rango de agua clara (%lu mV, esperado %d-%d mV); revisar conexion y divisor 10k/20k en GPIO4.\n",
                         (unsigned long)mv, TURB_MIN_AGUA_CLARA_MV, TURB_MAX_VALIDO_MV);
         } else {
           vt0_mv = (float)mv;

@@ -61,7 +61,7 @@ Esto genera `pruebas/sensores_<AAAAMMDD_HHMMSS>_calibracion_ph.csv` y `.log`.
 
 1. En `gateway/src/` copiar `config.example.h` como `config.h` y completar WiFi (hotspot del celular) y token de ThingsBoard. `config.h` **no se sube** a GitHub.
 2. Subir `nodo` a un ESP32 y `gateway` al otro, cada uno con su RAK.
-3. El firmware de `nodo` lee sensores reales (pH, TDS, turbidez TS-300B en GPIO32, DS18B20 asíncrono en GPIO33), evalúa persistencia de anomalías, gestiona la FSM de la bomba en NVS (`muestreo`) y emite telemetría LoRa P2P cada 5 s sin deriva.
+3. El firmware de `nodo` lee sensores reales (pH, TDS, turbidez TS-300B en GPIO4, DS18B20 asíncrono en GPIO33), evalúa persistencia de anomalías, gestiona la FSM de la bomba en NVS (`muestreo`) y emite telemetría LoRa P2P cada 5 s sin deriva.
    - La bomba o relé se refleja en `PIN_LED` (GPIO2) para pruebas en mesa.
    - Durante `MUESTREANDO`, la CPU no muestrea sensores ni usa la radio, dedicándose exclusivamente a la temporización de corte de la bomba.
    - Comandos por consola serial (`115200` baudios):
