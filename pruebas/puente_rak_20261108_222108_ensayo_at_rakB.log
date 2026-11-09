@@ -1,0 +1,11 @@
+AT
+
+OK
+AT+VER=?
+
+AT+VER=RUI_4.2.1_RAK3172-E
+OK
+AT+NWM-?  =?
+
+AT+NWM=0
+OK

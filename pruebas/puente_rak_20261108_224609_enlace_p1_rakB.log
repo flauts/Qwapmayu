@@ -1,0 +1,26 @@
+https://claude.ai/chat/4dc1a5aa-6d7f-4926-b2dc-f99dcf8b382a                                                            AT+PRECV=65534
+
+OK
++EVT:RXP2P:-41:13:48454C4C4F
+AT+P2P=923500000:7:125:0:10:14
+
+P2P_RX_ON already, please disable P2P RX before setting.
+AT_BUSY_ERROR
+AT+P2P=?
+
+AT+P2P=923500000:7:0:0:10:14
+OK
+AT+PRECV=0
+
+OK
+AT+P2P=923500000:7:125:0:10:14
+
+OK
+AT+P2P=0 ?
+
+AT+P2P=923500000:7:0:0:10:14
+OK
+AT+PRECV=65534
+
+OK
++EVT:RXP2P:-39:12:48454C4C4F
