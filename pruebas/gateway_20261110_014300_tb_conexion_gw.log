@@ -1,0 +1,17 @@
+01:43:01.520 > RX seq=668 estado=BLOQUEADO tds=58 rssi=-36 snr=12 PDR=100.0%
+01:43:06.520 > RX seq=669 estado=BLOQUEADO tds=58 rssi=-36 snr=12 PDR=100.0%
+01:43:11.520 > RX seq=670 estado=BLOQUEADO tds=58 rssi=-36 snr=12 PDR=100.0%
+01:43:16.520 > RX seq=671 estado=BLOQUEADO tds=58 rssi=-36 snr=12 PDR=100.0%
+01:43:21.520 > RX seq=672 estado=BLOQUEADO tds=58 rssi=-36 snr=12 PDR=100.0%
+01:43:26.520 > RX seq=673 estado=BLOQUEADO tds=58 rssi=-36 snr=13 PDR=100.0%
+01:43:27.217 > [estado] WiFi=ok MQTT=ok cola=0 recibidas=42 crc_err=0 dup=0
+01:43:31.519 > RX seq=674 estado=BLOQUEADO tds=58 rssi=-36 snr=12 PDR=100.0%
+01:43:36.520 > RX seq=675 estado=BLOQUEADO tds=58 rssi=-36 snr=12 PDR=100.0%
+01:43:41.520 > RX seq=676 estado=BLOQUEADO tds=58 rssi=-36 snr=12 PDR=100.0%
+01:43:46.520 > RX seq=677 estado=BLOQUEADO tds=58 rssi=-36 snr=12 PDR=100.0%
+01:43:51.520 > RX seq=678 estado=BLOQUEADO tds=58 rssi=-35 snr=12 PDR=100.0%
+01:43:56.520 > RX seq=679 estado=BLOQUEADO tds=58 rssi=-36 snr=12 PDR=100.0%
+01:43:57.219 > [estado] WiFi=ok MQTT=ok cola=0 recibidas=48 crc_err=0 dup=0
+01:44:01.519 > RX seq=680 estado=BLOQUEADO tds=58 rssi=-35 snr=12 PDR=100.0%
+01:44:06.519 > RX seq=681 estado=BLOQUEADO tds=58 rssi=-36 snr=12 PDR=100.0%
+01:44:11.519 > RX seq=682 estado=BLOQUEADO tds=58 rssi=-36 snr=12 PDR=100.0%
