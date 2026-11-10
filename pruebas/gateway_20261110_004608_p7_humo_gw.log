@@ -1,0 +1,116 @@
+00:46:13.132 > RX seq=6 estado=BLOQUEADO tds=58 rssi=-33 snr=12 PDR=100.0%
+00:46:13.137 > Cola llena: se descarta el mas antiguo
+00:46:21.716 > Nuevo boot del nodo: 12
+00:46:21.718 > RX seq=1 estado=BLOQUEADO tds=58 rssi=-34 snr=12 PDR=100.0%
+00:46:21.723 > Cola llena: se descarta el mas antiguo
+00:46:26.726 > RX seq=2 estado=BLOQUEADO tds=58 rssi=-35 snr=12 PDR=100.0%
+00:46:26.731 > Cola llena: se descarta el mas antiguo
+
+00:46:29.349 > [estado] WiFi=no MQTT=no cola=16 recibidas=2 crc_err=0 dup=0
+00:46:31.726 > RX seq=3 estado=BLOQUEADO tds=58 rssi=-35 snr=13 PDR=100.0%
+00:46:31.731 > Cola llena: se descarta el mas antiguo
+00:46:36.725 > RX seq=4 estado=BLOQUEADO tds=58 rssi=-35 snr=12 PDR=100.0%
+00:46:36.730 > Cola llena: se descarta el mas antiguo
+00:46:39.170 > ets Jul 29 2019 12:21:46
+00:46:39.172 > 
+00:46:39.173 > rst:0x1 (POWERON_RESET),boot:0x13 (SPI_FAST_FLASH_BOOT)
+00:46:39.177 > configsip: 0, SPIWP:0xee
+
+00:46:39.180 > clk_drv:0x00,q_drv:0x00,d_drv:0x00,cs0_drv:0x00,hd_drv:0x00,wp_drv:0x00
+00:46:39.186 > mode:DIO, clock div:2
+00:46:39.188 > load:0x3fff0030,len:4640
+00:46:39.190 > load:0x40078000,len:15632
+
+00:46:39.193 > load:0x40080400,len:3164
+00:46:39.195 > entry 0x4008059c
+00:46:40.123 > 
+00:46:40.123 > === QawapMayu gateway GW01 ===
+
+00:46:40.284 >   RAK> AT
+00:46:40.285 >   RAK< AT
+00:46:40.286 >   RAK< OK
+00:46:40.287 >   RAK> AT+NWM=0
+00:46:40.288 >   RAK< AT+NWM=0
+00:46:40.296 >   RAK< P2P_RX_ON already, please disable P2P RX before setting.
+00:46:40.302 >   RAK< AT_BUSY_ERROR
+00:46:41.798 >   RAK> AT+PRECV=0
+00:46:41.802 >   RAK< AT+PRECV=0
+
+00:46:41.804 >   RAK< OK
+00:46:41.805 >   RAK> AT+P2P=923500000:7:125:0:10:14
+00:46:41.809 >   RAK< AT+P2P=923500000:7:125:0:10:14
+00:46:41.818 >   RAK< OK
+00:46:41.819 >   RAK> AT+PRECV=65534
+00:46:41.822 >   RAK< AT+PRECV=65534
+00:46:41.824 >   RAK< OK
+00:46:41.825 > RAK escuchando en P2P
+00:46:46.724 > Nuevo boot del nodo: 12
+00:46:46.728 > RX seq=6 estado=BLOQUEADO tds=58 rssi=-35 snr=13 PDR=100.0%
+00:46:51.725 > RX seq=7 estado=BLOQUEADO tds=58 rssi=-35 snr=12 PDR=100.0%
+00:46:56.724 > RX seq=8 estado=BLOQUEADO tds=58 rssi=-35 snr=13 PDR=100.0%
+00:47:01.725 > RX seq=9 estado=BLOQUEADO tds=58 rssi=-36 snr=12 PDR=100.0%
+00:47:06.724 > RX seq=10 estado=BLOQUEADO tds=58 rssi=-35 snr=12 PDR=100.0%
+00:47:09.569 > [estado] WiFi=no MQTT=no cola=5 recibidas=5 crc_err=0 dup=0
+00:47:11.724 > RX seq=11 estado=BLOQUEADO tds=58 rssi=-35 snr=12 PDR=100.0%
+00:47:16.724 > RX seq=12 estado=BLOQUEADO tds=58 rssi=-34 snr=13 PDR=100.0%
+00:47:26.492 > Nuevo boot del nodo: 13
+00:47:26.495 > RX seq=1 estado=BLOQUEADO tds=58 rssi=-36 snr=12 PDR=100.0%
+00:47:31.502 > RX seq=2 estado=BLOQUEADO tds=58 rssi=-35 snr=13 PDR=100.0%
+00:47:36.502 > RX seq=3 estado=BLOQUEADO tds=58 rssi=-35 snr=12 PDR=100.0%
+00:47:39.569 > [estado] WiFi=no MQTT=no cola=10 recibidas=3 crc_err=0 dup=0
+00:47:41.501 > RX seq=4 estado=BLOQUEADO tds=58 rssi=-35 snr=12 PDR=100.0%
+00:47:46.501 > RX seq=5 estado=BLOQUEADO tds=58 rssi=-35 snr=12 PDR=100.0%
+00:47:51.501 > RX seq=6 estado=BLOQUEADO tds=58 rssi=-35 snr=12 PDR=100.0%
+00:47:56.501 > RX seq=7 estado=BLOQUEADO tds=58 rssi=-36 snr=13 PDR=100.0%
+00:48:01.501 > RX seq=8 estado=BLOQUEADO tds=58 rssi=-35 snr=12 PDR=100.0%
+00:48:06.500 > RX seq=9 estado=BLOQUEADO tds=58 rssi=-36 snr=12 PDR=100.0%
+00:48:09.569 > [estado] WiFi=no MQTT=no cola=16 recibidas=9 crc_err=0 dup=0
+00:48:11.500 > RX seq=10 estado=BLOQUEADO tds=58 rssi=-36 snr=12 PDR=100.0%
+00:48:11.506 > Cola llena: se descarta el mas antiguo
+
+00:48:16.500 > RX seq=11 estado=BLOQUEADO tds=58 rssi=-36 snr=12 PDR=100.0%
+00:48:16.506 > Cola llena: se descarta el mas antiguo
+00:48:21.500 > RX seq=12 estado=BLOQUEADO tds=58 rssi=-36 snr=12 PDR=100.0%
+00:48:21.506 > Cola llena: se descarta el mas antiguo
+00:48:26.500 > RX seq=13 estado=BLOQUEADO tds=58 rssi=-35 snr=13 PDR=100.0%
+00:48:26.506 > Cola llena: se descarta el mas antiguo
+00:48:31.500 > RX seq=14 estado=BLOQUEADO tds=58 rssi=-34 snr=13 PDR=100.0%
+00:48:31.506 > Cola llena: se descarta el mas antiguo
+00:48:36.500 > RX seq=15 estado=BLOQUEADO tds=58 rssi=-35 snr=12 PDR=100.0%
+00:48:36.505 > Cola llena: se descarta el mas antiguo
+00:48:39.570 > [estado] WiFi=no MQTT=no cola=16 recibidas=15 crc_err=0 dup=0
+00:48:41.499 > RX seq=16 estado=BLOQUEADO tds=58 rssi=-35 snr=12 PDR=100.0%
+00:48:41.505 > Cola llena: se descarta el mas antiguo
+00:48:46.499 > RX seq=17 estado=BLOQUEADO tds=58 rssi=-35 snr=12 PDR=100.0%
+00:48:46.505 > Cola llena: se descarta el mas antiguo
+00:48:51.499 > RX seq=18 estado=BLOQUEADO tds=58 rssi=-35 snr=12 PDR=100.0%
+00:48:51.505 > Cola llena: se descarta el mas antiguo
+00:48:56.499 > RX seq=19 estado=BLOQUEADO tds=58 rssi=-35 snr=12 PDR=100.0%
+00:48:56.505 > Cola llena: se descarta el mas antiguo
+00:49:01.499 > RX seq=20 estado=BLOQUEADO tds=58 rssi=-36 snr=13 PDR=100.0%
+00:49:01.504 > Cola llena: se descarta el mas antiguo
+00:49:06.499 > RX seq=21 estado=BLOQUEADO tds=58 rssi=-36 snr=13 PDR=100.0%
+00:49:06.504 > Cola llena: se descarta el mas antiguo
+
+00:49:09.570 > [estado] WiFi=no MQTT=no cola=16 recibidas=21 crc_err=0 dup=0
+00:49:11.498 > RX seq=22 estado=BLOQUEADO tds=58 rssi=-36 snr=12 PDR=100.0%
+00:49:11.504 > Cola llena: se descarta el mas antiguo
+00:49:16.498 > RX seq=23 estado=BLOQUEADO tds=58 rssi=-36 snr=12 PDR=100.0%
+00:49:16.504 > Cola llena: se descarta el mas antiguo
+00:49:21.498 > RX seq=24 estado=BLOQUEADO tds=58 rssi=-36 snr=13 PDR=100.0%
+00:49:21.504 > Cola llena: se descarta el mas antiguo
+00:49:26.498 > RX seq=25 estado=BLOQUEADO tds=58 rssi=-36 snr=12 PDR=100.0%
+00:49:26.503 > Cola llena: se descarta el mas antiguo
+00:49:31.498 > RX seq=26 estado=BLOQUEADO tds=58 rssi=-36 snr=12 PDR=100.0%
+00:49:31.503 > Cola llena: se descarta el mas antiguo
+
+00:49:36.498 > RX seq=27 estado=BLOQUEADO tds=58 rssi=-36 snr=13 PDR=100.0%
+00:49:36.503 > Cola llena: se descarta el mas antiguo
+
+00:49:39.571 > [estado] WiFi=no MQTT=no cola=16 recibidas=27 crc_err=0 dup=0
+00:49:41.498 > RX seq=28 estado=BLOQUEADO tds=58 rssi=-36 snr=12 PDR=100.0%
+00:49:41.503 > Cola llena: se descarta el mas antiguo
+00:49:46.497 > RX seq=29 estado=BLOQUEADO tds=58 rssi=-36 snr=12 PDR=100.0%
+00:49:46.503 > Cola llena: se descarta el mas antiguo
+00:49:51.497 > RX seq=30 estado=BLOQUEADO tds=58 rssi=-36 snr=12 PDR=100.0%
+00:49:51.504 > Cola llena: se descarta el mas antiguo
