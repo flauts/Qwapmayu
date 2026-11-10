@@ -1,0 +1,60 @@
+RX seq=70 estado=ARMADO tds=58 rssi=-36 snr=12 PDR=100.0%
+RX seq=71 estado=ARMADO tds=58 rssi=-36 snr=13 PDR=100.0%
+[estado] WiFi=ok MQTT=ok cola=0 recibidas=6 crc_err=0 dup=0
+RX seq=72 estado=ARMADO tds=58 rssi=-36 snr=12 PDR=100.0%
+RX seq=73 estado=ARMADO tds=58 rssi=-36 snr=12 PDR=100.0%
+RX seq=74 estado=ARMADO tds=58 rssi=-37 snr=13 PDR=100.0%
+RX seq=75 estado=ARMADO tds=58 rssi=-37 snr=13 PDR=100.0%
+RX seq=76 estado=ARMADO tds=58 rssi=-36 snr=12 PDR=100.0%
+RX seq=77 estado=ARMADO tds=58 rssi=-36 snr=12 PDR=100.0%
+[estado] WiFi=ok MQTT=ok cola=0 recibidas=12 crc_err=0 dup=0
+RX seq=78 estado=ARMADO tds=58 rssi=-36 snr=13 PDR=100.0%
+RX seq=79 estado=ARMADO tds=58 rssi=-36 snr=13 PDR=100.0%
+Conectando a ThingsBoard... OK
+RX seq=80 estado=ARMADO tds=58 rssi=-37 snr=13 PDR=100.0%
+RX seq=81 estado=ARMADO tds=58 rssi=-37 snr=12 PDR=100.0%
+RX seq=82 estado=ARMADO tds=58 rssi=-37 snr=12 PDR=100.0%
+RX seq=83 estado=ARMADO tds=58 rssi=-37 snr=13 PDR=100.0%
+[estado] WiFi=ok MQTT=ok cola=0 recibidas=18 crc_err=0 dup=0
+RX seq=84 estado=ARMADO tds=58 rssi=-37 snr=13 PDR=100.0%
+RX seq=85 estado=ARMADO tds=58 rssi=-37 snr=13 PDR=100.0%
+RX seq=86 estado=ARMADO tds=58 rssi=-37 snr=13 PDR=100.0%
+Conectando a ThingsBoard... fallo
+
+[wifi] Intentando reconectar WiFi...
+E (124791) wifi:sta is connecting, cannot set config
+RX seq=87 estado=ARMADO tds=58 rssi=-37 snr=13 PDR=100.0%
+RX seq=88 estado=ARMADO tds=58 rssi=-37 snr=13 PDR=100.0%
+[wifi] Intentando reconectar WiFi...
+
+E (134789) wifi:sta is connecting, return error
+RX seq=89 estado=ARMADO tds=58 rssi=-37 snr=13 PDR=100.0%
+[estado] WiFi=no MQTT=no cola=3 recibidas=24 crc_err=0 dup=0
+RX seq=90 estado=ARMADO tds=58 rssi=-37 snr=13 PDR=100.0%
+[wifi] Intentando reconectar WiFi...
+E (144789) wifi:sta is connecting, return error
+RX seq=91 estado=ARMADO tds=58 rssi=-37 snr=13 PDR=100.0%
+RX seq=92 estado=ARMADO tds=58 rssi=-37 snr=13 PDR=100.0%
+[wifi] Intentando reconectar WiFi...
+E (154789) wifi:sta is connecting, return error
+RX seq=93 estado=ARMADO tds=58 rssi=-38 snr=12 PDR=100.0%
+RX seq=94 estado=ARMADO tds=58 rssi=-37 snr=13 PDR=100.0%
+[wifi] Intentando reconectar WiFi...
+E (164789) wifi:sta is connecting, return error
+RX seq=95 estado=ARMADO tds=58 rssi=-37 snr=12 PDR=100.0%
+[estado] WiFi=no MQTT=no cola=9 recibidas=30 crc_err=0 dup=0
+RX seq=96 estado=ARMADO tds=58 rssi=-37 snr=13 PDR=100.0%
+[wifi] Intentando reconectar WiFi...
+E (174789) wifi:sta is connecting, return error
+RX seq=97 estado=ARMADO tds=58 rssi=-37 snr=12 PDR=100.0%
+Conectando a ThingsBoard... fallo
+RX seq=98 estado=ARMADO tds=58 rssi=-37 snr=13 PDR=100.0%
+Conectando a ThingsBoard... OK
+RX seq=99 estado=ARMADO tds=58 rssi=-37 snr=13 PDR=100.0%
+RX seq=100 estado=ARMADO tds=58 rssi=-38 snr=13 PDR=100.0%
+RX seq=101 estado=ARMADO tds=58 rssi=-37 snr=13 PDR=100.0%
+[estado] WiFi=ok MQTT=ok cola=0 recibidas=36 crc_err=0 dup=0
+RX seq=102 estado=ARMADO tds=58 rssi=-37 snr=13 PDR=100.0%
+RX seq=103 estado=ARMADO tds=58 rssi=-37 snr=13 PDR=100.0%
+RX seq=104 estado=ARMADO tds=58 rssi=-37 snr=13 PDR=100.0%
+RX seq=105 estado=ARMADO tds=58 rssi=-37 snr=13 PDR=100.0%

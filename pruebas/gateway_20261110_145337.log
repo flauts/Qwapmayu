@@ -1,0 +1,170 @@
+ets Jul 29 2019 12:21:46
+
+
+rst:0x1 (POWERON_RESET),boot:0x13 (SPI_FAST_FLASH_BOOT)
+configsip: 0, SPIWP:0xee
+clk_drv:0x00,q_drv:0x00,d_drv:0x00,cs0_drv:0x00,hd_drv:0x00,wp_drv:0x00
+mode:DIO, clock div:2
+load:0x3fff0030,len:4640
+
+load:0x40078000,len:15632
+load:0x40080400,len:3164
+entry 0x4008059c
+
+=== QawapMayu gateway GW01 ===
+
+  RAK> AT
+  RAK< AT
+  RAK< OK
+  RAK> AT+NWM=0
+  RAK< AT+NWM=0
+  RAK< OK
+
+  RAK> AT+PRECV=0
+  RAK< AT+PRECV=0
+
+  RAK< OK
+
+  RAK> AT+P2P=923500000:7:125:0:10:14
+  RAK< AT+P2P=923500000:7:125:0:10:14
+  RAK< OK
+
+  RAK> AT+PRECV=65534
+
+  RAK< AT+PRECV=65534
+  RAK< OK
+RAK escuchando en P2P
+Conectando a ThingsBoard... OK
+Nuevo boot del nodo: 14
+RX seq=43 estado=BLOQUEADO tds=58 rssi=-33 snr=12 PDR=100.0%
+RX seq=44 estado=BLOQUEADO tds=58 rssi=-34 snr=13 PDR=100.0%
+RX seq=45 estado=BLOQUEADO tds=58 rssi=-34 snr=13 PDR=100.0%
+RX seq=46 estado=BLOQUEADO tds=58 rssi=-34 snr=13 PDR=100.0%
+RX seq=47 estado=BLOQUEADO tds=58 rssi=-34 snr=12 PDR=100.0%
+[estado] WiFi=ok MQTT=ok cola=0 recibidas=5 crc_err=0 dup=0
+RX seq=48 estado=BLOQUEADO tds=58 rssi=-34 snr=13 PDR=100.0%
+RX seq=49 estado=BLOQUEADO tds=58 rssi=-34 snr=13 PDR=100.0%
+RX seq=50 estado=BLOQUEADO tds=58 rssi=-34 snr=13 PDR=100.0%
+RX seq=51 estado=BLOQUEADO tds=58 rssi=-34 snr=13 PDR=100.0%
+RX seq=52 estado=BLOQUEADO tds=58 rssi=-34 snr=13 PDR=100.0%
+RX seq=53 estado=BLOQUEADO tds=58 rssi=-33 snr=12 PDR=100.0%
+[estado] WiFi=ok MQTT=ok cola=0 recibidas=11 crc_err=0 dup=0
+RX seq=54 estado=BLOQUEADO tds=58 rssi=-34 snr=13 PDR=100.0%
+RX seq=55 estado=BLOQUEADO tds=58 rssi=-34 snr=13 PDR=100.0%
+Conectando a ThingsBoard... fallo
+RX seq=56 estado=BLOQUEADO tds=58 rssi=-35 snr=13 PDR=100.0%
+Conectando a ThingsBoard... fallo
+RX seq=57 estado=BLOQUEADO tds=58 rssi=-35 snr=13 PDR=100.0%
+Conectando a ThingsBoard... fallo
+RX seq=58 estado=BLOQUEADO tds=58 rssi=-34 snr=13 PDR=100.0%
+Conectando a ThingsBoard... OK
+RX seq=59 estado=BLOQUEADO tds=58 rssi=-34 snr=13 PDR=100.0%
+[estado] WiFi=ok MQTT=ok cola=0 recibidas=17 crc_err=0 dup=0
+RX seq=60 estado=BLOQUEADO tds=58 rssi=-34 snr=13 PDR=100.0%
+RX seq=61 estado=BLOQUEADO tds=58 rssi=-34 snr=13 PDR=100.0%
+RX seq=62 estado=BLOQUEADO tds=58 rssi=-34 snr=13 PDR=100.0%
+RX seq=63 estado=BLOQUEADO tds=58 rssi=-33 snr=12 PDR=100.0%
+RX seq=64 estado=BLOQUEADO tds=58 rssi=-32 snr=12 PDR=100.0%
+RX seq=65 estado=BLOQUEADO tds=58 rssi=-33 snr=13 PDR=100.0%
+[estado] WiFi=ok MQTT=ok cola=0 recibidas=23 crc_err=0 dup=0
+RX seq=66 estado=BLOQUEADO tds=58 rssi=-33 snr=12 PDR=100.0%
+RX seq=67 estado=BLOQUEADO tds=58 rssi=-33 snr=13 PDR=100.0%
+RX seq=68 estado=BLOQUEADO tds=58 rssi=-33 snr=12 PDR=100.0%
+Conectando a ThingsBoard... fallo
+RX seq=69 estado=BLOQUEADO tds=58 rssi=-33 snr=12 PDR=100.0%
+RX seq=70 estado=BLOQUEADO tds=58 rssi=-33 snr=12 PDR=100.0%
+RX seq=71 estado=BLOQUEADO tds=58 rssi=-32 snr=12 PDR=100.0%
+[estado] WiFi=no MQTT=no cola=3 recibidas=29 crc_err=0 dup=0
+RX seq=72 estado=BLOQUEADO tds=58 rssi=-33 snr=12 PDR=100.0%
+RX seq=73 estado=BLOQUEADO tds=58 rssi=-33 snr=12 PDR=100.0%
+RX seq=74 estado=BLOQUEADO tds=58 rssi=-33 snr=13 PDR=100.0%
+RX seq=75 estado=BLOQUEADO tds=58 rssi=-34 snr=13 PDR=100.0%
+RX seq=76 estado=BLOQUEADO tds=58 rssi=-34 snr=13 PDR=100.0%
+RX seq=77 estado=BLOQUEADO tds=58 rssi=-33 snr=12 PDR=100.0%
+[estado] WiFi=no MQTT=no cola=9 recibidas=35 crc_err=0 dup=0
+RX seq=78 estado=BLOQUEADO tds=58 rssi=-33 snr=12 PDR=100.0%
+RX seq=79 estado=BLOQUEADO tds=58 rssi=-33 snr=12 PDR=100.0%
+RX seq=80 estado=BLOQUEADO tds=58 rssi=-33 snr=13 PDR=100.0%
+RX seq=81 estado=BLOQUEADO tds=58 rssi=-34 snr=13 PDR=100.0%
+RX seq=82 estado=BLOQUEADO tds=58 rssi=-34 snr=13 PDR=100.0%
+RX seq=83 estado=BLOQUEADO tds=58 rssi=-33 snr=13 PDR=100.0%
+[estado] WiFi=no MQTT=no cola=15 recibidas=41 crc_err=0 dup=0
+RX seq=84 estado=BLOQUEADO tds=58 rssi=-33 snr=12 PDR=100.0%
+RX seq=85 estado=BLOQUEADO tds=58 rssi=-33 snr=13 PDR=100.0%
+Cola llena: se descarta el mas antiguo
+RX seq=86 estado=BLOQUEADO tds=58 rssi=-33 snr=12 PDR=100.0%
+Cola llena: se descarta el mas antiguo
+RX seq=87 estado=BLOQUEADO tds=58 rssi=-33 snr=13 PDR=100.0%
+Cola llena: se descarta el mas antiguo
+RX seq=88 estado=BLOQUEADO tds=58 rssi=-33 snr=13 PDR=100.0%
+Cola llena: se descarta el mas antiguo
+RX seq=89 estado=BLOQUEADO tds=58 rssi=-33 snr=12 PDR=100.0%
+Cola llena: se descarta el mas antiguo
+[estado] WiFi=no MQTT=no cola=16 recibidas=47 crc_err=0 dup=0
+RX seq=90 estado=BLOQUEADO tds=58 rssi=-33 snr=13 PDR=100.0%
+Cola llena: se descarta el mas antiguo
+RX seq=91 estado=BLOQUEADO tds=58 rssi=-33 snr=12 PDR=100.0%
+Cola llena: se descarta el mas antiguo
+RX seq=92 estado=BLOQUEADO tds=58 rssi=-33 snr=13 PDR=100.0%
+Cola llena: se descarta el mas antiguo
+RX seq=93 estado=BLOQUEADO tds=58 rssi=-33 snr=12 PDR=100.0%
+Cola llena: se descarta el mas antiguo
+
+RX seq=94 estado=BLOQUEADO tds=58 rssi=-34 snr=13 PDR=100.0%
+Cola llena: se descarta el mas antiguo
+RX seq=95 estado=BLOQUEADO tds=58 rssi=-33 snr=12 PDR=100.0%
+Cola llena: se descarta el mas antiguo
+
+[estado] WiFi=no MQTT=no cola=16 recibidas=53 crc_err=0 dup=0
+RX seq=96 estado=BLOQUEADO tds=58 rssi=-33 snr=13 PDR=100.0%
+Cola llena: se descarta el mas antiguo
+RX seq=97 estado=BLOQUEADO tds=58 rssi=-34 snr=13 PDR=100.0%
+Cola llena: se descarta el mas antiguo
+RX seq=98 estado=BLOQUEADO tds=58 rssi=-34 snr=13 PDR=100.0%
+Cola llena: se descarta el mas antiguo
+RX seq=99 estado=BLOQUEADO tds=58 rssi=-34 snr=13 PDR=100.0%
+Cola llena: se descarta el mas antiguo
+RX seq=100 estado=BLOQUEADO tds=58 rssi=-34 snr=13 PDR=100.0%
+Cola llena: se descarta el mas antiguo
+RX seq=101 estado=BLOQUEADO tds=58 rssi=-34 snr=13 PDR=100.0%
+Cola llena: se descarta el mas antiguo
+[estado] WiFi=no MQTT=no cola=16 recibidas=59 crc_err=0 dup=0
+RX seq=102 estado=BLOQUEADO tds=58 rssi=-34 snr=13 PDR=100.0%
+Cola llena: se descarta el mas antiguo
+RX seq=103 estado=BLOQUEADO tds=58 rssi=-34 snr=13 PDR=100.0%
+Cola llena: se descarta el mas antiguo
+RX seq=104 estado=BLOQUEADO tds=58 rssi=-35 snr=12 PDR=100.0%
+Cola llena: se descarta el mas antiguo
+RX seq=105 estado=BLOQUEADO tds=58 rssi=-34 snr=13 PDR=100.0%
+Cola llena: se descarta el mas antiguo
+
+RX seq=106 estado=BLOQUEADO tds=58 rssi=-34 snr=13 PDR=100.0%
+Cola llena: se descarta el mas antiguo
+RX seq=107 estado=BLOQUEADO tds=58 rssi=-34 snr=13 PDR=100.0%
+Cola llena: se descarta el mas antiguo
+[estado] WiFi=no MQTT=no cola=16 recibidas=65 crc_err=0 dup=0
+RX seq=108 estado=BLOQUEADO tds=58 rssi=-34 snr=12 PDR=100.0%
+Cola llena: se descarta el mas antiguo
+RX seq=109 estado=BLOQUEADO tds=58 rssi=-34 snr=13 PDR=100.0%
+Cola llena: se descarta el mas antiguo
+RX seq=110 estado=BLOQUEADO tds=58 rssi=-34 snr=13 PDR=100.0%
+Cola llena: se descarta el mas antiguo
+
+RX seq=111 estado=BLOQUEADO tds=58 rssi=-34 snr=13 PDR=100.0%
+Cola llena: se descarta el mas antiguo
+RX seq=112 estado=BLOQUEADO tds=58 rssi=-34 snr=13 PDR=100.0%
+Cola llena: se descarta el mas antiguo
+RX seq=113 estado=BLOQUEADO tds=58 rssi=-34 snr=13 PDR=100.0%
+Cola llena: se descarta el mas antiguo
+[estado] WiFi=no MQTT=no cola=16 recibidas=71 crc_err=0 dup=0
+RX seq=114 estado=BLOQUEADO tds=58 rssi=-33 snr=12 PDR=100.0%
+Cola llena: se descarta el mas antiguo
+RX seq=115 estado=BLOQUEADO tds=58 rssi=-33 snr=13 PDR=100.0%
+Cola llena: se descarta el mas antiguo
+RX seq=116 estado=BLOQUEADO tds=58 rssi=-33 snr=13 PDR=100.0%
+Cola llena: se descarta el mas antiguo
+
+RX seq=117 estado=BLOQUEADO tds=58 rssi=-33 snr=12 PDR=100.0%
+Cola llena: se descarta el mas antiguo
+RX seq=118 estado=BLOQUEADO tds=58 rssi=-34 snr=13 PDR=100.0%
+Cola llena: se descarta el mas antiguo

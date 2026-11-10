@@ -106,7 +106,17 @@ void atender_rak() {
   }
 }
 
+void atender_wifi() {
+  static uint32_t t_wifi = 0;
+  if (WiFi.status() == WL_CONNECTED) return;
+  if (millis() - t_wifi < 10000) return;
+  t_wifi = millis();
+  Serial.println("[wifi] Intentando reconectar WiFi...");
+  WiFi.reconnect();
+}
+
 void atender_mqtt() {
+  atender_wifi();
   static uint32_t t_intento = 0;
   if (WiFi.status() != WL_CONNECTED) return;
   if (!tb.connected()) {
