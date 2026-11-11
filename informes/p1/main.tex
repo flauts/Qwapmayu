@@ -1,0 +1,1671 @@
+\documentclass[11pt,a4paper]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[spanish,es-tabla,es-nodecimaldot,es-noquoting]{babel}
+\usepackage[margin=2.1cm]{geometry}
+
+\usepackage{
+    lmodern,
+    microtype,
+    amsmath,
+    amssymb,
+    booktabs,
+    array,
+    longtable,
+    tabularx,
+    enumitem
+}
+
+\usepackage{xcolor}
+\usepackage{graphicx}
+\usepackage{tikz}
+\usepackage{fancyhdr}
+\usepackage{hyperref}
+
+\usetikzlibrary{
+    arrows.meta,
+    shapes.geometric,
+    positioning,
+    calc,
+    babel,
+    shadows
+}
+
+\definecolor{navy}{HTML}{15354A}
+\definecolor{teal}{HTML}{007F82}
+\definecolor{pale}{HTML}{EAF4F4}
+\definecolor{power}{HTML}{B45C24}
+\definecolor{boxfill}{HTML}{EEF4F7}
+
+\hypersetup{
+    colorlinks=true,
+    linkcolor=teal,
+    urlcolor=teal,
+    citecolor=teal,
+    pdftitle={QawapMayu - Perfil de proyecto P1},
+    pdfauthor={Meza Torres, Murakami, Nieto y Tipula}
+}
+
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{6pt}
+\setlength{\emergencystretch}{2em}
+\setlist{nosep,leftmargin=*}
+\renewcommand{\arraystretch}{1.2}
+\setlength{\tabcolsep}{4pt}
+
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small\textcolor{navy}{QawapMayu}}
+\fancyhead[R]{\small Perfil P1 / Semana 07}
+\fancyfoot[L]{\footnotesize Internet de las Cosas -- 2026-2}
+\fancyfoot[R]{\thepage}
+\setlength{\headheight}{15pt}
+
+\newcolumntype{Y}{>{\raggedright\arraybackslash}X}
+
+\newcommand{\nota}[1]{
+    \begin{quote}
+        \small
+        \textcolor{navy}{\textbf{Criterio de diseño.} #1}
+    \end{quote}
+}
+
+\tikzset{
+    box/.style={
+        rectangle,
+        draw=navy,
+        fill=pale,
+        minimum height=10mm,
+        text width=46mm,
+        align=center,
+        font=\small
+    },
+    term/.style={
+        ellipse,
+        draw=teal,
+        fill=pale,
+        minimum height=9mm,
+        text width=32mm,
+        align=center,
+        font=\small
+    },
+    decision/.style={
+        diamond,
+        aspect=2.6,
+        draw=navy,
+        fill=white,
+        text width=35mm,
+        inner sep=1mm,
+        align=center,
+        font=\small
+    },
+    io/.style={
+        trapezium,
+        trapezium left angle=70,
+        trapezium right angle=110,
+        draw=teal,
+        fill=pale,
+        text width=43mm,
+        minimum height=10mm,
+        align=center,
+        font=\small
+    },
+    arr/.style={
+        -{Stealth[length=2.5mm]},
+        thick,
+        draw=navy
+    },
+    energy/.style={
+        -{Stealth[length=2.5mm]},
+        thick,
+        dashed,
+        draw=power
+    },
+    fluid/.style={
+        -{Stealth[length=2.5mm]},
+        very thick,
+        draw=teal
+    },
+    lbl/.style={
+        font=\scriptsize,
+        fill=white,
+        inner sep=1.2pt
+    }
+}
+
+\begin{document}
+\hypersetup{pageanchor=false}
+\begin{titlepage}
+
+\color{navy}
+
+{\large INTERNET DE LAS COSAS\hfill 2026-2}\par
+
+\vspace{1.8cm}
+
+{\Huge\bfseries QawapMayu\par}
+
+\vspace{0.5cm}
+
+{\LARGE
+Sistema modular de alerta temprana y muestreo automatizado para el monitoreo de aguas bajo influencia minera vía LoRa
+\par}
+
+\vspace{0.8cm}
+
+{\Large Perfil de proyecto P1 -- Semana 07\par}
+
+\vspace{0.8cm}
+
+\colorbox{pale}{
+    \parbox{0.92\textwidth}{
+        \vspace{4mm}
+
+        \textbf{Actuador principal}\par
+        Sistema de Muestreo Automatizado de Emergencia\par
+        con bomba peristáltica y relé de un canal
+
+        \vspace{4mm}
+    }
+}
+
+\vfill
+
+\textbf{Integrantes}\par
+Fabryzzio Jossue Meza Torres\par
+Mitsuo Murakami\par
+Sebastián Nieto\par
+Jose Tipula\par
+
+\vspace{0.4cm}
+
+\textbf{Docente:} Gabriel Andrés Arias Obregón\par
+\textbf{Aplicación objetivo:} Monitoreo de aguas bajo influencia minera en el Perú\par
+\textbf{Fecha:} 23 de septiembre de 2026\par
+
+\vspace{0.8cm}
+
+{\small
+Propuesta de ingeniería y plan de validación.
+Los valores de ensayo, presupuesto y desempeño objetivo no constituyen resultados experimentales obtenidos.
+}
+
+\end{titlepage}
+
+\section{Introducción}
+
+La actividad minera puede alterar la calidad de los recursos hídricos mediante procesos como el drenaje ácido de roca, la movilización de metales y el transporte de material particulado. En el Perú, estudios realizados en zonas bajo influencia minera han identificado variaciones de metales como Fe, Cu, Zn, Mn, Pb y As en aguas superficiales \cite{moreno2024,ocona2024}.
+
+La degradación de la calidad del agua puede afectar los ecosistemas acuáticos, limitar su aprovechamiento en actividades como la agricultura y representar riesgos para la salud humana cuando sustancias potencialmente peligrosas alcanzan fuentes destinadas al consumo \cite{moreno2024,faoWaterQuality,whoDrinkingWater2026}.
+
+QawapMayu propone un sistema de monitoreo de bajo costo basado en cuatro variables: temperatura, pH, TDS como indicador de cambios en la carga iónica del agua y turbidez. Un ESP32 \cite{esp32} adquiere, valida y procesa las mediciones y transmite la información mediante LoRa hacia una pasarela conectada a un dashboard. Estos parámetros no permiten identificar directamente la presencia ni la concentración de un metal específico, pero permiten reconocer alteraciones fisicoquímicas que pueden justificar una inspección y un análisis posterior.
+
+La característica central del sistema es el \textbf{Sistema de Muestreo Automatizado de Emergencia}. Ante una anomalía persistente detectada localmente, el nodo activa una bomba peristáltica y recolecta aproximadamente 100 mL de agua. De esta manera, las mediciones registradas durante el evento quedan asociadas temporalmente a una muestra física que puede ser posteriormente analizada mediante técnicas apropiadas para determinar contaminantes específicos.
+
+La decisión de captura se ejecuta directamente en el nodo de campo, sin depender de conectividad a Internet. El prototipo será validado inicialmente en condiciones controladas de laboratorio y se plantea como un sistema de alerta temprana y apoyo al muestreo, no como un instrumento para la identificación o cuantificación directa de metales.
+
+\section{Problemática}
+
+\subsection{Contexto y Brecha de Observación}
+
+El monitoreo periódico permite conocer la calidad del agua en el momento en que se realiza el muestreo, pero una alteración de corta duración puede ocurrir y desaparecer entre dos campañas. Esto dificulta obtener una muestra representativa del evento y determinar posteriormente sus posibles causas e impactos.
+
+Esta limitación resulta relevante en zonas bajo influencia minera, donde las concentraciones de algunos metales y las condiciones fisicoquímicas del agua pueden presentar variaciones temporales \cite{moreno2024,ocona2024}. Una detección tardía también puede retrasar la identificación de eventos capaces de afectar ecosistemas, actividades agrícolas o fuentes de agua utilizadas por las poblaciones.
+
+La brecha que aborda QawapMayu es el tiempo entre la aparición de una anomalía y la obtención de una muestra del mismo evento. Para reducirla, el sistema monitorea continuamente el agua y activa automáticamente el muestreo cuando detecta una alteración persistente.
+
+\section{Marco Teórico}
+
+\subsection{Modulación LoRa y Propagación Inalámbrica Sub-GHz}
+
+LoRa emplea una modulación basada en \textit{Chirp Spread Spectrum} (CSS), desarrollada por Semtech \cite{semtech}, mientras que LoRaWAN define protocolos y parámetros de red mantenidos por la LoRa Alliance \cite{lora}. La información se transmite mediante \textit{chirps} cuya frecuencia varía a lo largo del tiempo sobre un ancho de banda definido ($BW$).
+
+La duración de símbolo depende del Factor de Ensanchamiento ($SF$) y del ancho de banda:
+
+\begin{equation}
+    T_s = \frac{2^{SF}}{BW}
+\end{equation}
+
+El incremento de $SF$ aumenta la sensibilidad y robustez del enlace, pero también incrementa el tiempo en el aire (\textit{Time on Air}) y reduce la tasa de transmisión. Esta característica resulta apropiada para telemetría de bajo volumen en zonas donde el nodo de monitoreo puede encontrarse alejado del punto de acceso a Internet.
+
+El proyecto utiliza comunicación LoRa punto a punto (P2P) en banda sub-GHz entre el nodo de monitoreo y una pasarela. Estas frecuencias presentan condiciones favorables para enlaces de larga distancia en terrenos abiertos, valles y quebradas. Sin embargo, el alcance efectivo depende de factores como la topografía, los obstáculos, las antenas, la potencia de transmisión y las interferencias, por lo que deberá determinarse experimentalmente.
+
+\subsection{Principios Fisicoquímicos y Transducción}
+
+\subsubsection{Potenciometría de pH}
+
+El pH representa el logaritmo negativo de la actividad de los iones hidrógeno en una solución y se determina electroquímicamente mediante la diferencia de potencial entre un electrodo sensible y un electrodo de referencia. Para un electrodo ideal, esta relación puede expresarse mediante la ecuación de Nernst:
+
+\begin{equation}
+    E = E^0 - \left( \frac{2.303 \cdot R \cdot T}{F} \right)\text{pH}
+\end{equation}
+
+donde $E^0$ es el potencial de referencia, $R$ la constante de los gases, $T$ la temperatura absoluta y $F$ la constante de Faraday.
+
+El pH es un parámetro relevante en aguas bajo influencia minera debido a que procesos como el drenaje ácido de mina pueden generar condiciones ácidas y favorecer la movilización de metales desde minerales y residuos mineros \cite{usgsMineDrainage}. Sin embargo, una disminución del pH no permite identificar por sí sola la presencia ni la concentración de un metal específico.
+
+La pendiente electroquímica del electrodo depende de la temperatura, con un valor teórico aproximado de $59.16$ mV/pH a 25\,$^{\circ}$C. Por ello, la temperatura se registra mediante un sensor DS18B20 \cite{ds18} como variable auxiliar para la interpretación y compensación de las mediciones cuando corresponda.
+
+\subsubsection{Conductividad Eléctrica y Sólidos Disueltos Totales}
+
+La conductividad eléctrica ($CE$) representa la capacidad del agua para transportar corriente eléctrica debido a la presencia de iones disueltos. De forma simplificada, para una celda conductimétrica puede expresarse como:
+
+\begin{equation}
+    CE = \frac{K_{\text{celda}}}{R_x}
+\end{equation}
+
+donde $R_x$ es la resistencia eléctrica observada y $K_{\text{celda}}$ la constante de la celda.
+
+En aguas bajo influencia minera, cambios en la conductividad pueden utilizarse como indicadores de variaciones en la cantidad de especies iónicas disueltas. Sin embargo, la conductividad no permite determinar qué sustancias o metales producen dicha variación \cite{usgsMineDrainage}.
+
+El prototipo utiliza el módulo Keyestudio KS0429 TDS Meter V1.0 \cite{tds}, que proporciona una estimación de Sólidos Disueltos Totales ($TDS$). La relación entre TDS y conductividad es empírica y puede expresarse aproximadamente como:
+
+\begin{equation}
+    TDS \approx k_e \cdot CE
+\end{equation}
+
+donde $k_e$ depende de la composición iónica del agua. Por tanto, QawapMayu utiliza el TDS como indicador de cambios en la carga iónica y no como una medición directa de metales ni como una medición certificada de conductividad eléctrica.
+
+El Keyestudio KS0429 posee un rango nominal de 0 a 1000 ppm y permite realizar compensación térmica, por lo que la medición del DS18B20 se utiliza como referencia de temperatura durante el cálculo de TDS \cite{tds}.
+
+\subsubsection{Medición Óptica de Turbidez}
+
+La turbidez está relacionada con la presencia de partículas suspendidas que modifican la transmisión y dispersión de la luz a través del agua. Un aumento de sedimentos o material particulado puede, por tanto, producir un cambio detectable mediante sensores ópticos.
+
+El sensor SEN0189 \cite{turb} utilizado en el prototipo detecta cambios relativos de turbidez mediante variaciones en la transmisión y dispersión de luz. Este sensor no entrega directamente una medición certificada en Unidades Nefelométricas de Turbidez (NTU), por lo que sus lecturas se utilizarán principalmente para identificar cambios respecto a una condición de referencia.
+
+En el contexto minero, un incremento de turbidez puede estar asociado al transporte de sedimentos o partículas, pero no permite determinar su composición química ni inferir directamente la concentración de metales presentes.
+
+\subsection{Desplazamiento Positivo Peristáltico}
+
+La bomba peristáltica utiliza rodillos que comprimen progresivamente una manguera flexible, generando el desplazamiento del líquido sin que este entre en contacto directo con los componentes mecánicos de la bomba. Esta característica reduce el riesgo de contaminación de la muestra y resulta adecuada para el sistema de captación automática.
+
+Una vez calibrado el caudal bajo las condiciones de operación del prototipo, el volumen recolectado puede aproximarse mediante:
+
+\begin{equation}
+    V \approx Q_{\text{cal}} \cdot \Delta t
+\end{equation}
+
+donde $Q_{\text{cal}}$ es el caudal determinado experimentalmente y $\Delta t$ el tiempo de funcionamiento de la bomba.
+
+En QawapMayu, este principio permite controlar aproximadamente el volumen recolectado mediante temporización. El caudal deberá calibrarse experimentalmente debido a que puede variar con la tensión de alimentación, la altura de succión, la longitud de la manguera y las características de la bomba.
+
+\subsection{Acondicionamiento y Desacoplo Inductivo}
+
+Las entradas analógicas del ESP32 \cite{esp32} utilizan un convertidor analógico-digital (ADC) cuya respuesta presenta ruido y no linealidades, por lo que las señales provenientes de los sensores analógicos deben mantenerse dentro del rango eléctrico permitido y ser procesadas antes de utilizarse para la detección de anomalías.
+
+QawapMayu emplea filtrado digital mediante la mediana de múltiples lecturas adquiridas dentro de cada ciclo de medición. Esta estrategia reduce la influencia de valores atípicos y perturbaciones eléctricas sin introducir una ventana temporal adicional de varios ciclos.
+
+Por otra parte, la bomba peristáltica utiliza un motor DC, una carga inductiva capaz de producir sobretensiones transitorias durante su conmutación debido a la fuerza contraelectromotriz:
+
+\begin{equation}
+    V_{\text{ind}} = -L\frac{di}{dt}
+\end{equation}
+
+Para reducir la propagación de estos transitorios hacia la electrónica de control, el sistema utiliza un relé optoacoplado y elementos de protección como un diodo \textit{flyback}. Además, la alimentación de la bomba se mantiene separada de la rama regulada utilizada por el ESP32 y los sensores, reduciendo el riesgo de perturbaciones y reinicios durante el accionamiento.
+
+\section{Estado del Arte}
+
+\subsection{Matriz de Revisión de Investigaciones Previas}
+
+La Tabla \ref{tab:estado_arte} consolida la revisión de ocho investigaciones vinculadas con telemetría ambiental, sensado de calidad de agua, redes LPWAN, estabilidad de sensores de bajo costo y muestreo automatizado.
+
+{\small
+\begin{longtable}{p{3.8cm}p{3.2cm}p{7.8cm}}
+
+\caption{Matriz de Revisión de Investigaciones Previas}
+\label{tab:estado_arte} \\
+
+\toprule
+Referencia / Autores &
+Enfoque / Tecnología &
+Aporte Técnico y Límite de Transferencia \\
+\midrule
+\endhead
+
+Georgantas et al. \cite{georgantas} &
+Enlace LoRa multiparamétrico &
+Valida una arquitectura de monitoreo de calidad de agua mediante LoRa; sus condiciones experimentales no representan directamente un entorno bajo influencia minera. \\
+
+Sattley et al. \cite{sattley} &
+Muestreador peristáltico &
+Demuestra la viabilidad del muestreo de agua mediante bombas peristálticas de bajo costo; su sistema no implementa un disparo automático basado en anomalías fisicoquímicas. \\
+
+Naloufi et al. \cite{naloufi} &
+Estabilidad temporal de sensores &
+Documenta problemas de deriva y estabilidad en sensores económicos durante periodos prolongados de monitoreo. \\
+
+De Camargo et al. \cite{camargo} &
+Sensores IoT de bajo costo &
+Revisión sistemática de sensores económicos para calidad de agua; evidencia limitaciones relacionadas con calibración, precisión y durabilidad. \\
+
+Jabbar et al. \cite{jabbar} &
+Estación rural LoRaWAN &
+Implementa una estación remota de calidad de agua mediante LoRaWAN; su arquitectura de red difiere del enlace P2P utilizado por QawapMayu. \\
+
+Wang et al. \cite{wang} &
+Sensor óptico de turbidez &
+Evalúa un sensor óptico de bajo costo y evidencia la importancia de caracterizar experimentalmente su respuesta y los efectos del ensuciamiento. \\
+
+Basford et al. \cite{basford} &
+Evaluación prolongada de LoRaWAN &
+Demuestra que la tasa real de entrega de paquetes puede diferir considerablemente del comportamiento esperado, justificando una evaluación experimental del enlace. \\
+
+Ramos Villalta et al. \cite{ramos} &
+Monitoreo agrícola en Perú &
+Antecedente nacional con ESP32 y LoRaWAN en Arequipa; demuestra la viabilidad de telemetría de agua en entornos rurales, aunque sus condiciones de operación difieren de una aplicación minera. \\
+
+\bottomrule
+
+\end{longtable}
+}
+
+\subsection{Análisis Crítico por Ejes Temáticos}
+
+\subsubsection{Comunicaciones Inalámbricas y Rendimiento de Enlace en Entornos Remotos}
+
+La evaluación de redes LPWAN en escenarios de difícil acceso exige contrastar el alcance teórico con el desempeño observado experimentalmente. Georgantas et al. \cite{georgantas} demostraron la viabilidad de integrar LoRa en estaciones de monitoreo de calidad de agua de bajo consumo. Basford et al. \cite{basford}, mediante una evaluación prolongada de transmisiones, evidenciaron que la tasa real de entrega de paquetes puede degradarse por obstáculos, interferencias y condiciones particulares del despliegue.
+
+En el contexto peruano, Ramos Villalta et al. \cite{ramos} implementaron un sistema basado en ESP32 y LoRaWAN para monitoreo de agua en Arequipa, demostrando la viabilidad de este tipo de hardware en entornos rurales. Jabbar et al. \cite{jabbar} también desarrollaron una estación ambiental remota basada en LoRaWAN.
+
+Para QawapMayu, estos antecedentes justifican medir experimentalmente el \textit{Packet Delivery Ratio} (PDR) y la latencia del enlace, evitando asumir un alcance o una recepción perfecta antes de realizar pruebas. Además, la decisión de muestreo permanece desacoplada de la disponibilidad del radioenlace.
+
+\subsubsection{Confiabilidad, Calibración y Deriva en Sensores de Bajo Costo}
+
+Los sensores económicos permiten reducir significativamente el costo de una estación IoT, pero presentan limitaciones de precisión, estabilidad y duración. De Camargo et al. \cite{camargo} identificaron en su revisión sistemática la necesidad de realizar calibraciones y contrastes experimentales antes de interpretar estos dispositivos como instrumentos de medición confiables.
+
+Naloufi et al. \cite{naloufi} documentaron problemas de estabilidad durante el monitoreo prolongado de agua, mientras que Wang et al. \cite{wang} evidenciaron que los sensores ópticos pueden verse afectados por suciedad y cambios en las condiciones de operación.
+
+Por ello, QawapMayu utiliza sensores de bajo costo principalmente para detectar cambios fisicoquímicos y generar alertas tempranas. Las lecturas se filtran y validan antes de alimentar la lógica de detección y no se presentan como mediciones certificadas.
+
+\subsubsection{Sistemas Mecánicos de Muestreo Físico en Lazo Cerrado}
+
+Los sistemas de monitoreo continuo permiten registrar variaciones temporales de la calidad del agua, pero la telemetría por sí sola no conserva una muestra física del evento detectado. Sattley et al. \cite{sattley} demostraron la viabilidad de utilizar bombas peristálticas para el muestreo de agua, aprovechando que el fluido permanece confinado dentro de la manguera y reduce su contacto con los componentes mecánicos.
+
+QawapMayu integra este principio con una lógica de actuación local. Cuando el nodo identifica una alteración persistente en alguno de los parámetros habilitados como disparadores, el ESP32 activa automáticamente la bomba peristáltica y registra el evento junto con la telemetría correspondiente.
+
+La contribución del prototipo se centra en integrar monitoreo multiparamétrico de bajo costo, detección local, muestreo físico reactivo y comunicación LoRa dentro de una misma arquitectura. No se plantea esta integración como una técnica inédita ni como sustituto de procedimientos profesionales de muestreo y análisis.
+
+\subsubsection{Monitoreo de Aguas bajo Influencia Minera}
+
+Las aguas bajo influencia minera pueden presentar variaciones en pH, contenido iónico, material suspendido y concentración de metales. Procesos como el drenaje ácido de mina pueden modificar significativamente la química del agua y favorecer la movilización de metales \cite{usgsMineDrainage}.
+
+Variables como el pH y la conductividad pueden utilizarse como indicadores de cambios fisicoquímicos, pero no permiten determinar directamente qué metal o sustancia produce una alteración. En el Perú se han documentado variaciones espaciales y temporales de metales en recursos hídricos bajo influencia minera \cite{moreno2024,ocona2024}.
+
+Estos antecedentes sustentan el uso del monitoreo continuo como mecanismo de alerta temprana y como complemento del muestreo físico y del análisis posterior de laboratorio.
+
+
+\section{Metodología}
+\subsection{Flujo General de la Arquitectura de Solución}
+
+La arquitectura de QawapMayu integra dos rutas que operan de forma concurrente. La primera corresponde a la ruta de datos, encargada de adquirir, validar y transmitir las cuatro variables medidas hacia ThingsBoard mediante un enlace LoRa P2P y una pasarela MQTT. La segunda corresponde a la ruta de actuación local: cuando una anomalía válida persiste durante tres ciclos consecutivos, el ESP32 activa la bomba peristáltica y registra el estado de la muestra sin depender de conectividad a Internet.
+
+\begin{center}
+\resizebox{\textwidth}{!}{
+\begin{tikzpicture}[
+    >=Latex,
+    node distance=11mm and 13mm,
+    every node/.style={font=\small},
+    flow/.style={->, line width=0.9pt, draw=navy},
+    loopflow/.style={->, line width=0.9pt, draw=navy},
+    fluidline/.style={->, line width=1.8pt, draw=teal},
+    lab/.style={font=\scriptsize, inner sep=1pt, fill=white, text=black}
+]
+
+\node[box,text width=31mm,minimum height=14mm,align=center] (water)
+{Agua monitoreada\\Punto de observación};
+
+\node[box,text width=35mm,minimum height=16mm,align=center,right=of water] (sensors)
+{Cuatro sensores\\pH, TDS, turbidez\\y temperatura};
+
+\node[box,text width=40mm,minimum height=18mm,align=center,
+fill=navy,text=white,right=of sensors] (node)
+{Nodo QM01 -- ESP32\\Adquisición, validación, filtrado\\y máquina de estados};
+
+\node[decision,text width=28mm,minimum height=16mm,
+align=center,right=of node] (alarm)
+{¿Anomalía válida\\y persistente?};
+
+\node[box,text width=30mm,minimum height=14mm,
+align=center,right=18mm of alarm] (normal)
+{Continuar monitoreo\\sin actuación};
+
+\node[box,text width=28mm,minimum height=14mm,
+align=center,above=16mm of normal] (relay)
+{Relé optoacoplado\\GPIO23};
+
+\node[box,text width=30mm,minimum height=14mm,
+align=center,right=of relay] (pump)
+{Bomba peristáltica\\Captación calibrada};
+
+\node[box,text width=31mm,minimum height=14mm,
+align=center,below=16mm of pump] (bottle)
+{Frasco identificado\\Muestra objetivo: 100 mL};
+
+\node[box,text width=30mm,minimum height=14mm,
+align=center,below=22mm of node] (radio)
+{EBYTE E32 nodo\\Trama LoRa P2P};
+
+\node[box,text width=31mm,minimum height=14mm,
+align=center,right=of radio] (gateway)
+{Gateway GW01\\E32 + ESP32};
+
+\node[box,text width=34mm,minimum height=16mm,
+align=center,right=of gateway] (cloud)
+{ThingsBoard\\Dashboard, histórico\\y alertas};
+
+\node[term,text width=27mm,minimum height=14mm,
+align=center,right=of cloud] (operator)
+{Operador /\\laboratorio};
+
+\draw[flow] (water.east) -- (sensors.west);
+\draw[flow] (sensors.east) -- (node.west);
+\draw[flow] (node.east) -- (alarm.west);
+
+\draw[flow] (alarm.east)
+-- node[lab,above]{F} (normal.west);
+
+\draw[loopflow] (normal.south)
+|- ++(-8.3,-1.2)
+|- node[lab,pos=.20]{Siguiente ciclo} (node.south);
+
+\draw[flow] (alarm.north)
+|- node[lab,pos=.22,above]{V / solicitud} (relay.west);
+
+\draw[flow] (relay.east) -- (pump.west);
+
+\draw[flow] (node.south)
+-- node[lab,right]{Telemetría + estado} (radio.north);
+
+\draw[flow] (radio.east) -- (gateway.west);
+\draw[flow] (gateway.east) -- (cloud.west);
+\draw[flow] (cloud.east) -- (operator.west);
+
+\draw[flow] (bottle.south)
+|- node[lab,pos=.35,right]{Retiro y análisis} (operator.north);
+
+\coordinate (tap1) at ($(water.north)+(0,1.0)$);
+\coordinate (tap2) at ($(pump.north)+(0,1.0)$);
+
+\draw[fluidline]
+(water.north) -- (tap1)
+-- node[lab,pos=.78,above]{Succión} (tap2)
+-- (pump.north);
+
+\draw[fluidline]
+(pump.south)
+-- node[lab,right]{Muestra física} (bottle.north);
+
+\node[
+    align=left,
+    text width=0.92\textwidth,
+    font=\small
+] at ($(gateway.south)+(1.8,-2.8)$)
+{
+\textcolor{navy}{Línea continua fina: datos y control.}\hspace{1em}
+\textcolor{teal}{Línea continua gruesa: recorrido físico del agua.}
+La detección, el enclavamiento y la captación se ejecutan localmente; la nube conserva funciones de supervisión y trazabilidad.
+};
+
+\end{tikzpicture}
+}
+\end{center}
+
+\textbf{Figura 1.} Flujo general de la arquitectura de solución QawapMayu, desde la observación de las variables del agua hasta la captación física, transmisión LoRa y supervisión en ThingsBoard. Elaboración propia.
+
+\subsection{Especificaciones y Componentes}
+
+La implementación seguirá el orden: arquitectura, diagramas de flujo, revisión de interfaces, pseudocódigo, integración y validación. El alcance de hardware emplea el procesador ESP32-WROOM-32 \cite{esp32} y asigna los pines de adquisición analógica (ADC1), buses digitales e interfaces de radio y conmutación requeridos por el prototipo.
+
+{\small
+\begin{longtable}{p{3.2cm}p{4.1cm}p{7.9cm}}
+
+\caption{Especificaciones de hardware y asignación de interfaces}
+\label{tab:componentes} \\
+
+\toprule
+Subsistema &
+Selección de referencia &
+Función y condición de integración \\
+\midrule
+\endfirsthead
+
+\toprule
+Subsistema &
+Selección de referencia &
+Función y condición de integración \\
+\midrule
+\endhead
+
+Procesamiento &
+2 ESP32 DevKit V1 \cite{esp32} &
+Nodo de monitoreo: adquisición, filtrado, validación de sensores, detección de anomalías y control de la bomba. Gateway: recepción LoRa y publicación de telemetría mediante MQTT. \\
+
+Temperatura &
+DS18B20 encapsulado \cite{ds18} &
+GPIO4, bus 1-Wire y resistencia pull-up de 4.7 k$\Omega$ a 3.3 V. Se utiliza como variable de contexto y para compensación térmica del sensor TDS. Se verifica presencia del dispositivo e integridad mediante CRC. \\
+
+pH &
+PH-4502C + sonda BNC &
+GPIO35 (ADC1). Señal analógica acondicionada para mantenerse dentro del rango permitido por el ADC del ESP32. Se realizará calibración multipunto mediante soluciones buffer de referencia antes de los ensayos. \\
+
+TDS &
+Keyestudio KS0429 TDS Meter V1.0 \cite{tds} &
+GPIO34 (ADC1). Estimación de Sólidos Disueltos Totales en un rango nominal de 0--1000 ppm, con compensación térmica mediante el DS18B20. Se emplea como indicador de cambios en la carga iónica y no como mecanismo de identificación o cuantificación directa de metales. \\
+
+Turbidez &
+SEN0189 \cite{turb} &
+GPIO32 (ADC1). Salida analógica acondicionada para proteger la entrada del ESP32. Se emplea como indicador relativo de cambios de turbidez respecto a una condición de referencia y no como una medición certificada en NTU. \\
+
+Actuador &
+Bomba peristáltica DC 12 V &
+Motor DC con conmutación ON/OFF. El fluido permanece confinado en la manguera flexible. La captación objetivo es de aproximadamente 100 mL y se determina mediante temporización después de calibrar experimentalmente el caudal. \\
+
+Conmutación &
+Relé de 1 canal optoacoplado &
+GPIO23 conectado a la entrada de control. Contacto normalmente abierto (NO) para energizar la bomba únicamente durante el muestreo. Se incorpora un diodo \textit{flyback} para reducir los transitorios producidos por la carga inductiva. \\
+
+Enlace de radio &
+2 módulos EBYTE E32 LoRa \cite{ebyteE32} &
+Transceptores UART utilizados para comunicación LoRa punto a punto entre nodo y gateway. Conexión del nodo: TX $\to$ GPIO17, RX $\to$ GPIO16, M0 $\to$ GPIO21, M1 $\to$ GPIO22 y AUX $\to$ GPIO19. La configuración final de frecuencia y potencia deberá corresponder a la versión específica adquirida y a las condiciones permitidas para el despliegue. \\
+
+Resguardo físico &
+Gabinete ABS nominal IP65 &
+Compartimento destinado a separar la electrónica del recorrido hidráulico y del frasco de muestreo. Se consideran pasacables estancos, lazos antigoteo y disposición interna que reduzca la exposición a fugas y salpicaduras. \\
+
+Potencia &
+Batería 12 V 7 Ah y convertidor buck &
+Ramas separadas para motor y electrónica. La bomba utiliza la rama de 12 V, mientras que un convertidor DC-DC step-down alimenta la electrónica a 5 V. Se incorpora fusible de protección. \\
+
+Contenedor y venteo &
+Frasco colector ($\geq150$ mL) y soporte &
+Recibe aproximadamente 100 mL por evento. La descarga se mantiene separada del volumen acumulado para reducir el riesgo de sifonamiento y el recipiente dispone de una vía de venteo protegida. \\
+
+Seguridad operativa &
+Pulsador de rearme y corte manual &
+Pulsador normalmente abierto conectado a GPIO25 con resistencia pull-up interna y antirrebote por software. Se incluye además un interruptor físico de corte en la rama de 12 V de la bomba. \\
+
+\bottomrule
+\end{longtable}
+}
+\subsection{Diagrama de Bloques: Control, Potencia y Fluido}
+
+\begin{center}
+\resizebox{\textwidth}{!}{%
+\begin{tikzpicture}[
+    font=\small,
+    box/.style={
+        rectangle,
+        rounded corners=3pt,
+        draw=navy!55,
+        line width=.6pt,
+        fill=boxfill,
+        align=center,
+        minimum height=12mm,
+        inner sep=5pt,
+        drop shadow={
+            opacity=.18,
+            shadow xshift=.8pt,
+            shadow yshift=-.8pt
+        }
+    },
+    core/.style={
+        box,
+        draw=navy,
+        fill=navy,
+        text=white,
+        font=\small\bfseries,
+        minimum height=46mm
+    },
+    arr/.style={
+        -{Stealth[length=2.4mm,width=1.8mm]},
+        navy,
+        line width=.7pt
+    },
+    energy/.style={
+        -{Stealth[length=2.4mm,width=1.8mm]},
+        power,
+        line width=.9pt,
+        dash pattern=on 4pt off 2.5pt
+    },
+    fluid/.style={
+        -{Stealth[length=3mm,width=2.6mm]},
+        teal,
+        line width=1.8pt,
+        rounded corners=3pt
+    },
+    lbl/.style={
+        font=\scriptsize,
+        fill=white,
+        inner sep=1.5pt,
+        text=black!80
+    },
+    lblabove/.style={
+        font=\scriptsize,
+        above,
+        inner sep=2pt,
+        text=black!80
+    }
+]
+
+\node[box,text width=38mm] (ph) at (-0.5,8.0)
+{pH / TDS / turbidez\\Acondicionamiento};
+
+\node[box,text width=38mm] (temp) at (-0.5,6.2)
+{DS18B20\\Temperatura};
+
+\node[box,text width=38mm] (btn) at (-0.5,4.4)
+{Rearme manual\\y estado del frasco};
+
+\node[core,text width=40mm] (mcu) at (6.5,6.2)
+{ESP32 -- QM01\\[3pt]Validación y estados\\Control local\\Registro de eventos};
+
+\node[box,text width=36mm] (reg) at (6.5,10.2)
+{Regulación DC-DC\\5 V / 3.3 V};
+
+\node[box,text width=38mm] (supply) at (14,10.2)
+{Fuente / Batería 12 V\\Fusible + corte manual};
+
+\node[box,text width=38mm] (relay) at (14,7.6)
+{Relé optoacoplado\\Contacto NO};
+
+\node[box,text width=38mm] (pump) at (14,5.2)
+{Bomba peristáltica\\DC 12 V};
+
+\node[box,text width=38mm] (bottle) at (14,2.8)
+{Frasco $\geq150$ mL\\Muestra meta: 100 mL};
+
+\node[box,text width=38mm] (river) at (8.6,2.8)
+{Agua monitoreada\\Entrada próxima a sondas};
+
+\node[box,text width=38mm] (radio) at (-0.5,0)
+{E32 nodo (UART)\\M0, M1, AUX};
+
+\node[box,text width=38mm] (gw) at (6.5,0)
+{E32 + ESP32 GW01\\Pasarela P2P};
+
+\node[box,text width=38mm] (cloud) at (14,0)
+{ThingsBoard\\Histórico / alertas};
+
+\draw[arr]
+(ph.east)
+-- node[lblabove]{Analógico / ADC1}
+(ph.east -| mcu.west);
+
+\draw[arr]
+(temp.east)
+-- node[lblabove]{1-Wire}
+(temp.east -| mcu.west);
+
+\draw[arr]
+(btn.east)
+-- node[lblabove]{GPIO}
+(btn.east -| mcu.west);
+
+\draw[arr]
+(mcu.east |- relay.west)
+-- node[lblabove]{GPIO23 / interfaz}
+(relay.west);
+
+\draw[arr]
+([xshift=-10mm]mcu.south)
+-- ++(0,-2.3)
+-| node[lbl,pos=.25]{UART / Control}
+(radio.north);
+
+\draw[arr]
+(radio.east)
+-- node[lblabove]{LoRa P2P}
+(gw.west);
+
+\draw[arr]
+(gw.east)
+-- node[lblabove]{Wi-Fi / MQTT}
+(cloud.west);
+
+\draw[energy]
+(supply.west)
+-- node[lbl]{12 V}
+(reg.east);
+
+\draw[energy]
+(supply.south)
+-- node[lbl]{12 V}
+(relay.north);
+
+\draw[energy]
+(relay.south)
+-- node[lbl]{12 V conmutados}
+(pump.north);
+
+\draw[energy]
+(reg.south)
+-- node[lbl]{Alimentación lógica}
+(mcu.north);
+
+\draw[fluid]
+(river.east)
+-- ++(0.8,0)
+|- node[lbl,pos=.25]{Tubo / succión}
+(pump.west);
+
+\draw[fluid]
+(pump.south)
+-- node[lbl]{Fluido}
+(bottle.north);
+
+\node[
+    draw=black!20,
+    rounded corners=3pt,
+    fill=white,
+    inner sep=7pt,
+    align=left,
+    text width=178mm,
+    anchor=north,
+    font=\small
+] at (6.75,-1.2) {%
+
+\tikz[baseline=-.6ex]
+\draw[navy,line width=.7pt,-{Stealth}] (0,0)--(8mm,0);
+~\textcolor{navy}{Línea continua fina: datos/control.}\quad
+
+\tikz[baseline=-.6ex]
+\draw[power,line width=.9pt,dash pattern=on 4pt off 2.5pt,-{Stealth}] (0,0)--(8mm,0);
+~\textcolor{power}{Discontinua: potencia.}\quad
+
+\tikz[baseline=-.6ex]
+\draw[teal,line width=1.8pt,-{Stealth}] (0,0)--(8mm,0);
+~\textcolor{teal}{Continua gruesa: recorrido del agua.}\\[4pt]
+
+La rama regulada alimenta la electrónica y los sensores; la interfaz optoacoplada separa la señal de control del circuito de conmutación de la bomba.
+};
+
+\end{tikzpicture}
+}
+\end{center}
+
+\textbf{Figura 2.} Arquitectura de control, potencia y recorrido hidráulico propuesta para QawapMayu. Elaboración propia.
+
+
+\clearpage
+\subsection{Diagrama de Flujo del Nodo: Adquisición y Disparo}
+
+\begin{center}
+\begin{tikzpicture}[node distance=6mm]
+
+\node[term] (start) {Inicio};
+
+\node[box,below=of start] (init)
+{Relé OFF; cargar calibración\\y enclavamiento persistente};
+
+\node[box,below=of init] (tick)
+{Atender muestreador y red\\sin bloquear; esperar ciclo};
+
+\node[io,below=of tick] (read)
+{Leer cuatro sensores\\y diagnósticos};
+
+\node[box,below=of read] (valid)
+{Validar cada canal; marcar datos\\inválidos y registrar fallos};
+
+\node[box,below=of valid] (filter)
+{Filtrar canales válidos; actualizar\\referencias y contadores};
+
+\node[decision,below=of filter] (alert)
+{¿Una variable cumple\\3 ciclos anómalos?};
+
+\node[decision,below=of alert] (ready)
+{¿Muestreador\\armado y listo?};
+
+\node[box,below=of ready] (request)
+{Solicitar captura al\\muestreador (Figura 4)};
+
+\node[io,below=of request] (send)
+{Registrar y encolar telemetría\\con calidad y estado};
+
+\draw[arr] (start)--(init);
+\draw[arr] (init)--(tick);
+\draw[arr] (tick)--(read);
+\draw[arr] (read)--(valid);
+\draw[arr] (valid)--(filter);
+\draw[arr] (filter)--(alert);
+
+\draw[arr]
+(alert)
+-- node[lbl]{V}
+(ready);
+
+\draw[arr]
+(ready)
+-- node[lbl]{V}
+(request);
+
+\draw[arr]
+(request)
+-- (send);
+
+\draw[arr]
+(alert.west)
+-- ++(-23mm,0)
+|- node[lbl,pos=.15]{F}
+(send.west);
+
+\draw[arr]
+(ready.east)
+-- ++(20mm,0)
+|- node[lbl,pos=.12]{F}
+([yshift=2mm]send.east);
+
+\draw[arr]
+(send.west)
+-- ++(-36mm,0)
+|- (tick.west);
+
+\end{tikzpicture}
+\end{center}
+
+\textbf{Figura 3.} Flujo principal de adquisición. La validez se evalúa de forma independiente para cada canal. Las lecturas analógicas fuera del rango permitido, saturadas o inválidas reinician únicamente el contador correspondiente. Para el DS18B20 se verifica adicionalmente la integridad mediante CRC. Los canales válidos continúan participando en la lógica de detección.
+
+\clearpage
+\subsection{Diagrama de Flujo del Muestreador Peristáltico}
+
+\begin{center}
+\resizebox{.94\textwidth}{!}{
+\begin{tikzpicture}[node distance=6mm]
+
+\node[term] (start)
+{Inicio de servicio};
+
+\node[box,below=of start] (off)
+{Relé OFF; estado bloqueado\\si hay captura o reinicio incierto};
+
+\node[io,below=of off] (read)
+{Leer solicitud, rearme local\\y temporizadores};
+
+\node[decision,below=of read] (active)
+{¿Bomba activa?};
+
+\node[decision,right=29mm of active] (stop)
+{¿Corte, fallo o\\tiempo límite?};
+
+\node[box,below=8mm of stop,text width=40mm] (halt)
+{Relé OFF; registrar resultado;\\transición de estado y bloqueo};
+
+\node[decision,below=32mm of active] (rearm)
+{¿Rearme seguro\\confirmado?};
+
+\node[box,right=29mm of rearm,text width=40mm] (arm)
+{Frasco reemplazado; línea preparada;\\borrar bloqueo y armar};
+
+\node[decision,below=12mm of rearm] (req)
+{¿Solicitud y listo?};
+
+\node[box,below=8mm of req] (save)
+{Persistir bloqueo y evento\\antes de activar};
+
+\node[decision,below=of save] (ok)
+{¿Guardado correcto?};
+
+\node[box,below=of ok] (on)
+{Relé ON; fijar $t_0$\\y duración calibrada};
+
+\node[term,below=of on] (end)
+{Retornar al planificador};
+
+\draw[arr] (start)--(off);
+\draw[arr] (off)--(read);
+\draw[arr] (read)--(active);
+
+\draw[arr]
+(active)
+-- node[lbl]{V}
+(stop);
+
+\draw[arr]
+(active)
+-- node[lbl]{F}
+(rearm);
+
+\draw[arr]
+(stop)
+-- node[lbl]{V}
+(halt);
+
+\draw[arr]
+(stop.east)
+-- ++(12mm,0)
+|- node[lbl,pos=.08]{F}
+(end.east);
+
+\draw[arr]
+(halt.east)
+-- ++(9mm,0)
+|- (end.east);
+
+\draw[arr]
+(rearm)
+-- node[lbl]{V}
+(arm);
+
+\draw[arr]
+(rearm)
+-- node[lbl]{F}
+(req);
+
+\draw[arr]
+(arm.east)
+-- ++(12mm,0)
+|- (end.east);
+
+\draw[arr]
+(req)
+-- node[lbl]{V}
+(save);
+
+\draw[arr]
+(req.west)
+-- ++(-21mm,0)
+|- node[lbl,pos=.1]{F}
+(end.west);
+
+\draw[arr] (save)--(ok);
+
+\draw[arr]
+(ok)
+-- node[lbl]{V}
+(on);
+
+\draw[arr]
+(ok.east)
+-- ++(17mm,0)
+|- node[lbl,pos=.12]{F}
+(end.east);
+
+\draw[arr] (on)--(end);
+
+\end{tikzpicture}
+}
+\end{center}
+
+\textbf{Figura 4.} Servicio no bloqueante del actuador. El estado ``listo'' exige un frasco disponible, línea de muestreo preparada, calibración temporal válida y ausencia de bloqueo en memoria no volátil (NVS). Una captura concluida correctamente provoca el apagado de la bomba y el bloqueo del sistema hasta el reemplazo del frasco y el rearme manual.
+
+\clearpage
+\subsection{Diagrama de Flujo del Gateway y Publicación}
+\begin{center}\begin{tikzpicture}[node distance=7mm]
+\node[term] (start) {Inicio};
+\node[box,below=of start] (init) {Inicializar UART, cola local\\y cliente MQTT};
+\node[io,below=of init] (read) {Consultar recepción UART\\sin esperar};
+\node[decision,below=of read] (available) {¿Hay trama completa?};
+\node[decision,below=of available] (valid) {¿CRC y esquema válidos?};
+\node[box,right=24mm of valid,text width=35mm] (bad) {Contabilizar error;\\descartar trama};
+\node[decision,below=of valid] (new) {¿Secuencia nueva?};
+\node[box,below=of new] (queue) {Guardar en cola; actualizar\\PDR y estado del evento};
+\node[decision,below=of queue] (net) {¿MQTT conectado?};
+\node[io,below=of net] (pub) {Publicar datos y estado\\de muestra / fallo};
+\node[box,below=of pub] (service) {Gestionar confirmación, cola\\y reconexión sin bloquear};
+\draw[arr] (start)--(init);\draw[arr] (init)--(read);\draw[arr] (read)--(available);
+\draw[arr] (available)--node[lbl]{V}(valid);
+\draw[arr] (available.west)--++(-28mm,0) |- node[lbl,pos=.07]{F}(service.west);
+\draw[arr] (valid)--node[lbl]{V}(new);\draw[arr] (valid)--node[lbl]{F}(bad);
+\draw[arr] (bad.north) |- (read.east);
+\draw[arr] (new)--node[lbl]{V}(queue);
+\draw[arr] (new.west)--++(-20mm,0) |- node[lbl,pos=.1]{F}(net.west);
+\draw[arr] (queue)--(net);\draw[arr] (net)--node[lbl]{V}(pub);
+\draw[arr] (net.east)--++(25mm,0) |- node[lbl,pos=.1]{F}(service.east);
+\draw[arr] (pub)--(service);\draw[arr] (service.west)--++(-35mm,0) |- (read.west);
+\end{tikzpicture}\end{center}
+\textbf{Figura 5.} Pasarela P2P. La recepción LoRa y la publicación MQTT son asíncronas y desacopladas mediante una cola circular. El estado del radioenlace y de la conexión Wi-Fi no alteran las decisiones de seguridad ni el muestreo en el nodo sensor.
+
+\clearpage
+\subsection{Reglas de Detección y Estados}
+
+El nodo ejecutará un ciclo principal de adquisición cada $T_a = 5$ s. Dentro de cada ciclo se obtendrán múltiples lecturas rápidas de cada canal analógico y se utilizará su mediana como valor representativo, reduciendo la influencia de ruido eléctrico y valores atípicos.
+
+La temperatura se utiliza como variable de contexto y compensación, por lo que no activa directamente el muestreo. Los parámetros habilitados como disparadores son pH, TDS y turbidez relativa.
+
+Los umbrales utilizados durante la validación son parámetros experimentales configurables y no deben interpretarse como Límites Máximos Permisibles (LMP) ni como Estándares de Calidad Ambiental (ECA).
+
+Para los ensayos de TDS y turbidez se establecerá inicialmente una condición de referencia durante un periodo en el que el agua se encuentre estable. Estas referencias se mantendrán constantes durante cada evento de prueba para evitar que una anomalía modifique su propia línea base.
+
+Para TDS se define una referencia $TDS_0$. Se considera una alteración cuando:
+
+\begin{equation}
+    TDS > TDS_0 + \Delta_{TDS}
+\end{equation}
+
+donde $\Delta_{TDS}$ representa el incremento mínimo definido experimentalmente.
+
+Para turbidez se utiliza la señal registrada durante la condición de referencia $V_{T,0}$. Debido a que la salida del sensor disminuye conforme aumenta la turbidez, se define el índice relativo:
+
+\begin{equation}
+    I_T = \frac{V_{T,0}-V_T}{V_{T,0}}
+\end{equation}
+
+Se considera una alteración cuando:
+
+\begin{equation}
+    I_T > U_T
+\end{equation}
+
+Para pH se utilizará una ventana experimental configurable:
+
+\begin{equation}
+    pH < L_{pH}
+    \quad \lor \quad
+    pH > U_{pH}
+\end{equation}
+
+Los valores $L_{pH}$ y $U_{pH}$ se establecerán durante los ensayos después de calibrar el electrodo y no se presentarán como límites regulatorios.
+
+Una anomalía genera una solicitud de captura únicamente cuando permanece durante tres ciclos válidos consecutivos. Con un período de adquisición de 5 s, esto representa aproximadamente entre 10 y 15 s de persistencia dependiendo del instante en que comienza la alteración.
+
+Se aplicará histéresis para evitar oscilaciones alrededor de los umbrales y se exigirán tres ciclos normales consecutivos antes de permitir el rearme.
+
+\textbf{Máquina de estados finitos.} El nodo opera bajo cinco estados:
+
+\begin{enumerate}
+
+    \item \texttt{BLOQUEADO}: estado seguro después de una captura, un reinicio incierto o una condición que requiera inspección. La bomba permanece inactiva.
+
+    \item \texttt{ARMADO}: sensores, referencias y configuración validados; el sistema permanece a la espera de una anomalía persistente.
+
+    \item \texttt{MUESTREANDO}: el relé está activado y la bomba funciona durante el tiempo de captura calibrado.
+
+    \item \texttt{CAPTURA\_ESTIMADA}: finalización normal del ciclo de bombeo. El evento se registra y el sistema pasa a estado bloqueado.
+
+    \item \texttt{FALLO}: se detectó una condición de seguridad, un reinicio no controlado durante el bombeo u otro error crítico. La bomba se desenergiza y se requiere revisión manual.
+
+\end{enumerate}
+
+\clearpage
+\subsection{Pseudocódigo de la Máquina de Estados y Control}
+
+\begin{verbatim}
+inicio:
+    poner_rele_OFF()
+    cargar_configuracion_y_bloqueo_nvs()
+
+    si bloqueo_previo_activo()
+       o reinicio_durante_bombeo():
+        estado = BLOQUEADO
+    si_no:
+        estado = ARMADO
+
+cada_iteracion:
+    ahora = reloj_monotonico()
+
+    si bomba_activa:
+        si corte_seguridad_detectado()
+           o error_critico():
+
+            poner_rele_OFF()
+            estado = FALLO
+            registrar_resultado_y_mantener_bloqueo(
+                FALLO
+            )
+
+        o_si transcurrido(ahora, t0) >= t_captura:
+
+            poner_rele_OFF()
+            estado = CAPTURA_ESTIMADA
+            registrar_resultado_y_mantener_bloqueo(
+                CAPTURA_ESTIMADA
+            )
+
+    si toca_adquirir(ahora):
+
+        datos, flags_error =
+            adquirir_y_filtrar_sensores()
+
+        actualizar_referencias_si_corresponde(
+            datos,
+            flags_error
+        )
+
+        actualizar_contadores(
+            datos,
+            flags_error
+        )
+
+        si existe_anomalia_persistente()
+           y estado == ARMADO:
+
+            si frasco_disponible()
+               y guardado_nvs_exitoso():
+
+                registrar_inicio_evento()
+                estado = MUESTREANDO
+                t0 = ahora
+                poner_rele_ON()
+
+        encolar_telemetria(
+            datos,
+            estado,
+            id_evento
+        )
+
+    si rearme_local_pulsado()
+       y no bomba_activa:
+
+        si condiciones_normales()
+           y frasco_reemplazado():
+
+            borrar_bloqueo_nvs()
+            reiniciar_contadores()
+            estado = ARMADO
+
+    atender_transmision_lora_e32()
+    atender_watchdog_hardware()
+\end{verbatim}
+
+\subsection{Circuito Hidráulico, Calibración y Custodia}
+
+La entrada de la línea de succión se instalará próxima a los sensores para reducir la diferencia espacial y temporal entre las mediciones registradas y el agua posteriormente capturada.
+
+Para una manguera de diámetro interior $d_i = 3$ mm y longitud $L = 1.0$ m, el volumen interno aproximado de la línea es:
+
+\begin{equation}
+    V_l =
+    \frac{\pi d_i^2 L}{4}
+    \approx 7.1~\text{mL}
+\end{equation}
+
+El caudal real de la bomba, $Q_{\text{cal}}$, se determinará experimentalmente bajo las condiciones de operación del prototipo. A partir de este valor, el tiempo aproximado requerido para transportar el volumen contenido en la línea puede estimarse como:
+
+\begin{equation}
+    t_{\text{tránsito}}
+    =
+    \frac{V_l}{Q_{\text{cal}}}
+\end{equation}
+
+El volumen capturado durante un evento puede aproximarse mediante:
+
+\begin{equation}
+    V_{\text{captura}}
+    \approx
+    Q_{\text{cal}}\,t_{\text{captura}}
+\end{equation}
+
+Se realizarán diez ensayos volumétricos para determinar el caudal promedio, su variabilidad y el tiempo necesario para recolectar aproximadamente 100 mL.
+
+Para reducir el riesgo de sifonamiento cuando la bomba se encuentre apagada, la descarga se ubicará por encima del nivel máximo previsto de la muestra acumulada y se mantendrá una separación física entre el extremo de la manguera y el líquido almacenado.
+
+Durante el llenado deberá existir una vía de venteo que permita la salida del aire desplazado. En el prototipo de laboratorio se utilizará una solución de venteo protegida frente a salpicaduras y entrada de partículas.
+
+La muestra obtenida constituye evidencia física asociada temporalmente al evento detectado. No se asumirá automáticamente que cumple requisitos de preservación, volumen, recipiente o cadena de custodia necesarios para un análisis regulatorio, ya que estas condiciones dependen del analito y del método de laboratorio utilizado.
+
+\subsection{Telemetría, Energía y Gabinete}
+La trama transmitida incluye versión del protocolo, identificador de nodo, contador de reinicios (\textit{boot\_id}), número de secuencia incremental, tiempo relativo desde el encendido, variables físicas con unidades, indicadores booleanos de validez, estado formal de la máquina de estados, identificador de evento de captura y código CRC-16. En la pasarela, se descartan duplicados y se agrega la estampa de tiempo absoluta (UTC) antes de reenviar el paquete por MQTT hacia el broker de ThingsBoard.
+
+El transceptor LoRa EBYTE E32 se gobernará mediante los pines de modo M0 (GPIO21) y M1 (GPIO22) fijados a nivel bajo para transmisión transparente normal, supervisando el pin AUX (GPIO19) como entrada de interrupción para no transmitir mientras el búfer de radio se encuentre ocupado.
+
+El presupuesto energético se obtendrá midiendo los consumos de reposo, adquisición, transmisión y bombeo. La energía por captura será aproximadamente $E_b=V_bI_bt_b$ y la autonomía se estimará a partir de la energía útil de la batería (12 V, 7 Ah) y el consumo promedio completo, incluyendo pérdidas de conversión. El gabinete alojará la electrónica por encima del recorrido hidráulico, con separación frente a posibles fugas y montaje accesible para mantenimiento. Se revisarán sellos, condensación, exposición solar, conectores y limpieza de sondas.
+
+\subsection{Plan de Validación y Criterios de Aceptación Propuestos}
+
+La validación se realizará en un tanque o recipiente controlado utilizando alteraciones seguras y reproducibles. Estas pruebas tienen como objetivo verificar el funcionamiento integrado del prototipo y no reproducir químicamente un efluente minero real.
+
+{\small
+\begin{longtable}{p{3cm}p{7.7cm}p{4.5cm}}
+
+\caption{Matriz de ensayos y criterios de validación experimental}
+\label{tab:validacion} \\
+
+\toprule
+Ensayo &
+Procedimiento &
+Meta / evidencia \\
+\midrule
+\endhead
+
+pH &
+Calibrar el electrodo con soluciones buffer y producir posteriormente una variación controlada y segura del pH. &
+Respuesta coherente al cambio y detección del cruce del umbral experimental. \\
+
+TDS &
+Establecer una línea base y añadir progresivamente pequeñas cantidades de sal disuelta. &
+Incremento reproducible respecto a la referencia y detección al superar el umbral configurado. \\
+
+Turbidez &
+Establecer una condición de referencia con agua clara y añadir cantidades controladas de arcilla o material fino en suspensión. &
+Cambio reproducible respecto a la referencia. No se afirmará una medición cuantitativa certificada en NTU. \\
+
+Temperatura &
+Comparar el DS18B20 con un termómetro de referencia utilizando agua a diferentes temperaturas seguras. &
+Error absoluto objetivo $\leq1\,^{\circ}$C dentro del rango ensayado. \\
+
+Anomalía persistente &
+Mantener una condición fuera del umbral durante al menos tres ciclos. &
+Una sola solicitud de captura y registro trazable del evento. \\
+
+Pico aislado &
+Provocar una variación que desaparezca antes de completar tres ciclos. &
+Cero activaciones de la bomba. \\
+
+Dato inválido &
+Desconectar una sonda o provocar una lectura fuera del rango válido. &
+El canal afectado se marca como inválido sin generar una captura ni invalidar los demás sensores. \\
+
+Dosificación &
+Realizar diez captaciones utilizando las mismas condiciones hidráulicas. &
+Media objetivo de $100 \pm 10$ mL y registro individual de los volúmenes obtenidos. \\
+
+Enclavamiento &
+Mantener la anomalía después de una captura y reiniciar el nodo. &
+La bomba permanece apagada y el sistema retorna a \texttt{BLOQUEADO}. \\
+
+Desconexión &
+Interrumpir primero LoRa y posteriormente Internet durante una anomalía. &
+El muestreo local continúa independientemente de la conectividad. \\
+
+Enlace LoRa &
+Transmitir 100 tramas en diferentes posiciones de prueba documentadas. &
+Calcular PDR y latencia. Meta experimental de PDR $\geq95\%$ dentro del escenario declarado. \\
+
+Protección eléctrica &
+Activar repetidamente la bomba y observar la alimentación y posibles reinicios. &
+Ausencia de reinicios del ESP32 provocados por la conmutación del motor. \\
+
+\bottomrule
+\end{longtable}
+}
+
+\subsection{Presupuesto y Secuencia de Trabajo}
+
+Los precios y estimaciones corresponden a referencias de venta individual y pueden variar según disponibilidad y proveedor. Los valores marcados como estimados deberán actualizarse con las cotizaciones utilizadas durante la implementación.
+
+{\footnotesize
+\renewcommand{\arraystretch}{1.0}
+
+\begin{longtable}{r p{4.2cm}p{4.1cm}c r p{3.2cm}}
+
+\caption{Presupuesto proyectado de componentes e insumos}
+\label{tab:presupuesto} \\
+
+\toprule
+\# &
+Componente &
+Función &
+Cant. &
+S/ &
+Tienda / referencia \\
+\midrule
+\endhead
+
+1 &
+ESP32 DevKit V1 \cite{esp32} &
+Nodo sensor y gateway &
+2 &
+64.00 &
+SAI SAC, S/32 c/u \\
+
+2 &
+Módulo EBYTE E32 LoRa \cite{ebyteE32} &
+Enlace LoRa P2P entre nodo y gateway &
+2 &
+$\sim$90.00 &
+Precio por verificar \\
+
+3 &
+Antenas compatibles con EBYTE E32 &
+Enlace de radio &
+2 &
+$\sim$16.00 &
+Estimado \\
+
+4 &
+Sensor de turbidez SEN0189 \cite{turb} &
+Detección relativa de cambios de turbidez &
+1 &
+85.00 &
+Electromanía \\
+
+5 &
+Keyestudio KS0429 TDS Meter V1.0 \cite{tds} &
+Detección de cambios en sólidos disueltos &
+1 &
+37.00 &
+Sawers Perú \\
+
+6 &
+PH-4502C con sonda BNC &
+Medición de pH &
+1 &
+105.00 &
+Referencia de proveedor local \\
+
+7 &
+Soluciones buffer pH 4.01 / 6.86 / 9.18 &
+Calibración del electrodo &
+1 juego &
+$\sim$15.00 &
+Estimado \\
+
+8 &
+DS18B20 impermeable \cite{ds18} &
+Temperatura y compensación del TDS &
+1 &
+8.50 &
+Electromanía \\
+
+9 &
+Bomba peristáltica DC 12 V &
+Captación automática de la muestra &
+1 &
+$\sim$55.00 &
+Cotización local por verificar \\
+
+10 &
+Manguera compatible con bomba peristáltica &
+Conducción de la muestra &
+1 &
+$\sim$5.00 &
+Estimado \\
+
+11 &
+Relé optoacoplado de 1 canal &
+Conmutación de la bomba &
+1 &
+8.00 &
+AACARI \\
+
+12 &
+Batería sellada 12 V, 7 Ah &
+Alimentación del sistema &
+1 &
+54.00 &
+Referencia local \\
+
+13 &
+Convertidor DC-DC step-down &
+Regulación de 12 V a 5 V &
+1 &
+8.50 &
+LM2596 o equivalente \\
+
+14 &
+Resistencias, diodo flyback, fusible, pulsador y elementos de protección &
+Acondicionamiento y seguridad &
+--- &
+$\sim$10.00 &
+Estimado \\
+
+15 &
+Caja hermética y frasco colector &
+Protección y almacenamiento de la muestra &
+--- &
+$\sim$15.00 &
+Estimado \\
+
+\midrule
+
+\multicolumn{4}{r}{\textbf{Total aproximado}} &
+\textbf{S/576.00} &
+\\
+
+\bottomrule
+\end{longtable}
+}
+
+\begin{table}[htbp]
+
+\centering
+
+\caption{Cronograma de integración por semanas}
+\label{tab:cronograma}
+
+\begin{tabularx}{\textwidth}{p{2cm}YY}
+
+\toprule
+Etapa &
+Actividad &
+Evidencia de cierre \\
+\midrule
+
+Semana 07 &
+Perfil, artículos, bloques y flujos &
+Arquitectura coherente y decisiones documentadas. \\
+
+Semana 08 &
+Acondicionamiento y calibración &
+Lecturas de sensores, calibración de pH y revisión eléctrica. \\
+
+Semana 09 &
+Bomba y lógica de estados &
+Captaciones medidas, temporización calibrada y pruebas de bloqueo NVS. \\
+
+Semana 10 &
+LoRa, gateway y dashboard &
+PDR, latencia, enlace E32 y recuperación MQTT. \\
+
+Semana 11 &
+Integración y pruebas completas &
+Resultados del plan de validación en ambiente controlado. \\
+
+Semana 12 &
+Documentación y exposición &
+Informe final y demostración funcional. \\
+
+\bottomrule
+
+\end{tabularx}
+\end{table}
+
+\section{Objetivos y Alcances}
+
+\subsection{Objetivo General}
+
+Diseñar e implementar un prototipo modular IoT de bajo costo para la detección temprana de alteraciones fisicoquímicas en aguas bajo influencia minera, mediante monitoreo continuo, comunicación LoRa y un Sistema de Muestreo Automatizado de Emergencia con bomba peristáltica que recolecte una muestra cuando se detecte una anomalía persistente.
+
+\subsection{Objetivos Específicos}
+
+\begin{enumerate}
+    \item Integrar al ESP32 sensores de pH, TDS, turbidez y temperatura, documentando su acondicionamiento, calibración, filtrado y validez de las lecturas.
+
+    \item Implementar un algoritmo local de detección de anomalías persistentes y una máquina de estados que controle de forma segura el proceso de muestreo.
+
+    \item Implementar el Sistema de Muestreo Automatizado de Emergencia para recolectar aproximadamente 100 mL de agua mediante una bomba peristáltica, con temporización calibrada, estado seguro al arranque y enclavamiento persistente en NVS.
+
+    \item Establecer un enlace LoRa punto a punto mediante módulos EBYTE E32 para transmitir las variables medidas, el estado del sistema y los eventos detectados, evaluando la entrega de paquetes y la latencia en escenarios reproducibles.
+
+    \item Configurar ThingsBoard para visualizar las variables monitoreadas, el estado del nodo, las anomalías detectadas y los eventos de muestreo, conservando un historial de la telemetría.
+
+    \item Validar el funcionamiento integrado del prototipo en un entorno controlado mediante variaciones seguras de pH, TDS, turbidez y temperatura, verificando la detección de anomalías, activación de la bomba, captura de la muestra y transmisión de la información.
+\end{enumerate}
+
+\subsection{Alcances}
+
+El prototipo contempla un nodo de monitoreo, una pasarela LoRa, cuatro variables fisicoquímicas, un frasco de muestreo por evento y un dashboard de supervisión.
+
+El sistema está orientado a detectar cambios persistentes en las condiciones fisicoquímicas del agua y a obtener automáticamente una muestra asociada temporalmente al evento detectado. Las mediciones de pH, TDS, turbidez y temperatura se emplean como indicadores de alteraciones en el agua y no como mecanismos de identificación directa de contaminantes específicos.
+
+La validación inicial se realizará en un tanque o recipiente de laboratorio mediante alteraciones controladas y seguras. Se evaluará la respuesta de los sensores, la lógica de detección, la captación aproximada de 100 mL, el funcionamiento del enclavamiento, la transmisión LoRa y la visualización de los eventos en ThingsBoard.
+
+El alcance de esta etapa corresponde a un prototipo funcional de bajo costo. No se plantea su utilización como instrumento certificado de monitoreo ambiental ni como sustituto de análisis realizados por laboratorios acreditados.
+
+\subsection{Limitaciones y Trabajo Futuro}
+
+Los sensores utilizados permiten detectar variaciones en parámetros fisicoquímicos, pero no identifican ni cuantifican directamente metales como Cu, Pb, Zn, Cd, As u otros contaminantes específicos. Una anomalía detectada indica un cambio en las condiciones del agua, pero su causa debe determinarse mediante análisis posteriores de la muestra recolectada.
+
+El Keyestudio KS0429 proporciona una estimación de TDS y no una medición certificada de conductividad eléctrica, mientras que el SEN0189 permite principalmente identificar cambios relativos de turbidez. Asimismo, los sensores de bajo costo presentan limitaciones de precisión, deriva y estabilidad, por lo que requieren calibración y mantenimiento periódico.
+
+La captación se controla mediante el tiempo de funcionamiento de la bomba, por lo que el volumen de 100 mL constituye una meta experimental y debe verificarse mediante calibración. El frasco único permite almacenar una sola muestra antes de requerir reemplazo y rearme manual.
+
+La muestra obtenida por el prototipo no se considera automáticamente válida para análisis regulatorios, ya que el material del recipiente, la preservación, el volumen requerido y las condiciones de transporte dependen del contaminante y del método de laboratorio utilizado.
+
+La validación inicial se limita a condiciones controladas de laboratorio y no contempla operación permanente en campo ni certificación del sistema frente a condiciones ambientales reales.
+
+Como trabajo futuro, QawapMayu podrá adaptarse a otras aplicaciones de vigilancia de la calidad del agua además de los escenarios bajo influencia minera. Entre ellas se consideran la detección temprana de escorrentía agrícola y exceso de fertilizantes, el seguimiento de descargas industriales y aguas residuales, la supervisión de estanques de acuicultura, el control de fuentes destinadas al abastecimiento poblacional y la observación de cambios asociados con inundaciones, sedimentos o fallas en sistemas de tratamiento.
+
+Estas aplicaciones requerirán ajustar los parámetros, umbrales y protocolos de muestreo a las condiciones de cada entorno, sin asumir que los sensores de bajo costo identifican por sí solos la causa de una anomalía.
+
+Asimismo, podrán incorporarse sensores de mayor precisión, medición directa de conductividad eléctrica, oxígeno disuelto, ORP, nutrientes o contaminantes específicos; detección de flujo y volumen capturado; múltiples frascos para eventos consecutivos; conservación automática de muestras; alimentación solar; y una arquitectura LoRaWAN para despliegues con múltiples nodos.
+
+Finalmente, podrá diseñarse una PCB dedicada una vez validadas experimentalmente las interfaces, los consumos y los requerimientos eléctricos del prototipo.
+
+\begin{thebibliography}{99}
+\setlength{\itemsep}{1pt}
+\setlength{\parskip}{0pt}
+\small
+
+% ---------------------------------------------------------
+% LoRa, procesamiento e instrumentación
+% ---------------------------------------------------------
+
+\bibitem{lora}
+LoRa Alliance,
+``LoRaWAN Specification v1.1'',
+2017.
+\url{https://resources.lora-alliance.org/getting-started-with-lorawan/lorawan-specification-v1-1}.
+
+\bibitem{semtech}
+Semtech,
+``LoRa Connect Transceiver, SX1278, 137 MHz to 525 MHz'',
+ficha técnica.
+\url{https://www.semtech.com/products/wireless-rf/lora-connect/sx1278}.
+
+\bibitem{ebyteE32}
+Chengdu Ebyte Electronic Technology Co., Ltd.,
+``E32-433T20D LoRa UART Wireless Module'',
+ficha técnica del fabricante.
+\url{https://www.cdebyte.com/products/E32-433T20D}.
+
+\bibitem{esp32}
+Espressif Systems,
+``ESP32-WROOM-32 Datasheet'',
+v3.8.
+\url{https://documentation.espressif.com/esp32-wroom-32_datasheet_en.html}.
+
+\bibitem{ds18}
+Analog Devices,
+``DS18B20: Programmable Resolution 1-Wire Digital Thermometer'',
+ficha técnica.
+\url{https://www.analog.com/en/products/ds18b20.html}.
+
+\bibitem{tds}
+Keyestudio,
+``KS0429 Keyestudio TDS Meter V1.0'',
+documentación técnica del fabricante.
+\url{https://docs.keyestudio.com/projects/KS0429/en/latest/}.
+
+\bibitem{turb}
+DFRobot,
+``Gravity: Analog Turbidity Sensor for Arduino (SEN0189)'',
+documentación técnica.
+\url{https://wiki.dfrobot.com/sen0189}.
+
+% ---------------------------------------------------------
+% Sensores IoT y monitoreo de agua
+% ---------------------------------------------------------
+
+\bibitem{camargo}
+E. T. de Camargo et al.,
+``Low-Cost Water Quality Sensors for IoT: A Systematic Review'',
+\emph{Sensors},
+vol. 23, núm. 9, art. 4424, 2023.
+\url{https://doi.org/10.3390/s23094424}.
+
+\bibitem{sattley}
+W. M. Sattley, B. M. Burchell, S. D. Conrad y M. T. Madigan,
+``Design, Construction, and Application of an Inexpensive, High-Resolution Water Sampler'',
+\emph{Water},
+vol. 9, núm. 8, art. 578, 2017.
+\url{https://doi.org/10.3390/w9080578}.
+
+\bibitem{georgantas}
+I. Georgantas, S. Mitropoulos, S. Katsoulis, I. Chronis e I. Christakis,
+``Integrated Low-Cost Water Quality Monitoring System Based on LoRa Network'',
+\emph{Electronics},
+vol. 14, núm. 5, art. 857, 2025.
+\url{https://doi.org/10.3390/electronics14050857}.
+
+\bibitem{naloufi}
+M. Naloufi et al.,
+``Long-Term Stability of Low-Cost IoT System for Monitoring Water Quality in Urban Rivers'',
+\emph{Water},
+vol. 16, núm. 12, art. 1708, 2024.
+\url{https://doi.org/10.3390/w16121708}.
+
+\bibitem{jabbar}
+W. A. Jabbar et al.,
+``Development of LoRaWAN-based IoT System for Water Quality Monitoring in Rural Areas'',
+\emph{Expert Systems with Applications},
+vol. 242, art. 122862, 2024.
+\url{https://doi.org/10.1016/j.eswa.2023.122862}.
+
+\bibitem{wang}
+M. Wang et al.,
+``A Compact, Low-Cost, and Low-Power Turbidity Sensor for Continuous In Situ Stormwater Monitoring'',
+\emph{Sensors},
+vol. 24, núm. 12, art. 3926, 2024.
+\url{https://doi.org/10.3390/s24123926}.
+
+\bibitem{basford}
+P. J. Basford, F. M. J. Bulot, M. Apetroaie-Cristea,
+S. J. Cox y S. J. Ossont,
+``LoRaWAN for Smart City IoT Deployments: A Long Term Evaluation'',
+\emph{Sensors},
+vol. 20, núm. 3, art. 648, 2020.
+\url{https://doi.org/10.3390/s20030648}.
+
+\bibitem{ramos}
+M. K. Ramos Villalta, M. Condori Chirinos y R. R. Sulla Torres,
+``Development of an IoT System Based on LoRaWAN to Monitor the Distribution and Quality of Irrigation Water in Rural Areas of Arequipa, Peru'',
+\emph{International Journal of Electrical and Electronics Engineering},
+vol. 11, núm. 10, pp. 223--230, 2024.
+\url{https://doi.org/10.14445/23488379/IJEEE-V11I10P123}.
+
+% ---------------------------------------------------------
+% Minería y calidad de agua
+% ---------------------------------------------------------
+
+\bibitem{moreno2024}
+S. B. Moreno-Aguirre, J. J. Vértiz-Osores,
+C. E. Paredes-Espinal, E. Meseth,
+G. L. Vílchez-Ochoa, J. A. Espino-Ciudad
+y L. Flores del Pino,
+``Ecological risk of metals in Andean water resources:
+A framework for early environmental assessment of mining projects in Peru'',
+\emph{Heliyon},
+vol. 10, núm. 9, art. e30739, 2024.
+\url{https://doi.org/10.1016/j.heliyon.2024.e30739}.
+
+\bibitem{ocona2024}
+I. J. P. Simon, K. Pfaff, A. Navarre-Sitchler,
+J. Crespo, E. Holley, G. Vanzin,
+M. N. Guillen Gomez, S. Ticona-Corrales
+y J. O. Sharp,
+``Geological and anthropogenic contributions of metal(loid)s in the artisanal and small-scale mining-impacted Ocoña watershed of Arequipa, Peru'',
+\emph{Applied Geochemistry},
+vol. 168, art. 106028, 2024.
+\url{https://doi.org/10.1016/j.apgeochem.2024.106028}.
+
+\bibitem{usgsMineDrainage}
+U.S. Geological Survey,
+``Mine Drainage'',
+Water Resources Mission Area.
+\url{https://www.usgs.gov/mission-areas/water-resources/science/mine-drainage}.
+
+% ---------------------------------------------------------
+% Impacto en agricultura y salud
+% ---------------------------------------------------------
+
+\bibitem{faoWaterQuality}
+R. S. Ayers y D. W. Westcot,
+\emph{Water Quality for Agriculture},
+FAO Irrigation and Drainage Paper 29 Rev. 1,
+Food and Agriculture Organization of the United Nations,
+Roma, 1994.
+\url{https://www.fao.org/4/t0234e/t0234e00.htm}.
+
+\bibitem{whoDrinkingWater2026}
+World Health Organization,
+\emph{Guidelines for Drinking-water Quality:
+Fourth Edition Incorporating the First, Second and Third Addenda},
+World Health Organization,
+Ginebra, 2026.
+ISBN 978-92-4-012122-5.
+\url{https://www.who.int/publications/i/item/9789240121225}.
+
+\end{thebibliography}
+\end{document}
