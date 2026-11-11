@@ -35,7 +35,7 @@
 #include "hardware.h"
 
 // ---------- pines ----------
-#define PIN_PH           35
+#define PIN_PH           32
 #define PIN_TDS          34
 #define PIN_TEMP         33
 #define PIN_RELE         23
@@ -348,7 +348,7 @@ void leer_serial() {
       case 't': {
         uint32_t mv = mediana_mV(PIN_TURB, N_MUESTRAS);
         if (mv < TURB_MIN_AGUA_CLARA_MV || mv > TURB_MAX_VALIDO_MV) {
-          Serial.printf(">> Lectura TS-300B fuera de rango de agua clara (%lu mV, esperado %d-%d mV); revisar conexion y divisor 10k/20k en GPIO4.\n",
+          Serial.printf(">> Lectura TS-300B fuera de rango de agua clara (%lu mV, esperado %d-%d mV); revisar conexion y divisor 10k/20k en GPIO35.\n",
                         (unsigned long)mv, TURB_MIN_AGUA_CLARA_MV, TURB_MAX_VALIDO_MV);
         } else {
           vt0_mv = (float)mv;

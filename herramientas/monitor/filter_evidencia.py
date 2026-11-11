@@ -40,6 +40,10 @@ CSV_ROW_V3_RE = re.compile(
     rf"^\d+,-?\d+(?:\.\d+)?,\d+,{_NUM_OR_NAN},\d+,{_NUM_OR_NAN},\d+,{_NUM_OR_NAN},\d+,{_NUM_OR_NAN},{_NUM_OR_NAN},\d+,\d+,\d+,\d+,\d+$",
     re.IGNORECASE,
 )
+PUNTO_PH_RE = re.compile(
+    r"^>>\s*Punto pH\s+([\d\.]+)\s+capturado:\s+(\d+)\s+mV",
+    re.IGNORECASE,
+)
 
 
 def _sanitize_token(value: str) -> str:
@@ -85,6 +89,16 @@ class SessionRecorder:
         log_fh.flush()
 
         stripped = line.strip()
+        m_ph = PUNTO_PH_RE.match(stripped)
+        if m_ph:
+            ph_val = float(m_ph.group(1))
+            mv_val = float(m_ph.group(2))
+            self.output_dir.mkdir(parents=True, exist_ok=True)
+            cal_path = self.output_dir / "calibracion.log"
+            ts_now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            with cal_path.open("a", encoding="utf-8", newline="\n") as cal_fh:
+                cal_fh.write(f"{ts_now} | pH | {ph_val:.2f} | {mv_val:.1f} | {self.stem}\n")
+
         if stripped in (CSV_HEADER_V1, CSV_HEADER_V2, CSV_HEADER_V3):
             csv_fh = self._ensure_csv_open()
             if not self._csv_header_written:

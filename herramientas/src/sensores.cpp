@@ -5,10 +5,8 @@
 //   ms,temp_C,ph_mV,pH,tds_mV,tds_ppm,turb_mV,it,validez,tds0_ppm,vt0_mV,anomalias,c_ph,c_tds,c_turb,solicitud_captura
 // (el monitor guarda automaticamente pruebas/sensores_<fecha_hora>.csv y .log)
 //
-// Comandos (escribir la letra + Enter):
-//   4 -> captura el voltaje actual como buffer 4.01
-//   7 -> captura el voltaje actual como buffer 6.86
-//   9 -> captura el voltaje actual como buffer 9.18
+// Comandos (escribir la letra o comando + Enter):
+//   ph <val> -> captura el voltaje actual para el pH medido con la tira (ej. ph 3.0)
 //   c -> calcula la recta pH = m*mV + b con los puntos capturados
 //   s -> guarda m y b en la NVS de ESTE ESP32
 //   b -> borra la calibracion guardada
@@ -28,7 +26,7 @@
 #include "anomalia.h"
 #include "hardware.h"
 
-#define PIN_PH      35   // ADC1
+#define PIN_PH      32   // ADC1
 #define PIN_TDS     34   // ADC1
 #define PIN_TEMP    33   // 1-Wire (pull-up 4.7k a 3.3V)
 #define PIN_LED_SIM  2   // LED integrado del ESP32 (bomba simulada para Paso 2)
@@ -44,9 +42,12 @@ float ph_m = 0, ph_b = 0;
 bool  ph_calibrado = false;
 float vt0_mv = NAN;
 bool  vt0_calibrado = false;
-const float BUF_PH[3] = {4.01f, 6.86f, 9.18f};
-float cap_mV[3];
-bool  cap_ok[3] = {false, false, false};
+
+#define MAX_PUNTOS_PH 5
+float cap_ph[MAX_PUNTOS_PH];
+float cap_mV[MAX_PUNTOS_PH];
+int   n_puntos_ph = 0;
+
 bool  imprimir = true;
 
 // Detector de anomalia persistente
@@ -83,7 +84,7 @@ float calcular_tds(float volt, float tempC) {
 
 void ayuda() {
   Serial.println();
-  Serial.println("--- Comandos: 4/7/9 buffer | c calcular | s guardar | b borrar | 0 fijar TDS0 | t fijar VT0 (turbidez) | r reiniciar contadores | p pausa | h ayuda ---");
+  Serial.println("--- Comandos: ph <val> [mV] (ej. ph 3 414) | setph <m> <b> | c calcular | s guardar | b borrar | 0 fijar TDS0 | t fijar VT0 | r reiniciar | p pausa | h ayuda ---");
   if (ph_calibrado) Serial.printf("Calibracion actual: pH = %.6f * mV + %.4f\n", ph_m, ph_b);
   else Serial.println("pH SIN calibrar (la columna pH sale como nan y VAL_PH = 0)");
   if (det.tds0_fijado) Serial.printf("Referencia TDS0 actual: %.0f ppm (umbral disparo > %.0f ppm)\n", det.tds0, det.tds0 + UMBRAL_DELTA_TDS);
@@ -93,33 +94,52 @@ void ayuda() {
   Serial.println("ms,temp_C,ph_mV,pH,tds_mV,tds_ppm,turb_mV,it,validez,tds0_ppm,vt0_mV,anomalias,c_ph,c_tds,c_turb,solicitud_captura");
 }
 
-void capturar(int idx) {
-  uint32_t mv = mediana_mV(PIN_PH, 201);
-  cap_mV[idx] = mv;
-  cap_ok[idx] = true;
-  Serial.printf(">> Buffer %.2f capturado: %lu mV%s\n", BUF_PH[idx], (unsigned long)mv,
-                ph_mv_valido(mv) ? "" : "  (!! fuera de rango del ADC, revisar divisor/offset)");
+void capturar_punto(float ph_ref, float mv_manual = -1.0f) {
+  uint32_t mv = (mv_manual >= 0.0f) ? (uint32_t)mv_manual : mediana_mV(PIN_PH, 201);
+  int idx = -1;
+  for (int i = 0; i < n_puntos_ph; i++) {
+    if (fabsf(cap_ph[i] - ph_ref) < 0.05f) {
+      idx = i;
+      break;
+    }
+  }
+  if (idx < 0) {
+    if (n_puntos_ph >= MAX_PUNTOS_PH) {
+      n_puntos_ph = 0;
+    }
+    idx = n_puntos_ph++;
+  }
+  cap_mV[idx] = (float)mv;
+  cap_ph[idx] = ph_ref;
+  Serial.printf(">> Punto pH %.2f capturado: %lu mV%s (%d punto%s)\n",
+                ph_ref, (unsigned long)mv,
+                ph_mv_valido(mv) ? "" : "  (!! fuera de rango del ADC, revisar divisor/offset)",
+                n_puntos_ph, n_puntos_ph > 1 ? "s" : "");
 }
 
 void calcular() {
-  double n = 0, sx = 0, sy = 0, sxy = 0, sxx = 0;
-  for (int i = 0; i < 3; i++) {
-    if (!cap_ok[i]) continue;
-    double x = cap_mV[i], y = BUF_PH[i];
-    n++; sx += x; sy += y; sxy += x * y; sxx += x * x;
+  if (n_puntos_ph < 2) {
+    Serial.println(">> Necesito al menos 2 puntos capturados (usa 'ph <valor>').");
+    return;
   }
-  if (n < 2) { Serial.println(">> Necesito al menos 2 buffers capturados."); return; }
+  double n = n_puntos_ph, sx = 0, sy = 0, sxy = 0, sxx = 0;
+  for (int i = 0; i < n_puntos_ph; i++) {
+    double x = cap_mV[i], y = cap_ph[i];
+    sx += x; sy += y; sxy += x * y; sxx += x * x;
+  }
   double den = n * sxx - sx * sx;
-  if (den == 0) { Serial.println(">> Los voltajes son iguales: revisar conexion de la sonda."); return; }
+  if (den == 0) {
+    Serial.println(">> Los voltajes son iguales: revisar conexion de la sonda.");
+    return;
+  }
   ph_m = (float)((n * sxy - sx * sy) / den);
   ph_b = (float)((sy - ph_m * sx) / n);
   ph_calibrado = true;
-  Serial.printf(">> pH = %.6f * mV + %.4f   (%d puntos)\n", ph_m, ph_b, (int)n);
+  Serial.printf(">> pH = %.6f * mV + %.4f   (%d puntos)\n", ph_m, ph_b, n_puntos_ph);
   Serial.printf(">> Sensibilidad: %.1f mV por unidad de pH\n", 1.0 / ph_m);
-  for (int i = 0; i < 3; i++) {
-    if (!cap_ok[i]) continue;
+  for (int i = 0; i < n_puntos_ph; i++) {
     float pred = ph_m * cap_mV[i] + ph_b;
-    Serial.printf("   buffer %.2f -> modelo %.2f (error %+.2f)\n", BUF_PH[i], pred, pred - BUF_PH[i]);
+    Serial.printf("   punto %.2f -> modelo %.2f (error %+.2f)\n", cap_ph[i], pred, pred - cap_ph[i]);
   }
   Serial.println(">> Anoten estos valores en docs/calibracion.md y usen 's' para guardar.");
 }
@@ -146,59 +166,111 @@ void setup() {
 }
 
 void loop() {
+  static String cmd = "";
   while (Serial.available()) {
     char c = (char)Serial.read();
-    switch (c) {
-      case '4': capturar(0); break;
-      case '7': capturar(1); break;
-      case '9': capturar(2); break;
-      case 'c': calcular(); break;
-      case 's':
-        if (!ph_calibrado) { Serial.println(">> Primero calcula con 'c'."); break; }
-        nvs.putFloat("ph_m", ph_m); nvs.putFloat("ph_b", ph_b); nvs.putBool("ph_ok", true);
-        Serial.println(">> Calibracion guardada en NVS.");
-        break;
-      case 'b':
-        nvs.clear(); ph_calibrado = false; vt0_calibrado = false; vt0_mv = NAN;
-        Serial.println(">> Calibracion borrada.");
-        break;
-      case 't': {
-        uint32_t mv = mediana_mV(PIN_TURB, 201);
-        if (mv < TURB_MIN_AGUA_CLARA_MV || mv > TURB_MAX_VALIDO_MV) {
-          Serial.printf(">> Lectura TS-300B fuera de rango de agua clara (%lu mV, esperado %d-%d mV); revisar conexion y divisor 10k/20k en GPIO4.\n",
-                        (unsigned long)mv, TURB_MIN_AGUA_CLARA_MV, TURB_MAX_VALIDO_MV);
+    if (c == '\r') {
+      continue;
+    }
+    if (c == '\n') {
+      cmd.trim();
+      if (cmd.length() > 0) {
+        if (cmd.startsWith("ph ") || cmd.startsWith("PH ")) {
+          String arg = cmd.substring(3);
+          arg.trim();
+          int sep = arg.indexOf(' ');
+          if (sep > 0) {
+            float val = arg.substring(0, sep).toFloat();
+            float mv = arg.substring(sep + 1).toFloat();
+            if (val >= 0.0f && val <= 14.0f && mv > 0.0f) {
+              capturar_punto(val, mv);
+            } else {
+              Serial.println(">> Formato: ph <valor> [mV_manual]");
+            }
+          } else {
+            float val = arg.toFloat();
+            if (arg.length() > 0 && val >= 0.0f && val <= 14.0f && (val > 0.0f || arg[0] == '0')) {
+              capturar_punto(val);
+            } else {
+              Serial.printf(">> Valor de pH invalido: '%s' (debe estar entre 0 y 14)\n", arg.c_str());
+            }
+          }
+        } else if (cmd.startsWith("setph ") || cmd.startsWith("SETPH ")) {
+          String arg = cmd.substring(6);
+          arg.trim();
+          int sep = arg.indexOf(' ');
+          if (sep > 0) {
+            ph_m = arg.substring(0, sep).toFloat();
+            ph_b = arg.substring(sep + 1).toFloat();
+            ph_calibrado = true;
+            nvs.putFloat("ph_m", ph_m);
+            nvs.putFloat("ph_b", ph_b);
+            nvs.putBool("ph_ok", true);
+            Serial.printf(">> Calibracion fijada directamente en NVS: pH = %.6f * mV + %.4f\n", ph_m, ph_b);
+          } else {
+            Serial.println(">> Uso: setph <m> <b>");
+          }
+        } else if (cmd == "c" || cmd == "C") {
+          calcular();
+        } else if (cmd == "s" || cmd == "S") {
+          if (!ph_calibrado) {
+            Serial.println(">> Primero calcula con 'c'.");
+          } else {
+            nvs.putFloat("ph_m", ph_m);
+            nvs.putFloat("ph_b", ph_b);
+            nvs.putBool("ph_ok", true);
+            Serial.println(">> Calibracion guardada en NVS.");
+          }
+        } else if (cmd == "b" || cmd == "B") {
+          nvs.clear();
+          n_puntos_ph = 0;
+          ph_calibrado = false;
+          vt0_calibrado = false;
+          vt0_mv = NAN;
+          Serial.println(">> Calibracion borrada.");
+        } else if (cmd == "t" || cmd == "T") {
+          uint32_t mv = mediana_mV(PIN_TURB, 201);
+          if (mv < TURB_MIN_AGUA_CLARA_MV || mv > TURB_MAX_VALIDO_MV) {
+            Serial.printf(">> Lectura TS-300B fuera de rango de agua clara (%lu mV, esperado %d-%d mV); revisar conexion y divisor 10k/20k en GPIO35.\n",
+                          (unsigned long)mv, TURB_MIN_AGUA_CLARA_MV, TURB_MAX_VALIDO_MV);
+          } else {
+            vt0_mv = (float)mv;
+            vt0_calibrado = true;
+            nvs.putFloat("vt0_mv", vt0_mv);
+            nvs.putBool("vt0_ok", true);
+            det.c_turb = 0;
+            det.anomalias &= (uint8_t)~ANO_TURB;
+            Serial.printf(">> Referencia VT0 (agua clara) guardada en NVS: %.0f mV (umbral IT > %.3f)\n",
+                          vt0_mv, UMBRAL_IT_MAX);
+          }
+        } else if (cmd == "0") {
+          if (isnan(ult_tds_ppm)) {
+            Serial.println(">> Aun no hay lectura valida de TDS para fijar TDS0.");
+          } else {
+            detector_fijar_tds0(&det, ult_tds_ppm);
+            solicitud_prev = det.solicitud_captura;
+            digitalWrite(PIN_LED_SIM, det.solicitud_captura ? HIGH : LOW);
+            Serial.printf(">> TDS0 fijado manualmente en %.0f ppm (umbral disparo > %.0f ppm).\n",
+                          det.tds0, det.tds0 + UMBRAL_DELTA_TDS);
+          }
+        } else if (cmd == "r" || cmd == "R") {
+          detector_reiniciar_contadores(&det);
+          solicitud_prev = false;
+          digitalWrite(PIN_LED_SIM, LOW);
+          Serial.println(">> Contadores de anomalia y solicitud_captura reiniciados.");
+        } else if (cmd == "p" || cmd == "P") {
+          imprimir = !imprimir;
+        } else if (cmd == "h" || cmd == "H") {
+          ayuda();
         } else {
-          vt0_mv = (float)mv;
-          vt0_calibrado = true;
-          nvs.putFloat("vt0_mv", vt0_mv);
-          nvs.putBool("vt0_ok", true);
-          det.c_turb = 0;
-          det.anomalias &= (uint8_t)~ANO_TURB;
-          Serial.printf(">> Referencia VT0 (agua clara) guardada en NVS: %.0f mV (umbral IT > %.3f)\n",
-                        vt0_mv, UMBRAL_IT_MAX);
+          Serial.printf(">> Comando no reconocido: '%s' (usa 'h' para ayuda)\n", cmd.c_str());
         }
-        break;
       }
-      case '0':
-        if (isnan(ult_tds_ppm)) {
-          Serial.println(">> Aun no hay lectura valida de TDS para fijar TDS0.");
-        } else {
-          detector_fijar_tds0(&det, ult_tds_ppm);
-          solicitud_prev = det.solicitud_captura;
-          digitalWrite(PIN_LED_SIM, det.solicitud_captura ? HIGH : LOW);
-          Serial.printf(">> TDS0 fijado manualmente en %.0f ppm (umbral disparo > %.0f ppm).\n",
-                        det.tds0, det.tds0 + UMBRAL_DELTA_TDS);
-        }
-        break;
-      case 'r':
-        detector_reiniciar_contadores(&det);
-        solicitud_prev = false;
-        digitalWrite(PIN_LED_SIM, LOW);
-        Serial.println(">> Contadores de anomalia y solicitud_captura reiniciados.");
-        break;
-      case 'p': imprimir = !imprimir; break;
-      case 'h': ayuda(); break;
-      default: break;  // ignora \r, \n y otros
+      cmd = "";
+    } else {
+      if (cmd.length() < 64) {
+        cmd += c;
+      }
     }
   }
 
