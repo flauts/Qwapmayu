@@ -1,5 +1,7 @@
 # Calibraciones
 
+> **IMPORTANTE (Estado actual y protocolo completo paso a paso):** Ver [`docs/protocolo_calibracion_sensores.md`](protocolo_calibracion_sensores.md) para la guía maestra actualizada al 2026-11-11 con los pines en ADC1 (`GPIO32/33/34/35`), comandos exactos (`ph <val> [mV]`, `setph`, `t`, `0`, `r`), criterios de aprobación, plantillas de tablas y el avance real de cada uno de los 4 sensores.
+
 ## 1. pH (PH-4502C) – usar la herramienta `sensores`
 
 **Antes de empezar**
