@@ -4,16 +4,16 @@ Actualizado: radio EBYTE E32 reemplazado por RAK3272S y turbidez SEN0189 por TS-
 
 | Señal | GPIO | Alimentación del módulo | Notas |
 |---|---|---|---|
-| pH (PH-4502C, salida Po) | 35 (ADC1) | 5 V | **Medir Po con multímetro antes de conectar.** Si supera 3.1 V, ajustar offset o poner divisor 10k/20k |
+| pH (PH-4502C, salida Po) | 32 (ADC1) | 5 V | **Medir Po con multímetro antes de conectar.** Si supera 3.1 V, ajustar offset o poner divisor 10k/20k |
 | TDS (Keyestudio KS0429) | 34 (ADC1) | 3.3 V | Salida 0–2.3 V, conexión directa |
-| Turbidez (TS-300B) | 4 (ADC2) | 5 V | Salida hasta ~4.5 V → **divisor obligatorio**: 10k arriba, 20k abajo (×2/3) |
+| Turbidez (TS-300B) | 35 (ADC1) | 5 V | Salida hasta ~4.5 V → **divisor obligatorio**: 10k arriba, 20k abajo (×2/3) |
 | Temperatura (DS18B20) | 33 (1-Wire) | 3.3 V | Pull-up 4.7 kΩ entre DATA y 3.3 V |
 | Relé (entrada IN) | 23 | 5 V (VIN) | Verificar si es activo en bajo (`rele_arranque`) |
 | Pulsador de rearme | 25 | — | Entre GPIO25 y GND, pull-up interno |
 | RAK3272S TX → ESP32 RX2 | 16 | 3.3 V | Conexión cruzada |
 | RAK3272S RX ← ESP32 TX2 | 17 | | |
 | RAK3272S RST (opcional) | 21 | | Para reiniciar el radio por software |
-| Libres | 19, 22, 26, 27, 32 | | Ya no se usan M0/M1/AUX; GPIO32 libre tras migrar turbidez a GPIO4 |
+| Libres | 4, 19, 22, 26, 27 | | Ya no se usan M0/M1/AUX; GPIO4 libre |
 
 ## Alimentación (configuración de laboratorio)
 
@@ -26,6 +26,6 @@ Actualizado: radio EBYTE E32 reemplazado por RAK3272S y turbidez SEN0189 por TS-
 ## Reglas
 - **Nunca energizar el RAK sin la antena puesta.**
 - El RAK se alimenta del pin **3V3** del ESP32, nunca de 5 V. Con el ESP32 (lógica 3.3 V) no hace falta divisor en la línea RX del RAK; el divisor del LAB 4 era solo por el Arduino MEGA (5 V).
-- Sensores en ADC1: pH (GPIO35) y TDS (GPIO34). Turbidez (TS-300B) usa GPIO4 (ADC2_CH0), lo cual es válido y seguro porque en el nodo no se inicializa ni utiliza Wi-Fi ni BLE (el enlace es LoRa P2P mediante módulo externo RAK3272S por UART).
-- GPIO34 y 35 son solo entrada (sin pull-up interno).
+- Sensores en ADC1: pH (GPIO32, ADC1_CH4), TDS (GPIO34, ADC1_CH6) y Turbidez (GPIO35, ADC1_CH7). Todos los canales analógicos operan sobre ADC1 nativo (cero uso de ADC2), garantizando total independencia frente a Wi-Fi/BLE.
+- GPIO34 y 35 son solo entrada (sin pull-up interno). Turbidez en GPIO35 es puramente analógica.
 - Nunca más de 3.3 V en un pin del ESP32.
