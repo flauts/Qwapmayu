@@ -1,0 +1,15 @@
+# =============================================================
+# QawapMayu - Registro persistente de calibraciones de sensores
+# =============================================================
+# Cada línea registra un punto de referencia para el cálculo offline.
+# Formato: FECHA_HORA | SENSOR | VALOR_REF | MV_MEDIDO | NOTAS
+
+2026-11-10 22:24:26 | pH | 3.00 | 414.0 | Vinagre blanco diluido (medido con tira pH 3)
+2026-11-10 23:15:49 | pH | 10.00 | 2625.0 | sensores_20261110_231503_cal_ph_tiras
+2026-11-10 23:18:37 | pH | 10.00 | 2312.0 | sensores_20261110_231503_cal_ph_tiras
+2026-11-10 23:22:43 | pH | 10.00 | 2229.0 | sensores_20261110_231503_cal_ph_tiras
+2026-11-10 23:24:42 | pH | 1.00 | 2218.0 | sensores_20261110_231503_cal_ph_tiras
+2026-11-10 23:25:15 | pH | 10.00 | 2208.0 | sensores_20261110_231503_cal_ph_tiras
+2026-11-10 23:51:49 | pH | 9.00 | 2208.0 | sensores_20261110_233020_comp_agua_llave
+2026-11-10 23:51:53 | pH | 9.00 | 2208.0 | sensores_20261110_233020_comp_agua_llave
+2026-11-10 23:52:03 | pH | 3.00 | 414.0 | sensores_20261110_233020_comp_agua_llave

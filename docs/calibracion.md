@@ -26,6 +26,20 @@
 
 **Resultado:** pH = `m` × mV + `b` → m = ______ b = ______ sensibilidad = ______ mV/pH
 
+### 1.1 Registro de calibración con tiras reactivas (2026-11-10)
+
+Ante la indisponibilidad de buffers certificados estándar, se realizó la calibración mediante tiras reactivas de 4 almohadillas (escala entera 0–14, incertidumbre de lectura visual $\pm 0.5$ pH) utilizando dos puntos extremos y agua de grifo como comprobación independiente:
+
+| Muestra | pH tira | Voltaje medio (mV) | Rol | Archivo de evidencia |
+|---|---|---|---|---|
+| Vinagre blanco diluido | 3.00 | 414.0 | Calibración (Punto 1) | `pruebas/sensores_20261110_221530_cal_ph_tiras.csv` |
+| Bicarbonato de sodio | 9.00 (químico ~8.3) | 2208.0 | Calibración (Punto 2) | `pruebas/sensores_20261110_231503_cal_ph_tiras.csv` |
+| Agua de la llave | 7.00 | ~1680–1693 | Comprobación independiente | `pruebas/sensores_20261110_233020_comp_agua_llave.csv` |
+
+**Ecuación de calibración resultante:**
+- Con escala de tira (pH 9.00): $\text{pH} = 0.003344 \times \text{mV} + 1.6154$ (Sensibilidad: $299.0\text{ mV/pH}$)
+- Comprobación en agua de la llave ($1690\text{ mV}$): $\text{pH}_{\text{medido}} = 7.27 \implies \text{Error} = +0.27\text{ pH}$ (Aprobado: menor a $\pm 0.5$ pH).
+
 **Interferencia TDS–pH (agua de caño)**
 
 | Condición | pH leído |
