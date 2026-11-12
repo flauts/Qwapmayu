@@ -174,3 +174,6 @@ Equipo en la sesión: Flauta y Mitsuo (sensores). Formato CSV del programa `sens
 ## 8. Cuidado de la sonda
 
 Mantener el bulbo húmedo (no dejarlo secar), no frotarlo, enjuagar con agua limpia tras el vinagre y guardar en agua o solución de almacenamiento.
+## 2026-11-11 - Intercambio de pines
+
+Se intercambiaron pH 32->33, DS18B20 33->32, TDS 34->35 y TS-300B 35->34. El pull-up de 4.7 k sigue al DATA del DS18B20 (ahora GPIO32); el divisor 10k/20k sigue al TS-300B (ahora GPIO34). Las entradas anteriores de esta bitacora y los logs de `pruebas/` usan los pines viejos. La calibracion en NVS no cambia.

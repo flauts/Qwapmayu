@@ -6,12 +6,19 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <math.h>
+#if defined(ARDUINO)
+#include <Arduino.h>
+#endif
 #include "trama.h"
 
 // Umbrales deducidos de docs/bitacora.md:
 // - Aire / pin sin senal: ~142 mV (~58-59 ppm)
 // - Agua de cano (base TDS0): ~700-840 mV (~250-310 ppm)
 // - Pizca de sal: sube por encima de 400-450 ppm
+#define TDS0_AUTO_TIEMPO_MIN_MS  60000UL  // No auto-fijar en los primeros ~60 s tras arrancar
+#ifndef TDS0_AUTO_MUESTRAS
+#define TDS0_AUTO_MUESTRAS       30       // Mediana de ~30 lecturas validas por defecto (sensores a 1 Hz)
+#endif
 #define TDS_MIN_AGUA_PPM    100.0f   // Evita fijar TDS0 cuando la sonda sigue en el aire (~59 ppm)
 #define UMBRAL_DELTA_TDS    100.0f   // Anomalia si TDS > TDS0 + 100 ppm
 #define UMBRAL_PH_MIN            6.5f     // LpH (anomalia si pH < 6.5)
@@ -50,6 +57,8 @@ typedef struct {
   uint8_t c_normales;
   uint8_t anomalias;          // ANO_PH | ANO_TDS | ANO_TURB
   bool    solicitud_captura;
+  uint8_t tds_buf_n;
+  float   tds_buf[TDS0_AUTO_MUESTRAS];
 } DetectorAnomalia;
 
 static inline uint8_t _inc_sat_u8(uint8_t v) {
@@ -65,11 +74,29 @@ static inline void detector_iniciar(DetectorAnomalia* d) {
   d->c_normales        = 0;
   d->anomalias         = 0;
   d->solicitud_captura = false;
+  d->tds_buf_n         = 0;
 }
 
-static inline void detector_fijar_tds0(DetectorAnomalia* d, float tds_base) {
-  if (!isnan(tds_base) && tds_base >= 0.0f) {
-    d->tds0        = tds_base;
+static inline float _mediana_tds(const float* src, uint8_t n) {
+  if (n == 0) return NAN;
+  float v[TDS0_AUTO_MUESTRAS];
+  for (uint8_t i = 0; i < n; i++) v[i] = src[i];
+  for (uint8_t i = 1; i < n; i++) {
+    float x = v[i];
+    int j = (int)i - 1;
+    while (j >= 0 && v[j] > x) { v[j + 1] = v[j]; j--; }
+    v[j + 1] = x;
+  }
+  return v[n / 2];
+}
+
+static inline void detector_fijar_tds0(DetectorAnomalia* d, float tds_fallback) {
+  float base = tds_fallback;
+  if (d->tds_buf_n >= (TDS0_AUTO_MUESTRAS / 2)) {
+    base = _mediana_tds(d->tds_buf, d->tds_buf_n);
+  }
+  if (!isnan(base) && base >= 0.0f) {
+    d->tds0        = base;
     d->tds0_fijado = true;
   } else {
     d->tds0        = NAN;
@@ -98,10 +125,27 @@ static inline void detector_evaluar(DetectorAnomalia* d, const LecturaSensores* 
   bool tds_valido  = ((lec->validez & VAL_TDS)  != 0) && !isnan(lec->tds_ppm);
   bool turb_valido = ((lec->validez & VAL_TURB) != 0) && !isnan(lec->it);
 
-  // Auto-captura de TDS0 al detectar sonda sumergida en agua (>= TDS_MIN_AGUA_PPM)
-  if (!d->tds0_fijado && tds_valido && lec->tds_ppm >= TDS_MIN_AGUA_PPM) {
-    d->tds0        = lec->tds_ppm;
-    d->tds0_fijado = true;
+  // Mantenimiento continuo del bufer de TDS mientras este en agua (>= TDS_MIN_AGUA_PPM)
+  if (tds_valido && lec->tds_ppm >= TDS_MIN_AGUA_PPM) {
+    if (d->tds_buf_n < TDS0_AUTO_MUESTRAS) {
+      d->tds_buf[d->tds_buf_n++] = lec->tds_ppm;
+    } else {
+      for (uint8_t i = 0; i < TDS0_AUTO_MUESTRAS - 1; i++) {
+        d->tds_buf[i] = d->tds_buf[i + 1];
+      }
+      d->tds_buf[TDS0_AUTO_MUESTRAS - 1] = lec->tds_ppm;
+    }
+  }
+
+  // Auto-captura de TDS0 tras ventana de estabilizacion y bufer completo
+  if (!d->tds0_fijado) {
+#if defined(ARDUINO)
+    if (millis() >= TDS0_AUTO_TIEMPO_MIN_MS && d->tds_buf_n >= TDS0_AUTO_MUESTRAS) {
+#else
+    if (d->tds_buf_n >= TDS0_AUTO_MUESTRAS) {
+#endif
+      detector_fijar_tds0(d, lec->tds_ppm);
+    }
   }
 
   // 1. Evaluacion de TDS

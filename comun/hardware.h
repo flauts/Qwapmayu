@@ -10,6 +10,6 @@
 #define RELE_ACTIVO_BAJO true
 
 // Pin de lectura analogica para turbidez (TS-300B con divisor 10k/20k).
-// GPIO 35 corresponde a ADC1_CH7 (ADC1 nativo, completamente independiente de Wi-Fi/BLE).
-#define PIN_TURB 35
+// GPIO 34 corresponde a ADC1_CH6 (ADC1 nativo, completamente independiente de Wi-Fi/BLE).
+#define PIN_TURB 34
 

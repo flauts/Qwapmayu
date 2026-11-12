@@ -33,11 +33,12 @@
 #include "anomalia.h"
 #include "rak_at.h"
 #include "hardware.h"
+#include "calibracion.h"
 
 // ---------- pines ----------
-#define PIN_PH           32
-#define PIN_TDS          34
-#define PIN_TEMP         33
+#define PIN_PH           33
+#define PIN_TDS          35
+#define PIN_TEMP         32
 #define PIN_RELE         23
 #define PIN_LED          2
 #define PIN_REARME       25
@@ -348,7 +349,7 @@ void leer_serial() {
       case 't': {
         uint32_t mv = mediana_mV(PIN_TURB, N_MUESTRAS);
         if (mv < TURB_MIN_AGUA_CLARA_MV || mv > TURB_MAX_VALIDO_MV) {
-          Serial.printf(">> Lectura TS-300B fuera de rango de agua clara (%lu mV, esperado %d-%d mV); revisar conexion y divisor 10k/20k en GPIO35.\n",
+          Serial.printf(">> Lectura TS-300B fuera de rango de agua clara (%lu mV, esperado %d-%d mV); revisar conexion y divisor 10k/20k en GPIO34.\n",
                         (unsigned long)mv, TURB_MIN_AGUA_CLARA_MV, TURB_MAX_VALIDO_MV);
         } else {
           vt0_mv = (float)mv;
@@ -401,9 +402,9 @@ void setup() {
   nvs_nodo.putUShort("boot", boot_id);
 
   nvs_cal.begin("cal", false);
-  ph_calibrado  = nvs_cal.getBool("ph_ok", false);
-  ph_m          = nvs_cal.getFloat("ph_m", 0.0f);
-  ph_b          = nvs_cal.getFloat("ph_b", 0.0f);
+  ph_m          = PH_M;
+  ph_b          = PH_B;
+  ph_calibrado  = true;
   vt0_calibrado = nvs_cal.getBool("vt0_ok", false);
   vt0_mv        = nvs_cal.getFloat("vt0_mv", NAN);
   if (vt0_calibrado && (isnan(vt0_mv) || vt0_mv < TURB_MIN_AGUA_CLARA_MV || vt0_mv > TURB_MAX_VALIDO_MV)) {

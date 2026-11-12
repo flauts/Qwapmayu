@@ -8,7 +8,7 @@
 // Comandos (escribir la letra o comando + Enter):
 //   ph <val> -> captura el voltaje actual para el pH medido con la tira (ej. ph 3.0)
 //   c -> calcula la recta pH = m*mV + b con los puntos capturados
-//   s -> guarda m y b en la NVS de ESTE ESP32
+//   s -> imprime "#define PH_M" y "#define PH_B" para copiarlos a comun/calibracion.h
 //   b -> borra la calibracion guardada
 //   0 -> fija la referencia base TDS0 al valor actual de tds_ppm
 //   t -> captura y guarda en NVS la referencia VT0 (agua clara) del TS-300B
@@ -16,8 +16,8 @@
 //   p -> pausa / reanuda la impresion CSV
 //   h -> ayuda
 //
-// IMPORTANTE: usar el ESP32 que sera el NODO, porque la calibracion
-// queda guardada en su memoria NVS.
+// NOTA: al arrancar, m y b parten de PH_M y PH_B (comun/calibracion.h), no de la NVS.
+// Los comandos de pH solo cambian m y b hasta el proximo reinicio.
 // =============================================================
 #include <Arduino.h>
 #include <OneWire.h>
@@ -25,10 +25,11 @@
 #include <Preferences.h>
 #include "anomalia.h"
 #include "hardware.h"
+#include "calibracion.h"
 
-#define PIN_PH      32   // ADC1
-#define PIN_TDS     34   // ADC1
-#define PIN_TEMP    33   // 1-Wire (pull-up 4.7k a 3.3V)
+#define PIN_PH      33   // ADC1
+#define PIN_TDS     35   // ADC1
+#define PIN_TEMP    32   // 1-Wire (pull-up 4.7k a 3.3V)
 #define PIN_LED_SIM  2   // LED integrado del ESP32 (bomba simulada para Paso 2)
 
 #define N_MUESTRAS 31        // lecturas rapidas por canal; se usa la mediana
@@ -152,9 +153,9 @@ void setup() {
   analogReadResolution(12);
   ds.begin();
   nvs.begin("cal", false);
-  ph_calibrado = nvs.getBool("ph_ok", false);
-  ph_m = nvs.getFloat("ph_m", 0);
-  ph_b = nvs.getFloat("ph_b", 0);
+  ph_m = PH_M;
+  ph_b = PH_B;
+  ph_calibrado = true;
   vt0_calibrado = nvs.getBool("vt0_ok", false);
   vt0_mv = nvs.getFloat("vt0_mv", NAN);
   if (vt0_calibrado && (isnan(vt0_mv) || vt0_mv < TURB_MIN_AGUA_CLARA_MV || vt0_mv > TURB_MAX_VALIDO_MV)) {
@@ -216,10 +217,9 @@ void loop() {
           if (!ph_calibrado) {
             Serial.println(">> Primero calcula con 'c'.");
           } else {
-            nvs.putFloat("ph_m", ph_m);
-            nvs.putFloat("ph_b", ph_b);
-            nvs.putBool("ph_ok", true);
-            Serial.println(">> Calibracion guardada en NVS.");
+            Serial.println(">> Copia estas lineas a comun/calibracion.h:");
+            Serial.printf("#define PH_M %.6ff\n", ph_m);
+            Serial.printf("#define PH_B %.4ff\n", ph_b);
           }
         } else if (cmd == "b" || cmd == "B") {
           nvs.clear();
@@ -231,7 +231,7 @@ void loop() {
         } else if (cmd == "t" || cmd == "T") {
           uint32_t mv = mediana_mV(PIN_TURB, 201);
           if (mv < TURB_MIN_AGUA_CLARA_MV || mv > TURB_MAX_VALIDO_MV) {
-            Serial.printf(">> Lectura TS-300B fuera de rango de agua clara (%lu mV, esperado %d-%d mV); revisar conexion y divisor 10k/20k en GPIO35.\n",
+            Serial.printf(">> Lectura TS-300B fuera de rango de agua clara (%lu mV, esperado %d-%d mV); revisar conexion y divisor 10k/20k en GPIO34.\n",
                           (unsigned long)mv, TURB_MIN_AGUA_CLARA_MV, TURB_MAX_VALIDO_MV);
           } else {
             vt0_mv = (float)mv;

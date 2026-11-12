@@ -61,7 +61,7 @@ Esto genera `pruebas/sensores_<AAAAMMDD_HHMMSS>_calibracion_ph.csv` y `.log`.
 
 1. En `gateway/src/` copiar `config.example.h` como `config.h` y completar WiFi (hotspot del celular) y token de ThingsBoard. `config.h` **no se sube** a GitHub.
 2. Subir `nodo` a un ESP32 y `gateway` al otro, cada uno con su RAK.
-3. El firmware de `nodo` lee sensores reales (pH en GPIO32, TDS en GPIO34, turbidez TS-300B en GPIO35, DS18B20 asíncrono en GPIO33), evalúa persistencia de anomalías, gestiona la FSM de la bomba en NVS (`muestreo`) y emite telemetría LoRa P2P cada 5 s sin deriva.
+3. El firmware de `nodo` lee sensores reales (pH en GPIO33, TDS en GPIO35, turbidez TS-300B en GPIO34, DS18B20 asíncrono en GPIO32), evalúa persistencia de anomalías, gestiona la FSM de la bomba en NVS (`muestreo`) y emite telemetría LoRa P2P cada 5 s sin deriva.
    - La bomba o relé se refleja en `PIN_LED` (GPIO2) para pruebas en mesa.
    - Durante `MUESTREANDO`, la CPU no muestrea sensores ni usa la radio, dedicándose exclusivamente a la temporización de corte de la bomba.
    - Comandos por consola serial (`115200` baudios):
@@ -97,6 +97,6 @@ Configuración P2P común en `comun/rak_at.h` (`P2P_CONFIG`): **923.5 MHz (grupo
 ## Estado
 
 - **Sensores y calibración (`herramientas/`):** Herramienta interactiva de calibración de pH y TDS lista con persistencia NVS y filtro de evidencia automática en CSV/LOG.
-- **Nodo QM01 (`nodo/`):** Integrado con adquisición no bloqueante de sensores (DS18B20 asíncrono en GPIO33), detección de anomalía persistente (3 ciclos), FSM de seguridad de la bomba con enclavamiento en NVS (`ARMADO` -> `MUESTREANDO` -> `CAPTURA_ESTIMADA` -> `BLOQUEADO`), timeouts de RAK acotados y telemetría LoRa P2P. Compilación validada en PlatformIO.
+- **Nodo QM01 (`nodo/`):** Integrado con adquisición no bloqueante de sensores (DS18B20 asíncrono en GPIO32), detección de anomalía persistente (3 ciclos), FSM de seguridad de la bomba con enclavamiento en NVS (`ARMADO` -> `MUESTREANDO` -> `CAPTURA_ESTIMADA` -> `BLOQUEADO`), timeouts de RAK acotados y telemetría LoRa P2P. Compilación validada en PlatformIO.
 - **Gateway GW01 (`gateway/`):** Receptor LoRa P2P continuo, verificación CRC-16, deduplicación de tramas, cálculo de PDR y cliente MQTT hacia ThingsBoard. Compilación validada en PlatformIO.
 - **Pendiente inmediato:** Ensayos volumétricos de calibración de caudal ($Q_{\text{cal}}$) para ajustar `T_CAPTURA_MS`, pruebas de validación en mesa del nodo y verificación del enlace punto a punto Nodo -> Gateway -> ThingsBoard.
