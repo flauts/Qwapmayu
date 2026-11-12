@@ -1,0 +1,383 @@
+16:56:01.854 > RX seq=14 estado=ARMADO tds=136 rssi=-36 snr=12 PDR=100.0%
+16:56:02.895 > [wifi] Intentando reconectar WiFi...
+
+16:56:02.899 > E (20223) wifi:sta is connecting, return error
+16:56:06.854 > RX seq=15 estado=ARMADO tds=136 rssi=-35 snr=12 PDR=100.0%
+16:56:11.854 > RX seq=16 estado=ARMADO tds=135 rssi=-38 snr=12 PDR=100.0%
+16:56:12.895 > [wifi] Intentando reconectar WiFi...
+16:56:12.898 > E (30223) wifi:sta is connecting, return error
+16:56:16.854 > RX seq=17 estado=ARMADO tds=140 rssi=-40 snr=13 PDR=100.0%
+16:56:21.853 > RX seq=18 estado=ARMADO tds=140 rssi=-37 snr=13 PDR=100.0%
+16:56:22.895 > [wifi] Intentando reconectar WiFi...
+16:56:22.898 > E (40223) wifi:sta is connecting, return error
+16:56:22.902 > [estado] WiFi=no MQTT=no cola=6 recibidas=6 crc_err=0 dup=0 reintentos_rx=0
+16:56:26.853 > RX seq=19 estado=ARMADO tds=147 rssi=-38 snr=12 PDR=100.0%
+16:56:30.755 > [PRUEBA_SORDERA] AT+PRECV=0 -> OK
+16:56:32.895 > [wifi] Intentando reconectar WiFi...
+16:56:32.899 > E (50223) wifi:sta is connecting, return error
+16:56:34.762 > [PRUEBA_SORDERA] AT+PRECV=0 -> OK
+16:56:34.767 > [PRUEBA_SORDERA] AT+PRECV=0 -> OK
+16:56:42.895 > [wifi] Intentando reconectar WiFi...
+
+16:56:42.899 > E (60223) wifi:sta is connecting, return error
+
+16:56:52.895 > [wifi] Intentando reconectar WiFi...
+16:56:52.898 > E (70223) wifi:sta is connecting, return error
+16:56:52.903 > [estado] WiFi=no MQTT=no cola=7 recibidas=7 crc_err=0 dup=0 reintentos_rx=0
+16:57:02.894 > [wifi] Intentando reconectar WiFi...
+16:57:02.898 > E (80223) wifi:sta is connecting, return error
+16:57:12.894 > [wifi] Intentando reconectar WiFi...
+16:57:12.898 > E (90223) wifi:sta is connecting, return error
+16:57:22.894 > [wifi] Intentando reconectar WiFi...
+
+16:57:22.898 > E (100223) wifi:sta is connecting, return error
+16:57:22.902 > [estado] WiFi=no MQTT=no cola=7 recibidas=7 crc_err=0 dup=0 reintentos_rx=0
+16:57:26.852 > [SORDERA] sin tramas hace 60 s, rearmando RX (intento 1)
+16:57:28.419 > [SORDERA] RX rearmado OK
+16:57:31.852 > RX seq=32 estado=ARMADO tds=138 rssi=-48 snr=12 PDR=40.0%
+16:57:32.895 > [wifi] Intentando reconectar WiFi...
+16:57:32.898 > E (110223) wifi:sta is connecting, return error
+16:57:36.852 > RX seq=33 estado=ARMADO tds=132 rssi=-48 snr=12 PDR=42.9%
+16:57:41.853 > RX seq=34 estado=ARMADO tds=146 rssi=-48 snr=12 PDR=45.5%
+16:57:42.894 > [wifi] Intentando reconectar WiFi...
+16:57:42.898 > E (120223) wifi:sta is connecting, return error
+16:57:46.852 > RX seq=35 estado=ARMADO tds=131 rssi=-48 snr=12 PDR=47.8%
+16:57:51.851 > RX seq=36 estado=ARMADO tds=117 rssi=-48 snr=13 PDR=50.0%
+16:57:52.895 > [wifi] Intentando reconectar WiFi...
+16:57:52.898 > E (130223) wifi:sta is connecting, return error
+16:57:52.902 > [estado] WiFi=no MQTT=no cola=12 recibidas=12 crc_err=0 dup=0 reintentos_rx=0
+16:57:56.852 > RX seq=37 estado=ARMADO tds=153 rssi=-48 snr=12 PDR=52.0%
+16:58:01.852 > RX seq=38 estado=ARMADO tds=117 rssi=-48 snr=12 PDR=53.8%
+16:58:02.894 > [wifi] Intentando reconectar WiFi...
+
+16:58:02.898 > E (140223) wifi:sta is connecting, return error
+16:58:06.851 > RX seq=39 estado=ARMADO tds=122 rssi=-48 snr=13 PDR=55.6%
+16:58:11.852 > RX seq=40 estado=ARMADO tds=114 rssi=-48 snr=13 PDR=57.1%
+16:58:12.894 > [wifi] Intentando reconectar WiFi...
+16:58:12.897 > E (150223) wifi:sta is connecting, return error
+
+16:58:16.851 > RX seq=41 estado=ARMADO tds=122 rssi=-48 snr=12 PDR=58.6%
+16:58:16.856 > Cola llena: se descarta el mas antiguo
+
+16:58:21.851 > RX seq=42 estado=ARMADO tds=113 rssi=-48 snr=12 PDR=60.0%
+16:58:21.856 > Cola llena: se descarta el mas antiguo
+16:58:22.894 > [wifi] Intentando reconectar WiFi...
+16:58:22.897 > E (160223) wifi:sta is connecting, return error
+16:58:22.901 > [estado] WiFi=no MQTT=no cola=16 recibidas=18 crc_err=0 dup=0 reintentos_rx=0
+16:58:26.851 > RX seq=43 estado=ARMADO tds=126 rssi=-48 snr=12 PDR=61.3%
+16:58:26.856 > Cola llena: se descarta el mas antiguo
+16:58:31.851 > RX seq=44 estado=ARMADO tds=138 rssi=-48 snr=12 PDR=62.5%
+16:58:31.857 > Cola llena: se descarta el mas antiguo
+16:58:32.894 > [wifi] Intentando reconectar WiFi...
+16:58:32.897 > E (170223) wifi:sta is connecting, return error
+16:58:36.851 > RX seq=45 estado=ARMADO tds=117 rssi=-48 snr=12 PDR=63.6%
+16:58:36.856 > Cola llena: se descarta el mas antiguo
+16:58:41.850 > RX seq=46 estado=ARMADO tds=116 rssi=-48 snr=12 PDR=64.7%
+16:58:41.856 > Cola llena: se descarta el mas antiguo
+
+16:58:42.894 > [wifi] Intentando reconectar WiFi...
+
+16:58:42.898 > E (180223) wifi:sta is connecting, return error
+16:58:46.850 > RX seq=47 estado=ARMADO tds=131 rssi=-48 snr=13 PDR=65.7%
+16:58:46.856 > Cola llena: se descarta el mas antiguo
+16:58:51.851 > RX seq=48 estado=ARMADO tds=130 rssi=-48 snr=13 PDR=66.7%
+16:58:51.856 > Cola llena: se descarta el mas antiguo
+16:58:52.894 > [wifi] Intentando reconectar WiFi...
+16:58:52.897 > E (190223) wifi:sta is connecting, return error
+
+16:58:52.902 > [estado] WiFi=no MQTT=no cola=16 recibidas=24 crc_err=0 dup=0 reintentos_rx=0
+16:58:56.851 > RX seq=49 estado=ARMADO tds=131 rssi=-48 snr=12 PDR=67.6%
+16:58:56.856 > Cola llena: se descarta el mas antiguo
+16:59:01.850 > RX seq=50 estado=ARMADO tds=127 rssi=-48 snr=12 PDR=68.4%
+16:59:01.856 > Cola llena: se descarta el mas antiguo
+16:59:02.894 > [wifi] Intentando reconectar WiFi...
+16:59:02.897 > E (200223) wifi:sta is connecting, return error
+16:59:06.850 > RX seq=51 estado=ARMADO tds=146 rssi=-48 snr=12 PDR=69.2%
+16:59:06.855 > Cola llena: se descarta el mas antiguo
+16:59:11.851 > RX seq=52 estado=ARMADO tds=131 rssi=-48 snr=13 PDR=70.0%
+16:59:11.855 > Cola llena: se descarta el mas antiguo
+
+16:59:12.893 > [wifi] Intentando reconectar WiFi...
+16:59:12.897 > E (210223) wifi:sta is connecting, return error
+16:59:16.850 > RX seq=53 estado=ARMADO tds=131 rssi=-48 snr=12 PDR=70.7%
+16:59:16.855 > Cola llena: se descarta el mas antiguo
+16:59:21.850 > RX seq=54 estado=ARMADO tds=122 rssi=-48 snr=12 PDR=71.4%
+16:59:21.855 > Cola llena: se descarta el mas antiguo
+16:59:22.893 > [wifi] Intentando reconectar WiFi...
+
+16:59:22.897 > E (220223) wifi:sta is connecting, return error
+16:59:22.901 > [estado] WiFi=no MQTT=no cola=16 recibidas=30 crc_err=0 dup=0 reintentos_rx=0
+16:59:26.849 > RX seq=55 estado=ARMADO tds=131 rssi=-48 snr=13 PDR=72.1%
+16:59:26.855 > Cola llena: se descarta el mas antiguo
+16:59:31.849 > RX seq=56 estado=ARMADO tds=136 rssi=-49 snr=13 PDR=72.7%
+16:59:31.854 > Cola llena: se descarta el mas antiguo
+16:59:32.893 > [wifi] Intentando reconectar WiFi...
+16:59:32.896 > E (230223) wifi:sta is connecting, return error
+
+16:59:36.850 > RX seq=57 estado=ARMADO tds=119 rssi=-48 snr=12 PDR=73.3%
+16:59:36.854 > Cola llena: se descarta el mas antiguo
+
+16:59:41.849 > RX seq=58 estado=ARMADO tds=143 rssi=-48 snr=12 PDR=73.9%
+16:59:41.855 > Cola llena: se descarta el mas antiguo
+16:59:42.893 > [wifi] Intentando reconectar WiFi...
+16:59:42.897 > E (240223) wifi:sta is connecting, return error
+16:59:46.849 > RX seq=59 estado=ARMADO tds=128 rssi=-48 snr=12 PDR=74.5%
+16:59:46.854 > Cola llena: se descarta el mas antiguo
+16:59:51.849 > RX seq=60 estado=ARMADO tds=119 rssi=-48 snr=12 PDR=75.0%
+16:59:51.855 > Cola llena: se descarta el mas antiguo
+16:59:52.893 > [wifi] Intentando reconectar WiFi...
+16:59:52.897 > E (250223) wifi:sta is connecting, return error
+16:59:52.902 > [estado] WiFi=no MQTT=no cola=16 recibidas=36 crc_err=0 dup=0 reintentos_rx=0
+16:59:56.849 > RX seq=61 estado=ARMADO tds=125 rssi=-48 snr=12 PDR=75.5%
+16:59:56.855 > Cola llena: se descarta el mas antiguo
+17:00:01.849 > RX seq=62 estado=ARMADO tds=138 rssi=-48 snr=12 PDR=76.0%
+17:00:01.854 > Cola llena: se descarta el mas antiguo
+17:00:02.893 > [wifi] Intentando reconectar WiFi...
+
+17:00:02.897 > E (260223) wifi:sta is connecting, return error
+17:00:06.849 > RX seq=63 estado=ARMADO tds=117 rssi=-48 snr=13 PDR=76.5%
+17:00:06.854 > Cola llena: se descarta el mas antiguo
+17:00:11.849 > RX seq=64 estado=ARMADO tds=123 rssi=-48 snr=12 PDR=76.9%
+17:00:11.854 > Cola llena: se descarta el mas antiguo
+17:00:12.893 > [wifi] Intentando reconectar WiFi...
+17:00:12.897 > E (270223) wifi:sta is connecting, return error
+17:00:16.848 > RX seq=65 estado=ARMADO tds=128 rssi=-48 snr=12 PDR=77.4%
+17:00:16.854 > Cola llena: se descarta el mas antiguo
+17:00:21.849 > RX seq=66 estado=ARMADO tds=132 rssi=-48 snr=12 PDR=77.8%
+17:00:21.854 > Cola llena: se descarta el mas antiguo
+17:00:22.893 > [wifi] Intentando reconectar WiFi...
+17:00:22.896 > E (280223) wifi:sta is connecting, return error
+17:00:22.903 > [estado] WiFi=no MQTT=no cola=16 recibidas=42 crc_err=0 dup=0 reintentos_rx=0
+17:00:26.848 > RX seq=67 estado=ARMADO tds=129 rssi=-48 snr=12 PDR=78.2%
+17:00:26.853 > Cola llena: se descarta el mas antiguo
+17:00:31.848 > RX seq=68 estado=ARMADO tds=118 rssi=-48 snr=13 PDR=78.6%
+17:00:31.853 > Cola llena: se descarta el mas antiguo
+
+17:00:32.893 > [wifi] Intentando reconectar WiFi...
+17:00:32.896 > E (290223) wifi:sta is connecting, return error
+17:00:36.848 > RX seq=69 estado=ARMADO tds=126 rssi=-48 snr=12 PDR=78.9%
+17:00:36.854 > Cola llena: se descarta el mas antiguo
+17:00:41.848 > RX seq=70 estado=ARMADO tds=143 rssi=-48 snr=13 PDR=79.3%
+17:00:41.853 > Cola llena: se descarta el mas antiguo
+17:00:42.893 > [wifi] Intentando reconectar WiFi...
+17:00:42.896 > E (300223) wifi:sta is connecting, return error
+17:00:46.848 > RX seq=71 estado=ARMADO tds=156 rssi=-48 snr=12 PDR=79.7%
+17:00:46.854 > Cola llena: se descarta el mas antiguo
+17:00:51.848 > RX seq=72 estado=ARMADO tds=117 rssi=-48 snr=13 PDR=80.0%
+17:00:51.853 > Cola llena: se descarta el mas antiguo
+17:00:52.893 > [wifi] Intentando reconectar WiFi...
+
+17:00:52.897 > E (310223) wifi:sta is connecting, return error
+17:00:52.903 > [estado] WiFi=no MQTT=no cola=16 recibidas=48 crc_err=0 dup=0 reintentos_rx=0
+17:00:56.847 > RX seq=73 estado=ARMADO tds=132 rssi=-48 snr=12 PDR=80.3%
+17:00:56.853 > Cola llena: se descarta el mas antiguo
+
+17:01:01.847 > RX seq=74 estado=ARMADO tds=114 rssi=-48 snr=12 PDR=80.6%
+17:01:01.853 > Cola llena: se descarta el mas antiguo
+17:01:02.892 > [wifi] Intentando reconectar WiFi...
+17:01:02.896 > E (320223) wifi:sta is connecting, return error
+
+17:01:06.847 > RX seq=75 estado=ARMADO tds=141 rssi=-48 snr=12 PDR=81.0%
+17:01:06.853 > Cola llena: se descarta el mas antiguo
+17:01:11.848 > RX seq=76 estado=ARMADO tds=126 rssi=-48 snr=12 PDR=81.2%
+17:01:11.853 > Cola llena: se descarta el mas antiguo
+17:01:12.892 > [wifi] Intentando reconectar WiFi...
+17:01:12.896 > E (330223) wifi:sta is connecting, return error
+17:01:16.847 > RX seq=77 estado=ARMADO tds=122 rssi=-48 snr=13 PDR=81.5%
+17:01:16.853 > Cola llena: se descarta el mas antiguo
+17:01:21.847 > RX seq=78 estado=ARMADO tds=171 rssi=-48 snr=12 PDR=81.8%
+17:01:21.852 > Cola llena: se descarta el mas antiguo
+17:01:22.892 > [wifi] Intentando reconectar WiFi...
+17:01:22.896 > E (340223) wifi:sta is connecting, return error
+17:01:22.903 > [estado] WiFi=no MQTT=no cola=16 recibidas=54 crc_err=0 dup=0 reintentos_rx=0
+17:01:26.847 > RX seq=79 estado=ARMADO tds=150 rssi=-48 snr=12 PDR=82.1%
+17:01:26.852 > Cola llena: se descarta el mas antiguo
+
+17:01:31.848 > RX seq=80 estado=ARMADO tds=133 rssi=-48 snr=12 PDR=82.4%
+17:01:31.853 > Cola llena: se descarta el mas antiguo
+17:01:32.893 > [wifi] Intentando reconectar WiFi...
+
+17:01:32.896 > E (350223) wifi:sta is connecting, return error
+17:01:36.846 > RX seq=81 estado=ARMADO tds=117 rssi=-48 snr=12 PDR=82.6%
+17:01:36.852 > Cola llena: se descarta el mas antiguo
+17:01:41.846 > RX seq=82 estado=ARMADO tds=138 rssi=-48 snr=13 PDR=82.9%
+17:01:41.852 > Cola llena: se descarta el mas antiguo
+17:01:42.892 > [wifi] Intentando reconectar WiFi...
+17:01:42.895 > E (360223) wifi:sta is connecting, return error
+
+17:01:46.845 > RX seq=83 estado=ARMADO tds=130 rssi=-48 snr=12 PDR=83.1%
+17:01:46.850 > Cola llena: se descarta el mas antiguo
+17:01:51.845 > RX seq=84 estado=ARMADO tds=120 rssi=-48 snr=12 PDR=83.3%
+17:01:51.850 > Cola llena: se descarta el mas antiguo
+
+17:01:52.891 > [wifi] Intentando reconectar WiFi...
+17:01:52.894 > E (370223) wifi:sta is connecting, return error
+17:01:52.903 > [estado] WiFi=no MQTT=no cola=16 recibidas=60 crc_err=0 dup=0 reintentos_rx=0
+17:01:56.845 > RX seq=85 estado=ARMADO tds=122 rssi=-48 snr=12 PDR=83.6%
+17:01:56.850 > Cola llena: se descarta el mas antiguo
+17:02:01.845 > RX seq=86 estado=ARMADO tds=145 rssi=-48 snr=13 PDR=83.8%
+17:02:01.850 > Cola llena: se descarta el mas antiguo
+17:02:02.890 > [wifi] Intentando reconectar WiFi...
+17:02:02.894 > E (380223) wifi:sta is connecting, return error
+17:02:06.844 > RX seq=87 estado=ARMADO tds=141 rssi=-48 snr=12 PDR=84.0%
+17:02:06.849 > Cola llena: se descarta el mas antiguo
+17:02:11.843 > RX seq=88 estado=ARMADO tds=135 rssi=-48 snr=13 PDR=84.2%
+17:02:11.849 > Cola llena: se descarta el mas antiguo
+17:02:12.889 > [wifi] Intentando reconectar WiFi...
+
+17:02:12.893 > E (390223) wifi:sta is connecting, return error
+17:02:16.843 > RX seq=89 estado=ARMADO tds=159 rssi=-48 snr=12 PDR=84.4%
+17:02:16.848 > Cola llena: se descarta el mas antiguo
+17:02:21.842 > RX seq=90 estado=ARMADO tds=127 rssi=-48 snr=12 PDR=84.6%
+17:02:21.847 > Cola llena: se descarta el mas antiguo
+17:02:22.888 > [wifi] Intentando reconectar WiFi...
+17:02:22.892 > E (400223) wifi:sta is connecting, return error
+
+17:02:22.901 > [estado] WiFi=no MQTT=no cola=16 recibidas=66 crc_err=0 dup=0 reintentos_rx=0
+17:02:26.842 > RX seq=91 estado=ARMADO tds=124 rssi=-48 snr=12 PDR=84.8%
+17:02:26.847 > Cola llena: se descarta el mas antiguo
+17:02:31.841 > RX seq=92 estado=ARMADO tds=127 rssi=-48 snr=13 PDR=85.0%
+17:02:31.847 > Cola llena: se descarta el mas antiguo
+17:02:32.888 > [wifi] Intentando reconectar WiFi...
+17:02:32.891 > E (410223) wifi:sta is connecting, return error
+17:02:36.841 > RX seq=93 estado=ARMADO tds=147 rssi=-48 snr=13 PDR=85.2%
+17:02:36.847 > Cola llena: se descarta el mas antiguo
+17:02:41.841 > RX seq=94 estado=ARMADO tds=136 rssi=-48 snr=12 PDR=85.4%
+17:02:41.845 > Cola llena: se descarta el mas antiguo
+17:02:42.887 > [wifi] Intentando reconectar WiFi...
+17:02:42.890 > E (420223) wifi:sta is connecting, return error
+17:02:46.840 > RX seq=95 estado=ARMADO tds=121 rssi=-52 snr=12 PDR=85.5%
+17:02:46.845 > Cola llena: se descarta el mas antiguo
+
+17:02:51.840 > RX seq=96 estado=ARMADO tds=127 rssi=-47 snr=12 PDR=85.7%
+17:02:51.845 > Cola llena: se descarta el mas antiguo
+17:02:52.886 > [wifi] Intentando reconectar WiFi...
+17:02:52.890 > E (430223) wifi:sta is connecting, return error
+17:02:52.900 > [estado] WiFi=no MQTT=no cola=16 recibidas=72 crc_err=0 dup=0 reintentos_rx=0
+17:02:56.839 > RX seq=97 estado=ARMADO tds=130 rssi=-47 snr=13 PDR=85.9%
+17:02:56.845 > Cola llena: se descarta el mas antiguo
+17:03:01.839 > RX seq=98 estado=ARMADO tds=138 rssi=-48 snr=13 PDR=86.0%
+17:03:01.845 > Cola llena: se descarta el mas antiguo
+17:03:02.885 > [wifi] Intentando reconectar WiFi...
+17:03:02.889 > E (440223) wifi:sta is connecting, return error
+17:03:06.838 > RX seq=99 estado=ARMADO tds=148 rssi=-48 snr=12 PDR=86.2%
+17:03:06.843 > Cola llena: se descarta el mas antiguo
+17:03:11.838 > RX seq=100 estado=ARMADO tds=127 rssi=-48 snr=13 PDR=86.4%
+17:03:11.843 > Cola llena: se descarta el mas antiguo
+17:03:12.885 > [wifi] Intentando reconectar WiFi...
+17:03:12.888 > E (450223) wifi:sta is connecting, return error
+17:03:16.837 > RX seq=101 estado=ARMADO tds=121 rssi=-48 snr=13 PDR=86.5%
+17:03:16.843 > Cola llena: se descarta el mas antiguo
+
+17:03:21.837 > RX seq=102 estado=ARMADO tds=141 rssi=-48 snr=12 PDR=86.7%
+17:03:21.843 > Cola llena: se descarta el mas antiguo
+17:03:22.884 > [wifi] Intentando reconectar WiFi...
+17:03:22.888 > E (460223) wifi:sta is connecting, return error
+17:03:22.900 > [estado] WiFi=no MQTT=no cola=16 recibidas=78 crc_err=0 dup=0 reintentos_rx=0
+17:03:26.837 > RX seq=103 estado=ARMADO tds=149 rssi=-48 snr=12 PDR=86.8%
+17:03:26.842 > Cola llena: se descarta el mas antiguo
+17:03:31.836 > RX seq=104 estado=ARMADO tds=138 rssi=-47 snr=13 PDR=87.0%
+17:03:31.842 > Cola llena: se descarta el mas antiguo
+17:03:32.884 > [wifi] Intentando reconectar WiFi...
+17:03:32.887 > E (470223) wifi:sta is connecting, return error
+17:03:36.836 > RX seq=105 estado=ARMADO tds=138 rssi=-48 snr=13 PDR=87.1%
+17:03:36.841 > Cola llena: se descarta el mas antiguo
+17:03:41.836 > RX seq=106 estado=ARMADO tds=141 rssi=-47 snr=12 PDR=87.2%
+17:03:41.841 > Cola llena: se descarta el mas antiguo
+
+17:03:42.883 > [wifi] Intentando reconectar WiFi...
+
+17:03:42.887 > E (480223) wifi:sta is connecting, return error
+17:03:46.835 > RX seq=107 estado=ARMADO tds=121 rssi=-48 snr=13 PDR=87.4%
+17:03:46.841 > Cola llena: se descarta el mas antiguo
+
+17:03:51.835 > RX seq=108 estado=ARMADO tds=137 rssi=-47 snr=13 PDR=87.5%
+17:03:51.840 > Cola llena: se descarta el mas antiguo
+17:03:52.882 > [wifi] Intentando reconectar WiFi...
+17:03:52.885 > E (490223) wifi:sta is connecting, return error
+
+17:03:52.898 > [estado] WiFi=no MQTT=no cola=16 recibidas=84 crc_err=0 dup=0 reintentos_rx=0
+17:03:56.834 > RX seq=109 estado=ARMADO tds=131 rssi=-48 snr=13 PDR=87.6%
+17:03:56.840 > Cola llena: se descarta el mas antiguo
+17:04:01.834 > RX seq=110 estado=ARMADO tds=121 rssi=-48 snr=12 PDR=87.8%
+17:04:01.840 > Cola llena: se descarta el mas antiguo
+17:04:02.881 > [wifi] Intentando reconectar WiFi...
+17:04:02.885 > E (500223) wifi:sta is connecting, return error
+17:04:06.833 > RX seq=111 estado=ARMADO tds=121 rssi=-47 snr=12 PDR=87.9%
+17:04:06.838 > Cola llena: se descarta el mas antiguo
+17:04:11.833 > RX seq=112 estado=ARMADO tds=125 rssi=-48 snr=12 PDR=88.0%
+17:04:11.838 > Cola llena: se descarta el mas antiguo
+
+17:04:12.881 > [wifi] Intentando reconectar WiFi...
+17:04:12.884 > E (510223) wifi:sta is connecting, return error
+17:04:16.833 > RX seq=113 estado=ARMADO tds=129 rssi=-48 snr=12 PDR=88.1%
+17:04:16.838 > Cola llena: se descarta el mas antiguo
+17:04:21.832 > RX seq=114 estado=ARMADO tds=136 rssi=-48 snr=12 PDR=88.2%
+17:04:21.838 > Cola llena: se descarta el mas antiguo
+17:04:22.880 > [wifi] Intentando reconectar WiFi...
+
+17:04:22.884 > E (520223) wifi:sta is connecting, return error
+17:04:22.897 > [estado] WiFi=no MQTT=no cola=16 recibidas=90 crc_err=0 dup=0 reintentos_rx=0
+17:04:26.832 > RX seq=115 estado=ARMADO tds=130 rssi=-47 snr=13 PDR=88.3%
+17:04:26.838 > Cola llena: se descarta el mas antiguo
+17:04:31.831 > RX seq=116 estado=ARMADO tds=128 rssi=-48 snr=13 PDR=88.5%
+17:04:31.836 > Cola llena: se descarta el mas antiguo
+17:04:32.879 > [wifi] Intentando reconectar WiFi...
+17:04:32.883 > E (530223) wifi:sta is connecting, return error
+
+17:04:36.831 > RX seq=117 estado=ARMADO tds=136 rssi=-48 snr=12 PDR=88.6%
+17:04:36.836 > Cola llena: se descarta el mas antiguo
+
+17:04:41.831 > RX seq=118 estado=ARMADO tds=150 rssi=-48 snr=13 PDR=88.7%
+17:04:41.836 > Cola llena: se descarta el mas antiguo
+17:04:42.879 > [wifi] Intentando reconectar WiFi...
+17:04:42.882 > E (540223) wifi:sta is connecting, return error
+17:04:46.830 > RX seq=119 estado=ARMADO tds=157 rssi=-47 snr=13 PDR=88.8%
+17:04:46.836 > Cola llena: se descarta el mas antiguo
+17:04:51.830 > RX seq=120 estado=ARMADO tds=124 rssi=-47 snr=12 PDR=88.9%
+17:04:51.836 > Cola llena: se descarta el mas antiguo
+17:04:52.878 > [wifi] Intentando reconectar WiFi...
+17:04:52.882 > E (550223) wifi:sta is connecting, return error
+17:04:52.896 > [estado] WiFi=no MQTT=no cola=16 recibidas=96 crc_err=0 dup=0 reintentos_rx=0
+17:04:56.830 > RX seq=121 estado=ARMADO tds=127 rssi=-44 snr=12 PDR=89.0%
+17:04:56.835 > Cola llena: se descarta el mas antiguo
+17:05:01.829 > RX seq=122 estado=ARMADO tds=160 rssi=-41 snr=12 PDR=89.1%
+17:05:01.834 > Cola llena: se descarta el mas antiguo
+17:05:02.877 > [wifi] Intentando reconectar WiFi...
+17:05:02.881 > E (560223) wifi:sta is connecting, return error
+17:05:06.829 > RX seq=123 estado=ARMADO tds=140 rssi=-45 snr=12 PDR=89.2%
+17:05:06.834 > Cola llena: se descarta el mas antiguo
+
+17:05:11.828 > RX seq=124 estado=ARMADO tds=122 rssi=-43 snr=13 PDR=89.3%
+17:05:11.834 > Cola llena: se descarta el mas antiguo
+17:05:12.877 > [wifi] Intentando reconectar WiFi...
+17:05:12.881 > E (570223) wifi:sta is connecting, return error
+
+17:05:16.828 > RX seq=125 estado=ARMADO tds=141 rssi=-43 snr=13 PDR=89.4%
+17:05:16.834 > Cola llena: se descarta el mas antiguo
+17:05:21.828 > RX seq=126 estado=ARMADO tds=150 rssi=-43 snr=12 PDR=89.5%
+17:05:21.834 > Cola llena: se descarta el mas antiguo
+17:05:22.876 > [wifi] Intentando reconectar WiFi...
+17:05:22.880 > E (580223) wifi:sta is connecting, return error
+17:05:22.896 > [estado] WiFi=no MQTT=no cola=16 recibidas=102 crc_err=0 dup=0 reintentos_rx=0
+17:05:26.827 > RX seq=127 estado=ARMADO tds=131 rssi=-42 snr=13 PDR=89.6%
+17:05:26.833 > Cola llena: se descarta el mas antiguo
+17:05:31.827 > RX seq=128 estado=ARMADO tds=131 rssi=-47 snr=13 PDR=89.7%
+17:05:31.832 > Cola llena: se descarta el mas antiguo
+
+17:05:32.876 > [wifi] Intentando reconectar WiFi...
+17:05:32.879 > E (590223) wifi:sta is connecting, return error
+17:05:36.827 > RX seq=129 estado=ARMADO tds=141 rssi=-39 snr=12 PDR=89.7%
+17:05:36.832 > Cola llena: se descarta el mas antiguo
+17:05:41.826 > RX seq=130 estado=ARMADO tds=141 rssi=-37 snr=13 PDR=89.8%
+17:05:41.832 > Cola llena: se descarta el mas antiguo
+17:05:42.875 > [wifi] Intentando reconectar WiFi...
+17:05:42.879 > E (600223) wifi:sta is connecting, return error
+17:05:46.826 > RX seq=131 estado=ARMADO tds=131 rssi=-37 snr=12 PDR=89.9%
+17:05:46.832 > Cola llena: se descarta el mas antiguo
+17:05:51.826 > RX seq=132 estado=ARMADO tds=156 rssi=-38 snr=12 PDR=90.0%
+17:05:51.831 > Cola llena: se descarta el mas antiguo
+17:05:52.874 > [wifi] Intentando reconectar WiFi...
+
+17:05:52.879 > E (610223) wifi:sta is connecting, return error
+17:05:52.895 > [estado] WiFi=no MQTT=no cola=16 recibidas=108 crc_err=0 dup=0 reintentos_rx=0
