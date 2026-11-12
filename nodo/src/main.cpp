@@ -26,6 +26,8 @@
 //   z -> borra la NVS de muestreo (reiniciar para empezar limpio)
 // =============================================================
 #include <Arduino.h>
+#include <esp_system.h>
+#include <esp_task_wdt.h>
 #include <OneWire.h>
 #include <DallasTemperature.h>
 #include <Preferences.h>
@@ -54,6 +56,7 @@ const uint8_t  CICLOS_NORMALES_REARME = 3;
 // provisional: ~5 s por 100 mL con manguera de 70 cm y 30 cm de elevacion; el caudal depende de la geometria, recalibrar en el sitio de la expo
 const uint32_t T_CAPTURA_MS           = 5000;
 const uint32_t T_MAX_BOMBA_MS         = 2 * T_CAPTURA_MS;
+const uint32_t WDT_TIMEOUT_MS         = 5000;
 
 // ---------- perifericos y estado ----------
 OneWire oneWire(PIN_TEMP);
@@ -84,6 +87,10 @@ bool       anomalia_sim     = false;
 bool       corte_sim        = false;
 bool       fallo_nvs_sim    = false;
 bool       solicitud_rearme = false;
+uint32_t   loop_max_us      = 0;
+#ifdef PRUEBA_WDT
+bool       wdt_hang_bomba   = false;
+#endif
 
 // ---------- control de rele ----------
 void rele(bool encender) {
@@ -99,10 +106,11 @@ void cambiar_estado(EstadoNodo nuevo, const char* motivo) {
 }
 
 void imprimir_estado() {
-  Serial.printf("[%8lu] estado=%s ev=%u val=0x%02X ano=0x%02X c_tds=%u c_ph=%u c_turb=%u c_norm=%u tds0=%.0f vt0=%.0f sim_ano=%d sim_nvs=%d\n",
+  Serial.printf("[%8lu] estado=%s ev=%u val=0x%02X ano=0x%02X c_tds=%u c_ph=%u c_turb=%u c_norm=%u tds0=%.0f vt0=%.0f sim_ano=%d sim_nvs=%d loop_max_ms=%.2f\n",
                 (unsigned long)millis(), NOMBRE_ESTADO[estado], evento_id,
                 ult_lec.validez, det.anomalias, det.c_tds, det.c_ph, det.c_turb, det.c_normales,
-                det.tds0, vt0_mv, anomalia_sim ? 1 : 0, fallo_nvs_sim ? 1 : 0);
+                det.tds0, vt0_mv, anomalia_sim ? 1 : 0, fallo_nvs_sim ? 1 : 0,
+                loop_max_us / 1000.0f);
 }
 
 // ---------- lectura de sensores ----------
@@ -236,6 +244,16 @@ bool iniciar_captura(const LecturaSensores* lec) {
 
   t0_bomba = millis();
   rele(true);
+#ifdef PRUEBA_WDT
+  if (wdt_hang_bomba) {
+    wdt_hang_bomba = false;
+    Serial.println("!! [PRUEBA_WDT] Bloqueo tras encender rele (sin alimentar WDT)...");
+    Serial.flush();
+    while (true) {
+      __asm__ __volatile__("nop");
+    }
+  }
+#endif
   return true;
 }
 
@@ -371,6 +389,20 @@ void leer_serial() {
         evento_id = 0;
         Serial.println(">> NVS 'muestreo' borrada (reinicia el ESP32 para arrancar limpio)");
         break;
+#ifdef PRUEBA_WDT
+      case 'w':
+        Serial.println("!! [PRUEBA_WDT] Bloqueo inmediato (sin alimentar WDT)...");
+        Serial.flush();
+        while (true) {
+          __asm__ __volatile__("nop");
+        }
+        break;
+      case 'b':
+        wdt_hang_bomba = !wdt_hang_bomba;
+        Serial.printf(">> [PRUEBA_WDT] Bloqueo tras encender rele en proxima captura: %s\n",
+                      wdt_hang_bomba ? "ON" : "OFF");
+        break;
+#endif
       default:
         break;
     }
@@ -389,6 +421,29 @@ void setup() {
   Serial2.begin(115200, SERIAL_8N1, RAK_RX, RAK_TX);
   delay(300);
   Serial.println("\n=== QawapMayu - Nodo QM01 integrado ===");
+
+  esp_reset_reason_t rst = esp_reset_reason();
+  const char* rst_txt = "DESCONOCIDO";
+  switch (rst) {
+    case ESP_RST_UNKNOWN:    rst_txt = "UNKNOWN (desconocido)"; break;
+    case ESP_RST_POWERON:    rst_txt = "POWERON (encendido)"; break;
+    case ESP_RST_EXT:        rst_txt = "EXT (reset externo)"; break;
+    case ESP_RST_SW:         rst_txt = "SW (reinicio software)"; break;
+    case ESP_RST_PANIC:      rst_txt = "PANIC (excepcion)"; break;
+    case ESP_RST_INT_WDT:    rst_txt = "INT_WDT (watchdog interrupcion)"; break;
+    case ESP_RST_TASK_WDT:   rst_txt = "TASK_WDT (watchdog de tarea)"; break;
+    case ESP_RST_WDT:        rst_txt = "WDT (otro watchdog)"; break;
+    case ESP_RST_DEEPSLEEP:  rst_txt = "DEEPSLEEP"; break;
+    case ESP_RST_BROWNOUT:   rst_txt = "BROWNOUT (caida de tension)"; break;
+    case ESP_RST_SDIO:       rst_txt = "SDIO"; break;
+    case ESP_RST_USB:        rst_txt = "USB"; break;
+    case ESP_RST_JTAG:       rst_txt = "JTAG"; break;
+    case ESP_RST_EFUSE:      rst_txt = "EFUSE"; break;
+    case ESP_RST_PWR_GLITCH: rst_txt = "PWR_GLITCH (fallo alimentacion)"; break;
+    case ESP_RST_CPU_LOCKUP: rst_txt = "CPU_LOCKUP (bloqueo CPU)"; break;
+    default: break;
+  }
+  Serial.printf("Motivo de reinicio: %s (%d)\n", rst_txt, (int)rst);
 
   // 2) Sensores: ADC y primera conversion asincrona del DS18B20
   analogReadResolution(12);
@@ -436,10 +491,45 @@ void setup() {
   radio_ok = rak_configurar_p2p(Serial2, false);
   Serial.println(radio_ok ? "RAK configurado en P2P (TX)" : "!! Fallo configurando el RAK (el nodo opera igual)");
 
+  // Armar tras rak_configurar_p2p() porque esa inicializacion puede tomar hasta ~9 s sin respuesta del RAK.
+  // Se preserva la mascara de idle cores de sdkconfig (solo CPU0; loopTask corre en CPU1 sin ceder).
+  const esp_task_wdt_config_t wdt_cfg = {
+    .timeout_ms = WDT_TIMEOUT_MS,
+    .idle_core_mask =
+#ifdef CONFIG_ESP_TASK_WDT_CHECK_IDLE_TASK_CPU0
+      (1U << 0) |
+#endif
+#ifdef CONFIG_ESP_TASK_WDT_CHECK_IDLE_TASK_CPU1
+      (1U << 1) |
+#endif
+      0U,
+    .trigger_panic = true,
+  };
+  esp_err_t wdt_err = esp_task_wdt_reconfigure(&wdt_cfg);
+  if (wdt_err == ESP_ERR_INVALID_STATE) {
+    wdt_err = esp_task_wdt_init(&wdt_cfg);
+  }
+  if (wdt_err == ESP_OK) {
+    esp_err_t wdt_st = esp_task_wdt_status(NULL);
+    if (wdt_st == ESP_ERR_NOT_FOUND) {
+      wdt_err = esp_task_wdt_add(NULL);
+    } else if (wdt_st != ESP_OK) {
+      wdt_err = wdt_st;
+    }
+  }
+  if (wdt_err == ESP_OK) {
+    Serial.printf("WDT armado: %lu ms\n", (unsigned long)WDT_TIMEOUT_MS);
+  } else {
+    Serial.printf("!! Error armando WDT: %s (0x%x)\n", esp_err_to_name(wdt_err), (unsigned)wdt_err);
+  }
+
   t_ciclo = millis();
 }
 
 void loop() {
+  uint32_t t_ini_us = micros();
+  esp_task_wdt_reset();
+
   uint32_t ahora = millis();
 
   leer_serial();
@@ -447,34 +537,31 @@ void loop() {
   supervisar_bomba(ahora);
   atender_rearme();
 
-  if (ahora - t_ciclo < TA_MS) return;
-  t_ciclo += TA_MS;
+  if (ahora - t_ciclo >= TA_MS) {
+    t_ciclo += TA_MS;
 
-  // Regla 3: mientras la bomba corre, no se muestrean sensores ni se usa el radio
-  if (estado == EST_MUESTREANDO) {
-    return;
-  }
+    // Regla 3: mientras la bomba corre, no se muestrean sensores ni se usa el radio
+    if (estado != EST_MUESTREANDO) {
+      ult_lec = leer_sensores();
 
-  ult_lec = leer_sensores();
+      bool tds0_antes = det.tds0_fijado;
+      detector_evaluar(&det, &ult_lec);
+      if (!tds0_antes && det.tds0_fijado) {
+        Serial.printf(">> [AUTO] TDS0 fijado en %.0f ppm (umbral > %.0f ppm)\n",
+                      det.tds0, det.tds0 + UMBRAL_DELTA_TDS);
+      }
 
-  bool tds0_antes = det.tds0_fijado;
-  detector_evaluar(&det, &ult_lec);
-  if (!tds0_antes && det.tds0_fijado) {
-    Serial.printf(">> [AUTO] TDS0 fijado en %.0f ppm (umbral > %.0f ppm)\n",
-                  det.tds0, det.tds0 + UMBRAL_DELTA_TDS);
-  }
+      if (!(det.solicitud_captura && estado == EST_ARMADO && iniciar_captura(&ult_lec))) {
+        enviar_trama(&ult_lec);
 
-  if (det.solicitud_captura && estado == EST_ARMADO) {
-    if (iniciar_captura(&ult_lec)) {
-      // iniciar_captura ya envio la trama con EST_MUESTREANDO y encendio la bomba
-      return;
+        // Regla 1: tras enviar la trama con EST_CAPTURA_ESTIMADA, pasar a EST_BLOQUEADO
+        if (estado == EST_CAPTURA_ESTIMADA) {
+          cambiar_estado(EST_BLOQUEADO, "captura reportada, esperando rearme");
+        }
+      }
     }
   }
 
-  enviar_trama(&ult_lec);
-
-  // Regla 1: tras enviar la trama con EST_CAPTURA_ESTIMADA, pasar a EST_BLOQUEADO
-  if (estado == EST_CAPTURA_ESTIMADA) {
-    cambiar_estado(EST_BLOQUEADO, "captura reportada, esperando rearme");
-  }
+  uint32_t dur_us = micros() - t_ini_us;
+  if (dur_us > loop_max_us) loop_max_us = dur_us;
 }
