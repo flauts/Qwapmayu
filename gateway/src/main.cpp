@@ -34,10 +34,12 @@ void encolar(const String& s) {
   n_cola++;
 }
 
-// Estadisticas del enlace
+// Estadisticas del enlace y recuperacion por silencio del RAK
 uint16_t boot_actual = 0;
 uint32_t seq_primera = 0, seq_ultima = 0, recibidas = 0;
 uint32_t err_crc = 0, duplicadas = 0, contador = 0;
+uint32_t t_ultima_trama = 0, t_ultimo_reintento = 0;
+uint8_t reintentos_rx = 0;
 
 uint64_t epoch_ms() {
   time_t ahora = time(nullptr);
@@ -62,6 +64,9 @@ void procesar_linea(String linea) {
     return;
   }
 
+  t_ultima_trama = millis();
+  reintentos_rx = 0;
+
   // Duplicados y PDR (se reinician si el nodo reinicio)
   if (t.boot_id != boot_actual) {
     boot_actual = t.boot_id; seq_primera = t.seq; seq_ultima = 0; recibidas = 0;
@@ -80,10 +85,30 @@ void procesar_linea(String linea) {
   if (!importante && (contador % PUBLICAR_CADA) != 0) return;
 
   char valores[400];
-  snprintf(valores, sizeof(valores),
-    "{\"ph\":%.2f,\"tds\":%u,\"it\":%.3f,\"temp\":%.2f,\"validez\":%u,\"anomalias\":%u,"
+  size_t pos = 0;
+  int n = snprintf(valores + pos, sizeof(valores) - pos, "{");
+  if (n > 0 && (size_t)n < sizeof(valores) - pos) pos += (size_t)n;
+
+  if ((t.validez & VAL_PH) != 0) {
+    n = snprintf(valores + pos, sizeof(valores) - pos, "\"ph\":%.2f,", t.ph_x100 / 100.0);
+    if (n > 0 && (size_t)n < sizeof(valores) - pos) pos += (size_t)n;
+  }
+  if ((t.validez & VAL_TDS) != 0) {
+    n = snprintf(valores + pos, sizeof(valores) - pos, "\"tds\":%u,", t.tds_ppm);
+    if (n > 0 && (size_t)n < sizeof(valores) - pos) pos += (size_t)n;
+  }
+  if ((t.validez & VAL_TURB) != 0) {
+    n = snprintf(valores + pos, sizeof(valores) - pos, "\"it\":%.3f,", t.it_x1000 / 1000.0);
+    if (n > 0 && (size_t)n < sizeof(valores) - pos) pos += (size_t)n;
+  }
+  if ((t.validez & VAL_TEMP) != 0) {
+    n = snprintf(valores + pos, sizeof(valores) - pos, "\"temp\":%.2f,", t.temp_x100 / 100.0);
+    if (n > 0 && (size_t)n < sizeof(valores) - pos) pos += (size_t)n;
+  }
+
+  snprintf(valores + pos, sizeof(valores) - pos,
+    "\"validez\":%u,\"anomalias\":%u,"
     "\"estado\":\"%s\",\"evento\":%u,\"seq\":%lu,\"boot\":%u,\"rssi\":%d,\"snr\":%d,\"pdr\":%.1f}",
-    t.ph_x100 / 100.0, t.tds_ppm, t.it_x1000 / 1000.0, t.temp_x100 / 100.0,
     t.validez, t.anomalias, NOMBRE_ESTADO[t.estado % 5], t.evento_id,
     (unsigned long)t.seq, t.boot_id, rssi, snr, pdr);
 
@@ -144,23 +169,55 @@ void setup() {
   WiFi.begin(WIFI_SSID, WIFI_PASS);   // no bloquea; se revisa en loop
   configTime(0, 0, "pool.ntp.org", "time.google.com");
   tb.setServer(TB_HOST, TB_PORT);
+  tb.setKeepAlive(30);
   tb.setBufferSize(600);
 
   bool ok = rak_configurar_p2p(Serial2, true);
   Serial.println(ok ? "RAK escuchando en P2P" : "!! Fallo configurando el RAK");
   rak_eco = false;  // a partir de aqui solo se procesan eventos
+  t_ultima_trama = millis();
 }
 
 void loop() {
+#ifdef PRUEBA_SORDERA
+  while (Serial.available()) {
+    char c = (char)Serial.read();
+    if (c == 's') {
+      bool ok = rak_cmd(Serial2, "AT+PRECV=0");
+      Serial.printf("[PRUEBA_SORDERA] AT+PRECV=0 -> %s\n", ok ? "OK" : "error");
+    }
+  }
+#endif
+
   atender_rak();
   atender_mqtt();
+
+  uint32_t ahora = millis();
+  if (ahora - t_ultima_trama > 60000UL &&
+      (reintentos_rx == 0 || (ahora - t_ultimo_reintento >= 60000UL))) {
+    if (reintentos_rx >= 3) {
+      Serial.println("[SORDERA] 3 reintentos sin recuperar RX, reiniciando ESP32...");
+      delay(100);
+      ESP.restart();
+    } else {
+      reintentos_rx++;
+      t_ultimo_reintento = ahora;
+      Serial.printf("[SORDERA] sin tramas hace %lu s, rearmando RX (intento %u)\n",
+                    (unsigned long)((ahora - t_ultima_trama) / 1000UL),
+                    (unsigned)reintentos_rx);
+      if (tb.connected()) tb.loop();
+      bool ok = rak_configurar_p2p(Serial2, true);
+      Serial.println(ok ? "[SORDERA] RX rearmado OK" : "[SORDERA] !! Fallo rearmando RX");
+    }
+  }
 
   static uint32_t t_estado = 0;
   if (millis() - t_estado > 30000) {
     t_estado = millis();
-    Serial.printf("[estado] WiFi=%s MQTT=%s cola=%u recibidas=%lu crc_err=%lu dup=%lu\n",
+    Serial.printf("[estado] WiFi=%s MQTT=%s cola=%u recibidas=%lu crc_err=%lu dup=%lu reintentos_rx=%u\n",
                   WiFi.status() == WL_CONNECTED ? "ok" : "no",
                   tb.connected() ? "ok" : "no", n_cola,
-                  (unsigned long)recibidas, (unsigned long)err_crc, (unsigned long)duplicadas);
+                  (unsigned long)recibidas, (unsigned long)err_crc, (unsigned long)duplicadas,
+                  (unsigned)reintentos_rx);
   }
 }
