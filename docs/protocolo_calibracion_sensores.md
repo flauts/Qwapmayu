@@ -24,7 +24,7 @@
 
 | Canal / Función | Macro en código | Pin ESP32 | Convertidor / Bus | Rango válido en código (`comun/anomalia.h`) |
 |---|---|---|---|---|
-| **pH (DFRobot SEN0169)** | `PIN_PH` | **`GPIO33`** | `ADC1_CH5` | `20 mV <= ph_mV <= 3100 mV` (`PH_MIN_VALIDO_MV`, `PH_MAX_VALIDO_MV`). |
+| **pH (DFRobot SEN0169)** | `PIN_PH` | **`GPIO33`** | `ADC1_CH5` | `180 mV <= ph_mV <= 3100 mV` (`PH_MIN_VALIDO_MV`, `PH_MAX_VALIDO_MV`; actualizado el 2026-11-12 de 20 a 180 mV tras evidenciar piso de ADC a ~142 mV y ruido en reposo/ensayo ácido colapsado <180 mV en 2863 filas de `pruebas/`, preservando líquidos reales: vinagre diluido en 341 mV, BNC en corto en 1345 mV y agua de caño en ~1400 mV). |
 | **Temperatura (DS18B20)** | `PIN_TEMP` | **`GPIO32`** | `1-Wire` (pull-up $4.7\text{ k}\Omega$ a `3V3`) | `-10.0 °C < temp_C < 60.0 °C` y `!= -127.00 °C` |
 | **Turbidez (TS-300B)** | `PIN_TURB` | **`GPIO34`** | `ADC1_CH6` (solo entrada, divisor 10k/20k) | Conectado: `>= 300 mV`. Agua clara (`VT0`): `2000 mV <= turb_mV <= 3250 mV` en NVS `"cal"` (requiere recaptura con 't'). |
 | **TDS (KS0429)** | `PIN_TDS` | **`GPIO35`** | `ADC1_CH7` (solo entrada, directo 0–2.3V) | Rango: 0–1000 ppm. `tds_mV <= 2500 mV`. Auto-fijado (60 s, mediana) y tecla '0' con mediana en RAM (**implementado en código, pendiente de verificar en hardware**). |

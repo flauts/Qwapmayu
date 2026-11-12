@@ -24,7 +24,7 @@
 #define UMBRAL_PH_MIN            6.5f     // LpH (anomalia si pH < 6.5)
 #define UMBRAL_PH_MAX            8.5f     // UpH (anomalia si pH > 8.5)
 #define UMBRAL_IT_MAX            0.200f   // Indice de turbidez maximo (TS-300B: IT > 0.200)
-#define PH_MIN_VALIDO_MV         20       // Por debajo: sonda de pH desconectada o en corto
+#define PH_MIN_VALIDO_MV         180      // Por debajo: pin sin señal o sonda desconectada, piso del ADC ~142 mV
 #define PH_MAX_VALIDO_MV         3100     // Techo de validez para pH con divisor 10k/20k
 #define TDS_MAX_VALIDO_MV        2500     // Salida nativa KS0429 es 0-2.3 V; >2500 mV indica fallo de cableado
 #define TURB_MIN_CONECTADO_MV    300      // Descarta pin ADC flotante (~142 mV) cuando TS-300B no esta conectado
