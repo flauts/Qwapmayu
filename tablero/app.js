@@ -6,17 +6,11 @@
   const STALE_CHECK_INTERVAL_MS = 2000;
   const MAX_EVENTS = 100;
   const MAX_INSPECTOR_ROWS = 1000;
-  const MAX_MONITOREO_FEED_ROWS = 12;
   const MAX_DISCOVERED_TOPICS = 200;
   const MISSING_MARK = '\u2014';
 
   const GW_SUB_TOPIC = 'qawapmayu/v1/gw/+/+';
   const DEFAULT_MONITOREO_TOPIC = 'qawapmayu/v1/+/+/+/+';
-  const STANDARD_MONITOREO_TOPICS = new Set([
-    'qawapmayu/v1/+/+/+/+',
-    'qawapmayu/v1/barranco/#',
-    'qawapmayu/v1/chorrillos/#',
-  ]);
   const LWT_MSG_STORAGE_KEY = 'qawapmayu.lwtMessage';
   const DEFAULT_LWT_MESSAGE = 'Desconexión abrupta detectada (LWT)';
 
@@ -232,9 +226,7 @@
     brokerUrl: getDefaultBrokerUrl(),
     activeView: 'monitoreo',
     monitoreoTopic: DEFAULT_MONITOREO_TOPIC,
-    monitoreoFeedRows: [],
     stationCache: new Map(),
-    topicFeedCache: new Map(),
     discoveredTopics: new Map(),
     knownStations: new Map(),
     lwtEntities: new Map(),
@@ -433,7 +425,6 @@
 
     if (viewName === 'monitoreo') {
       window.requestAnimationFrame(() => {
-        if (!isTelemetryTopicFilter(state.monitoreoTopic)) return;
         if (state.map && state.mapMode === 'leaflet') {
           state.map.invalidateSize();
         }
@@ -484,14 +475,6 @@
     return fParts.length === tParts.length;
   }
 
-  function isTelemetryTopicFilter(topic) {
-    const clean = String(topic || '').trim();
-    if (!clean || clean.startsWith('qawapmayu/v1/gw/')) return false;
-    const parts = clean.split('/');
-    const lastSeg = parts[parts.length - 1];
-    return lastSeg === '#' || lastSeg === '+' || lastSeg === 'telemetria';
-  }
-
   function topicFilterMatchesStation(filterTopic, station) {
     if (!filterTopic || !station) return false;
     const keyParts = typeof station.key === 'string' ? station.key.split('/') : [];
@@ -503,35 +486,6 @@
     return ['telemetria', 'meta', 'estado', 'conexion', 'enlace', 'evento'].some((canal) =>
       mqttTopicMatches(filterTopic, prefix + canal)
     );
-  }
-
-  function dedupeMonitoreoFeedRows(rows) {
-    const seenRetained = new Set();
-    const result = [];
-    for (const row of rows) {
-      if (!row) continue;
-      if (row.retained) {
-        const sig = row.topic + '\0' + row.payload;
-        if (seenRetained.has(sig)) continue;
-        seenRetained.add(sig);
-      }
-      result.push(row);
-      if (result.length >= MAX_MONITOREO_FEED_ROWS) break;
-    }
-    return result;
-  }
-
-  function pushMonitoreoFeedRow(row) {
-    if (row.retained) {
-      state.monitoreoFeedRows = state.monitoreoFeedRows.filter(
-        (existing) =>
-          !(existing.retained && existing.topic === row.topic && existing.payload === row.payload)
-      );
-    }
-    state.monitoreoFeedRows.unshift(row);
-    if (state.monitoreoFeedRows.length > MAX_MONITOREO_FEED_ROWS) {
-      state.monitoreoFeedRows.length = MAX_MONITOREO_FEED_ROWS;
-    }
   }
 
   function makePayloadPreview(payloadStr) {
@@ -557,15 +511,37 @@
     const parsed = parseTopic(topic);
     if (parsed && parsed.kind === 'node') {
       const stationKey = parsed.zona + '/' + parsed.sitio + '/' + parsed.nodo;
-      if (!state.knownStations.has(stationKey)) {
-        state.knownStations.set(stationKey, {
+      let known = state.knownStations.get(stationKey);
+      if (!known) {
+        known = {
           key: stationKey,
           zona: parsed.zona,
           sitio: parsed.sitio,
           nodo: parsed.nodo,
           nombre: parsed.nodo,
           simulado: false,
-        });
+          hasMeta: false,
+        };
+        state.knownStations.set(stationKey, known);
+      }
+      if (parsed.canal === 'meta') {
+        try {
+          const meta = JSON.parse(payloadStr);
+          if (meta && typeof meta === 'object') {
+            if (typeof meta.nombre === 'string' && meta.nombre.trim()) {
+              known.nombre = meta.nombre.trim();
+            }
+            if (typeof meta.zona === 'string' && meta.zona.trim()) {
+              known.zona = meta.zona.trim();
+            }
+            if (typeof meta.simulado === 'boolean') {
+              known.simulado = meta.simulado;
+            }
+            known.hasMeta = true;
+          }
+        } catch (_err) {
+          // Ignorar JSON malformado en meta.
+        }
       }
     }
     return isNew;
@@ -831,18 +807,6 @@
 
     recordDiscoveredTopic(topic, payloadStr, isRetained, now);
 
-    if (
-      !STANDARD_MONITOREO_TOPICS.has(state.monitoreoTopic) &&
-      mqttTopicMatches(state.monitoreoTopic, topic)
-    ) {
-      pushMonitoreoFeedRow({
-        timeMs: now,
-        retained: isRetained,
-        topic,
-        payload: payloadStr,
-      });
-    }
-
     const parsed = parseTopic(topic);
     if (!parsed) {
       scheduleRender();
@@ -1076,6 +1040,7 @@
           nodo: node.nodo,
           nombre: node.nombre,
           simulado: node.simulado,
+          hasMeta: true,
         });
         const connTopic = 'qawapmayu/v1/' + parsed.zona + '/' + parsed.sitio + '/' + parsed.nodo + '/conexion';
         const lwtEnt = state.lwtEntities.get(connTopic);
@@ -1260,7 +1225,6 @@
     state.connected = false;
     state.connecting = false;
     state.stationCache.clear();
-    state.topicFeedCache.clear();
     disconnectInspectorBroker();
     updateConnectionUI();
   }
@@ -1350,6 +1314,7 @@
       const payloadText = payloadBuffer ? payloadBuffer.toString() : '';
       const retained = Boolean(packet && packet.retain);
       recordDiscoveredTopic(topic, payloadText, retained, Date.now());
+      syncStationScopeSelects(state.monitoreoTopic || DEFAULT_MONITOREO_TOPIC);
       if (state.inspectorPaused) return;
       state.inspectorRows.unshift({
         timeMs: Date.now(),
@@ -1536,22 +1501,155 @@
     state.markers.clear();
   }
 
+  function getAvailableStations() {
+    const stationMap = new Map();
+
+    const upsert = (entry, preferLive) => {
+      if (!entry) return;
+      const keyParts = typeof entry.key === 'string' ? entry.key.split('/') : [];
+      const zona = keyParts[0] || entry.zona || '';
+      const sitio = keyParts[1] || entry.sitio || '';
+      const nodo = keyParts[2] || entry.nodo || '';
+      if (!zona || !sitio || !nodo) return;
+
+      const key = zona + '/' + sitio + '/' + nodo;
+      const prev = stationMap.get(key);
+      const hasMeta = Boolean(entry.hasMeta);
+      const rawNombre = typeof entry.nombre === 'string' ? entry.nombre.trim() : '';
+      const prevNombre = prev ? prev.nombre : nodo;
+      const resolvedNombre =
+        rawNombre && (preferLive || hasMeta || rawNombre !== nodo || prevNombre === nodo)
+          ? rawNombre
+          : prevNombre;
+      const displayZona =
+        typeof entry.zona === 'string' && entry.zona.trim() && (preferLive || hasMeta || !prev)
+          ? entry.zona.trim()
+          : prev
+            ? prev.displayZona
+            : zona;
+      const simulado =
+        preferLive || hasMeta
+          ? Boolean(entry.simulado)
+          : Boolean((prev && prev.simulado) || entry.simulado);
+
+      stationMap.set(key, {
+        key,
+        zona,
+        sitio,
+        nodo,
+        displayZona,
+        nombre: resolvedNombre || nodo,
+        simulado,
+      });
+    };
+
+    for (const entry of state.stationCache.values()) upsert(entry, false);
+    for (const entry of state.knownStations.values()) upsert(entry, false);
+    for (const entry of state.nodes.values()) upsert(entry, true);
+
+    return Array.from(stationMap.values())
+      .sort(
+        (a, b) =>
+          String(a.nodo).localeCompare(String(b.nodo), 'es') ||
+          String(a.key).localeCompare(String(b.key), 'es')
+      )
+      .map((s) => {
+        const topic = 'qawapmayu/v1/' + s.zona + '/' + s.sitio + '/' + s.nodo + '/#';
+        const etiquetaNombre =
+          s.nombre && s.nombre !== s.nodo ? s.nombre + ' (' + s.nodo + ')' : s.nodo;
+        return {
+          key: s.key,
+          zona: s.zona,
+          sitio: s.sitio,
+          nodo: s.nodo,
+          displayZona: s.displayZona,
+          nombre: s.nombre,
+          etiquetaNombre,
+          simulado: s.simulado,
+          topic,
+        };
+      });
+  }
+
+  function populateStationScopeSelect(selectEl, activeTopic) {
+    if (!selectEl) return;
+    const targetTopic = activeTopic || state.monitoreoTopic || DEFAULT_MONITOREO_TOPIC;
+    const stations = getAvailableStations();
+    const optionDefs = stations.map((s) => ({
+      value: s.topic,
+      label: s.topic + ' · ' + s.etiquetaNombre + (s.simulado ? ' (Simulado)' : ''),
+    }));
+    const listSig = optionDefs.map((opt) => opt.value + '\u0001' + opt.label).join('\u0002');
+    const nextSig = targetTopic + '\u0003' + listSig;
+
+    if (selectEl.dataset.scopeSig === nextSig && selectEl.value === targetTopic) {
+      return;
+    }
+
+    const baseValues = new Set();
+    for (const opt of Array.from(selectEl.options)) {
+      if (
+        opt.dataset.customTopic !== 'true' &&
+        (!opt.parentElement || opt.parentElement.dataset.stationScopeGroup !== 'true')
+      ) {
+        baseValues.add(opt.value);
+      }
+    }
+    const needsCustomOption =
+      !baseValues.has(targetTopic) && !optionDefs.some((opt) => opt.value === targetTopic);
+
+    if (
+      selectEl.dataset.listSig === listSig &&
+      !needsCustomOption &&
+      !selectEl.querySelector('option[data-custom-topic="true"]')
+    ) {
+      selectEl.value = targetTopic;
+      selectEl.dataset.scopeSig = nextSig;
+      return;
+    }
+
+    const existingGroup = selectEl.querySelector('optgroup[data-station-scope-group="true"]');
+    if (existingGroup) existingGroup.remove();
+    const existingCustom = selectEl.querySelector('option[data-custom-topic="true"]');
+    if (existingCustom) existingCustom.remove();
+
+    if (optionDefs.length > 0) {
+      const group = document.createElement('optgroup');
+      group.label = 'Estaciones disponibles';
+      group.dataset.stationScopeGroup = 'true';
+      for (const def of optionDefs) {
+        const opt = document.createElement('option');
+        opt.value = def.value;
+        opt.textContent = def.label;
+        group.appendChild(opt);
+      }
+      selectEl.appendChild(group);
+    }
+
+    if (needsCustomOption) {
+      const customOpt = document.createElement('option');
+      customOpt.dataset.customTopic = 'true';
+      customOpt.value = targetTopic;
+      customOpt.textContent = targetTopic + ' · Filtro personalizado';
+      selectEl.appendChild(customOpt);
+    }
+
+    selectEl.value = targetTopic;
+    selectEl.dataset.listSig = listSig;
+    selectEl.dataset.scopeSig = nextSig;
+  }
+
+  function syncStationScopeSelects(activeTopic) {
+    const resolvedTopic = activeTopic || state.monitoreoTopic || DEFAULT_MONITOREO_TOPIC;
+    populateStationScopeSelect(getEl('monitoreo-station-scope'), resolvedTopic);
+    populateStationScopeSelect(getEl('zone-filter'), resolvedTopic);
+  }
+
   function changeMonitoreoTopic(rawTopic) {
     const nextTopic = String(rawTopic || '').trim();
     const validation = validateMqttTopicFilter(nextTopic);
-    const errorEl = getEl('monitoreo-sub-error');
-
     if (!validation.valid) {
-      if (errorEl) {
-        errorEl.textContent = validation.error;
-        errorEl.hidden = false;
-      }
       return false;
-    }
-
-    if (errorEl) {
-      errorEl.textContent = '';
-      errorEl.hidden = true;
     }
 
     const prevTopic = state.monitoreoTopic;
@@ -1560,15 +1658,10 @@
     for (const [key, node] of state.nodes.entries()) {
       state.stationCache.set(key, node);
     }
-    state.topicFeedCache.set(
-      prevTopic,
-      dedupeMonitoreoFeedRows(state.monitoreoFeedRows.slice(0, MAX_MONITOREO_FEED_ROWS))
-    );
 
     state.monitoreoTopic = nextTopic;
     state.nodes.clear();
     state.selectedKey = null;
-    state.monitoreoFeedRows = [];
     state.hasAutoFittedMap = false;
     clearMonitoreoMarkers();
 
@@ -1580,11 +1673,6 @@
     if (prevSelectedKey && state.nodes.has(prevSelectedKey)) {
       state.selectedKey = prevSelectedKey;
     }
-
-    const cachedFeed = state.topicFeedCache.get(nextTopic);
-    state.monitoreoFeedRows = Array.isArray(cachedFeed)
-      ? dedupeMonitoreoFeedRows(cachedFeed)
-      : [];
 
     updateMonitoreoTopicUI();
 
@@ -1613,36 +1701,14 @@
   function updateMonitoreoTopicUI() {
     const activeTopic = state.monitoreoTopic || DEFAULT_MONITOREO_TOPIC;
 
-    const inputEl = getEl('monitoreo-sub-input');
-    if (inputEl && inputEl.value !== activeTopic) {
-      inputEl.value = activeTopic;
-    }
-
     const topSub = getEl('active-sub-pill');
     if (topSub) topSub.textContent = activeTopic;
     const settingsSub = getEl('settings-active-sub');
     if (settingsSub) settingsSub.textContent = activeTopic;
+    const monitoreoActiveTopic = getEl('monitoreo-active-topic');
+    if (monitoreoActiveTopic) monitoreoActiveTopic.textContent = activeTopic;
 
-    const selectEl = getEl('zone-filter');
-    if (selectEl) {
-      let customOpt = selectEl.querySelector('option[data-custom-topic="true"]');
-      const hasPreset = Array.from(selectEl.options).some(
-        (opt) => opt.dataset.customTopic !== 'true' && opt.value === activeTopic
-      );
-      if (hasPreset) {
-        if (customOpt) customOpt.remove();
-        selectEl.value = activeTopic;
-      } else {
-        if (!customOpt) {
-          customOpt = document.createElement('option');
-          customOpt.dataset.customTopic = 'true';
-          selectEl.appendChild(customOpt);
-        }
-        customOpt.value = activeTopic;
-        customOpt.textContent = 'Personalizado (' + activeTopic + ')';
-        selectEl.value = activeTopic;
-      }
-    }
+    syncStationScopeSelects(activeTopic);
   }
 
   function updateConnectionUI() {
@@ -1764,7 +1830,6 @@
   function renderAll() {
     const now = Date.now();
     const nodes = getSortedNodes();
-    const showTelemetry = isTelemetryTopicFilter(state.monitoreoTopic);
 
     if (nodes.length > 0 && (!state.selectedKey || !state.nodes.has(state.selectedKey))) {
       state.selectedKey = nodes[0].key;
@@ -1772,38 +1837,17 @@
       state.selectedKey = null;
     }
 
+    syncStationScopeSelects(state.monitoreoTopic || DEFAULT_MONITOREO_TOPIC);
+
     const coverageEl = getEl('monitoreo-coverage');
     const telemetryEl = getEl('monitoreo-telemetry');
-    const wasCoverageHidden = coverageEl ? coverageEl.hidden : false;
-    const wasTelemetryHidden = telemetryEl ? telemetryEl.hidden : false;
-    const wasHidden = wasCoverageHidden || wasTelemetryHidden;
-    if (coverageEl) coverageEl.hidden = !showTelemetry;
-    if (telemetryEl) telemetryEl.hidden = !showTelemetry;
+    if (coverageEl) coverageEl.hidden = false;
+    if (telemetryEl) telemetryEl.hidden = false;
 
-    renderMonitoreoTopicFeed(nodes);
-    if (showTelemetry) {
-      if (wasCoverageHidden && state.map && state.mapMode === 'leaflet') {
-        state.map.invalidateSize();
-      }
-      renderStationsList(nodes, now);
-      renderSummaryStrip(nodes, now);
-      renderMap(nodes, now);
-      renderSelectedTelemetry(nodes, now);
-      if (wasHidden) {
-        window.requestAnimationFrame(() => {
-          if (state.activeView !== 'monitoreo' || !isTelemetryTopicFilter(state.monitoreoTopic)) {
-            return;
-          }
-          if (state.map && state.mapMode === 'leaflet') {
-            state.map.invalidateSize();
-            if (state.hasAutoFittedMap) {
-              fitMapToStations();
-            }
-          }
-          renderCharts();
-        });
-      }
-    }
+    renderStationsList(nodes, now);
+    renderSummaryStrip(nodes, now);
+    renderMap(nodes, now);
+    renderSelectedTelemetry(nodes, now);
     renderLwtPanel();
     renderEventsViews();
     renderInspectorTable();
@@ -2399,7 +2443,6 @@
   }
 
   function renderMap(nodes, now) {
-    if (!isTelemetryTopicFilter(state.monitoreoTopic)) return;
     if (!ensureLeafletMap()) {
       renderSvgMap(nodes, now);
       return;
@@ -2937,7 +2980,7 @@
   }
 
   function renderCharts() {
-    if (state.activeView !== 'monitoreo' || !isTelemetryTopicFilter(state.monitoreoTopic)) return;
+    if (state.activeView !== 'monitoreo') return;
     const node = state.selectedKey ? state.nodes.get(state.selectedKey) : null;
     if (!node) return;
 
@@ -2969,46 +3012,22 @@
     }
   }
 
-  /* ---------- Topic Combobox, Feed & LWT Panel ---------- */
+  /* ---------- Topic Combobox & LWT Panel ---------- */
 
-  function renderTopicMenu(menuEl, filterQuery, mode) {
+  function renderTopicMenu(menuEl, filterQuery) {
     if (!menuEl) return;
-    const resolvedMode = mode === 'inspector' ? 'inspector' : 'monitoreo';
-    menuEl.dataset.menuMode = resolvedMode;
 
     const query = String(filterQuery || '').trim().toLowerCase();
-    const activeTopic =
-      resolvedMode === 'inspector' ? state.inspectorTopic : state.monitoreoTopic;
+    const activeTopic = state.inspectorTopic;
 
-    const stationMap = new Map();
-    for (const [k, s] of state.knownStations.entries()) {
-      stationMap.set(k, Object.assign({}, s));
-    }
-    for (const [k, n] of state.nodes.entries()) {
-      stationMap.set(k, {
-        key: k,
-        zona: n.zona,
-        sitio: n.sitio,
-        nodo: n.nodo,
-        nombre: n.nombre,
-        simulado: n.simulado,
-      });
-    }
-
-    const stationItems = Array.from(stationMap.values())
-      .sort(
-        (a, b) =>
-          String(a.nodo).localeCompare(String(b.nodo), 'es') ||
-          String(a.key).localeCompare(String(b.key), 'es')
-      )
-      .map((s) => ({
-        topic: 'qawapmayu/v1/' + s.zona + '/' + s.sitio + '/' + s.nodo + '/#',
-        label:
-          (s.nombre && s.nombre !== s.nodo ? s.nombre + ' (' + s.nodo + ')' : s.nodo) +
-          ' · ' +
-          s.zona +
-          (s.simulado ? ' · Simulado' : ''),
-      }));
+    const stationItems = getAvailableStations().map((s) => ({
+      topic: s.topic,
+      label:
+        s.etiquetaNombre +
+        ' · ' +
+        s.displayZona +
+        (s.simulado ? ' · Simulado' : ''),
+    }));
 
     const liveItems = Array.from(state.discoveredTopics.values())
       .sort((a, b) => a.topic.localeCompare(b.topic, 'es'))
@@ -3062,72 +3081,13 @@
     }
 
     if (renderedCount === 0) {
-      const actionLabel = resolvedMode === 'inspector' ? 'Suscribir' : 'Aplicar';
       menuEl.appendChild(
         createEl(
           'div',
           'topic-menu__empty',
-          'Sin sugerencias coincidentes. Pulsa ' + actionLabel + ' para suscribir el tópico escrito.'
+          'Sin sugerencias coincidentes. Pulsa Suscribir para suscribir el tópico escrito.'
         )
       );
-    }
-  }
-
-  function renderMonitoreoTopicFeed(_nodes) {
-    const panel = getEl('monitoreo-topic-feed');
-    const listEl = getEl('monitoreo-feed-list');
-    const countEl = getEl('monitoreo-feed-count');
-    if (!panel || !listEl) return;
-
-    const showTelemetry = isTelemetryTopicFilter(state.monitoreoTopic);
-    const isNonStandard = !STANDARD_MONITOREO_TOPICS.has(state.monitoreoTopic);
-    const shouldShow =
-      !showTelemetry || (isNonStandard && state.monitoreoFeedRows.length > 0);
-
-    panel.hidden = !shouldShow;
-    if (!shouldShow) return;
-
-    if (countEl) {
-      countEl.textContent =
-        state.monitoreoFeedRows.length +
-        (state.monitoreoFeedRows.length === 1 ? ' mensaje' : ' mensajes');
-    }
-
-    listEl.innerHTML = '';
-
-    if (state.monitoreoFeedRows.length === 0) {
-      const empty = createEl('div', 'empty-state empty-state--compact');
-      const desc = createEl('p', 'empty-state__desc');
-      desc.appendChild(document.createTextNode('Esperando mensajes en '));
-      desc.appendChild(createEl('code', 'topic-slug', state.monitoreoTopic));
-      desc.appendChild(document.createTextNode('.'));
-      empty.appendChild(desc);
-      listEl.appendChild(empty);
-      return;
-    }
-
-    for (const row of state.monitoreoFeedRows) {
-      const item = createEl('div', 'topic-feed-item');
-      const top = createEl('div', 'topic-feed-item__top');
-      top.appendChild(createEl('code', 'topic-slug', row.topic));
-
-      const meta = createEl('div', 'topic-feed-item__meta');
-      meta.appendChild(
-        createEl(
-          'span',
-          row.retained ? 'pill pill--neutral' : 'pill pill--ok',
-          row.retained ? 'Retenido' : 'En vivo'
-        )
-      );
-      meta.appendChild(createEl('span', 'topic-feed-item__time num', formatClockWithMs(row.timeMs)));
-      top.appendChild(meta);
-      item.appendChild(top);
-
-      const pre = createEl('pre', 'topic-feed-item__payload');
-      pre.appendChild(createEl('code', 'num', row.payload || '(vacío)'));
-      item.appendChild(pre);
-
-      listEl.appendChild(item);
     }
   }
 
@@ -3543,7 +3503,7 @@
     });
   }
 
-  function wireTopicCombobox({ formId, inputId, toggleId, menuId, errorId, mode, onSubmit }) {
+  function wireTopicCombobox({ formId, inputId, toggleId, menuId, errorId, onSubmit }) {
     const formEl = getEl(formId);
     const inputEl = getEl(inputId);
     const toggleEl = getEl(toggleId);
@@ -3579,7 +3539,7 @@
         if (ctrl.menuEl !== menuEl) ctrl.closeMenu();
       }
       activeIndex = -1;
-      renderTopicMenu(menuEl, useFilter ? inputEl.value : '', mode);
+      renderTopicMenu(menuEl, useFilter ? inputEl.value : '');
       menuEl.hidden = false;
       inputEl.setAttribute('aria-expanded', 'true');
       toggleEl.setAttribute('aria-expanded', 'true');
@@ -3753,15 +3713,12 @@
       });
     }
 
-    wireTopicCombobox({
-      formId: 'monitoreo-sub-form',
-      inputId: 'monitoreo-sub-input',
-      toggleId: 'btn-monitoreo-dropdown',
-      menuId: 'monitoreo-topic-menu',
-      errorId: 'monitoreo-sub-error',
-      mode: 'monitoreo',
-      onSubmit: (topic) => changeMonitoreoTopic(topic),
-    });
+    const monitoreoScopeSelect = getEl('monitoreo-station-scope');
+    if (monitoreoScopeSelect) {
+      monitoreoScopeSelect.addEventListener('change', (evt) =>
+        changeMonitoreoTopic(evt.target.value)
+      );
+    }
 
     wireTopicCombobox({
       formId: 'inspector-sub-form',
@@ -3769,7 +3726,6 @@
       toggleId: 'btn-inspector-dropdown',
       menuId: 'inspector-topic-menu',
       errorId: 'inspector-sub-error',
-      mode: 'inspector',
       onSubmit: (topic) => subscribeInspectorTopic(topic),
     });
 

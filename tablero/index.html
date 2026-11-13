@@ -201,61 +201,18 @@
       <!-- Vista 1: Monitoreo -->
       <section id="view-monitoreo" class="view-section" aria-label="Monitoreo en tiempo real">
         <div id="monitoreo-sub-bar" class="monitoreo-sub-bar">
-          <form id="monitoreo-sub-form" class="topic-combobox" autocomplete="off">
-            <label class="sr-only" for="monitoreo-sub-input">Suscripción MQTT de monitoreo</label>
-            <div class="topic-combobox__field">
-              <input
-                id="monitoreo-sub-input"
-                class="input input--sm input--mono topic-combobox__input"
-                type="text"
-                value="qawapmayu/v1/+/+/+/+"
-                autocomplete="off"
-                spellcheck="false"
-                placeholder="Escribe o elige un tópico (+ / #)..."
-                role="combobox"
-                aria-autocomplete="list"
-                aria-expanded="false"
-                aria-controls="monitoreo-topic-menu"
-              />
-              <button
-                id="btn-monitoreo-dropdown"
-                class="topic-combobox__toggle"
-                type="button"
-                aria-expanded="false"
-                aria-controls="monitoreo-topic-menu"
-                aria-label="Mostrar tópicos sugeridos"
-              >
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-                  <path
-                    d="M4 6l4 4 4-4"
-                    stroke="currentColor"
-                    stroke-width="1.6"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                  />
-                </svg>
-              </button>
-            </div>
-            <button id="btn-monitoreo-apply" class="btn btn--sm btn--primary" type="submit">
-              Aplicar
-            </button>
-            <div
-              id="monitoreo-topic-menu"
-              class="topic-menu"
-              role="listbox"
-              aria-label="Tópicos sugeridos para monitoreo"
-              hidden
-            ></div>
-          </form>
-          <p id="monitoreo-sub-error" class="inspector-sub-error" role="alert" hidden></p>
-        </div>
-
-        <div id="monitoreo-topic-feed" class="topic-feed-panel panel" hidden>
-          <header class="panel__header">
-            <h2>Mensajes del tópico</h2>
-            <span id="monitoreo-feed-count" class="panel__meta num">0 mensajes</span>
-          </header>
-          <div id="monitoreo-feed-list" class="topic-feed-list"></div>
+          <div class="monitoreo-sub-bar__row">
+            <label class="monitoreo-sub-bar__label" for="monitoreo-station-scope">Suscripción MQTT</label>
+            <select id="monitoreo-station-scope" class="input input--sm input--mono monitoreo-sub-bar__select">
+              <option value="qawapmayu/v1/+/+/+/+">qawapmayu/v1/+/+/+/+ · Todas las estaciones</option>
+              <option value="qawapmayu/v1/barranco/#">qawapmayu/v1/barranco/# · Distrito Barranco</option>
+              <option value="qawapmayu/v1/chorrillos/#">qawapmayu/v1/chorrillos/# · Distrito Chorrillos</option>
+            </select>
+          </div>
+          <div class="monitoreo-sub-bar__meta">
+            <span>Tópico activo:</span>
+            <code id="monitoreo-active-topic" class="topic-slug">qawapmayu/v1/+/+/+/+</code>
+          </div>
         </div>
 
         <div id="monitoreo-coverage" class="coverage-split">
@@ -795,10 +752,9 @@
                 <div class="field">
                   <label for="zone-filter">Filtro de zona (suscripción wildcard)</label>
                   <select id="zone-filter" class="input input--form">
-                    <option value="qawapmayu/v1/+/+/+/+">Todas (qawapmayu/v1/+/+/+/+)</option>
-                    <option value="qawapmayu/v1/barranco/#">Barranco (qawapmayu/v1/barranco/#)</option>
-                    <option value="qawapmayu/v1/chorrillos/#">Chorrillos (qawapmayu/v1/chorrillos/#)</option>
-                    <option value="qawapmayu/v1/#">Todo QawapMayu (qawapmayu/v1/#)</option>
+                    <option value="qawapmayu/v1/+/+/+/+">qawapmayu/v1/+/+/+/+ · Todas las estaciones</option>
+                    <option value="qawapmayu/v1/barranco/#">qawapmayu/v1/barranco/# · Distrito Barranco</option>
+                    <option value="qawapmayu/v1/chorrillos/#">qawapmayu/v1/chorrillos/# · Distrito Chorrillos</option>
                   </select>
                 </div>
 
