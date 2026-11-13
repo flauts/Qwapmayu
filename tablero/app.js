@@ -233,6 +233,8 @@
     activeView: 'monitoreo',
     monitoreoTopic: DEFAULT_MONITOREO_TOPIC,
     monitoreoFeedRows: [],
+    stationCache: new Map(),
+    topicFeedCache: new Map(),
     discoveredTopics: new Map(),
     knownStations: new Map(),
     lwtEntities: new Map(),
@@ -431,6 +433,7 @@
 
     if (viewName === 'monitoreo') {
       window.requestAnimationFrame(() => {
+        if (!isTelemetryTopicFilter(state.monitoreoTopic)) return;
         if (state.map && state.mapMode === 'leaflet') {
           state.map.invalidateSize();
         }
@@ -481,6 +484,56 @@
     return fParts.length === tParts.length;
   }
 
+  function isTelemetryTopicFilter(topic) {
+    const clean = String(topic || '').trim();
+    if (!clean || clean.startsWith('qawapmayu/v1/gw/')) return false;
+    const parts = clean.split('/');
+    const lastSeg = parts[parts.length - 1];
+    return lastSeg === '#' || lastSeg === '+' || lastSeg === 'telemetria';
+  }
+
+  function topicFilterMatchesStation(filterTopic, station) {
+    if (!filterTopic || !station) return false;
+    const keyParts = typeof station.key === 'string' ? station.key.split('/') : [];
+    const zona = keyParts[0] || station.zona;
+    const sitio = keyParts[1] || station.sitio;
+    const nodo = keyParts[2] || station.nodo;
+    if (!zona || !sitio || !nodo) return false;
+    const prefix = 'qawapmayu/v1/' + zona + '/' + sitio + '/' + nodo + '/';
+    return ['telemetria', 'meta', 'estado', 'conexion', 'enlace', 'evento'].some((canal) =>
+      mqttTopicMatches(filterTopic, prefix + canal)
+    );
+  }
+
+  function dedupeMonitoreoFeedRows(rows) {
+    const seenRetained = new Set();
+    const result = [];
+    for (const row of rows) {
+      if (!row) continue;
+      if (row.retained) {
+        const sig = row.topic + '\0' + row.payload;
+        if (seenRetained.has(sig)) continue;
+        seenRetained.add(sig);
+      }
+      result.push(row);
+      if (result.length >= MAX_MONITOREO_FEED_ROWS) break;
+    }
+    return result;
+  }
+
+  function pushMonitoreoFeedRow(row) {
+    if (row.retained) {
+      state.monitoreoFeedRows = state.monitoreoFeedRows.filter(
+        (existing) =>
+          !(existing.retained && existing.topic === row.topic && existing.payload === row.payload)
+      );
+    }
+    state.monitoreoFeedRows.unshift(row);
+    if (state.monitoreoFeedRows.length > MAX_MONITOREO_FEED_ROWS) {
+      state.monitoreoFeedRows.length = MAX_MONITOREO_FEED_ROWS;
+    }
+  }
+
   function makePayloadPreview(payloadStr) {
     const compact = String(payloadStr || '').replace(/\s+/g, ' ').trim();
     if (compact.length <= 44) return compact;
@@ -528,20 +581,60 @@
     return rawTs;
   }
 
-  function getGwDiagMeta(estado) {
+  function getGwDiagMeta(estado, reintentosRx) {
     switch (estado) {
       case 'escuchando':
         return { label: 'Escuchando', pillClass: 'pill--ok' };
       case 'recuperado':
         return { label: 'Recuperado', pillClass: 'pill--ok' };
       case 'sordera_rearmando':
-        return { label: 'Rearmando RX', pillClass: 'pill--warn' };
+        return {
+          label:
+            'Rearmando RAK' +
+            (typeof reintentosRx === 'number' && Number.isFinite(reintentosRx)
+              ? ' (' + reintentosRx + '/3)'
+              : ''),
+          pillClass: 'pill--warn',
+        };
       case 'nodo_silencio':
         return { label: 'Nodo en silencio', pillClass: 'pill--warn' };
       case 'sordera_reinicio':
-        return { label: 'Reinicio por sordera', pillClass: 'pill--bad' };
+        return { label: 'Reinicio sordera', pillClass: 'pill--bad' };
       default:
         return { label: estado || 'Sin diagnóstico', pillClass: 'pill--neutral' };
+    }
+  }
+
+  function humanizeSorderaMotivo(motivo, diag) {
+    const code = String(motivo || '').trim().toLowerCase();
+    switch (code) {
+      case 'inicio':
+        return 'Gateway conectado y escuchando LoRa';
+      case 'sin_tramas_lora_rearme_ok':
+        return 'Sin tramas LoRa; radio RAK rearmada';
+      case 'sin_tramas_lora_rearme_fallo':
+        return 'Sin tramas LoRa; falló el rearme del RAK';
+      case 'reinicio_por_sordera':
+        return '3 fallos RX seguidos; reinicio automático del gateway';
+      case 'timeout_lora_nodo':
+        return 'Sin tramas LoRa del nodo (>30 s)';
+      case 'trama_rx_recuperada':
+        return 'Trama LoRa recuperada';
+      case 'nodo_reconectado':
+        return 'Nodo reconectado por LoRa';
+      default: {
+        if (code) {
+          const readable = String(motivo).trim().replace(/_/g, ' ');
+          return readable.charAt(0).toUpperCase() + readable.slice(1);
+        }
+        const d = diag || {};
+        return buildDefaultDiagReason(
+          d.estado,
+          d.silencioS || 0,
+          d.reintentosRx || 0,
+          d.nodo || ''
+        );
+      }
     }
   }
 
@@ -586,38 +679,42 @@
     const key = zona + '/' + sitio + '/' + nodo;
     let node = state.nodes.get(key);
     if (!node) {
-      node = {
-        key,
-        zona,
-        sitio,
-        nodo,
-        nombre: nodo,
-        lat: null,
-        lon: null,
-        simulado: false,
-        conexion: null,
-        conexionRetained: false,
-        conexionTsMs: null,
-        estado: null,
-        hasTelemetry: false,
-        ph: null,
-        tds: null,
-        it: null,
-        temp: null,
-        validez: 0,
-        anomalias: 0,
-        rssi: null,
-        snr: null,
-        pdr: null,
-        seq: null,
-        boot: null,
-        lastTelemetryTs: 0,
-        lastLiveTelemetryRxMs: 0,
-        lastMsgRxMs: 0,
-        history: [],
-      };
+      node = state.stationCache.get(key);
+      if (!node) {
+        node = {
+          key,
+          zona,
+          sitio,
+          nodo,
+          nombre: nodo,
+          lat: null,
+          lon: null,
+          simulado: false,
+          conexion: null,
+          conexionRetained: false,
+          conexionTsMs: null,
+          estado: null,
+          hasTelemetry: false,
+          ph: null,
+          tds: null,
+          it: null,
+          temp: null,
+          validez: 0,
+          anomalias: 0,
+          rssi: null,
+          snr: null,
+          pdr: null,
+          seq: null,
+          boot: null,
+          lastTelemetryTs: 0,
+          lastLiveTelemetryRxMs: 0,
+          lastMsgRxMs: 0,
+          history: [],
+        };
+      }
       state.nodes.set(key, node);
     }
+    state.stationCache.set(key, node);
     return node;
   }
 
@@ -738,15 +835,12 @@
       !STANDARD_MONITOREO_TOPICS.has(state.monitoreoTopic) &&
       mqttTopicMatches(state.monitoreoTopic, topic)
     ) {
-      state.monitoreoFeedRows.unshift({
+      pushMonitoreoFeedRow({
         timeMs: now,
         retained: isRetained,
         topic,
         payload: payloadStr,
       });
-      if (state.monitoreoFeedRows.length > MAX_MONITOREO_FEED_ROWS) {
-        state.monitoreoFeedRows.length = MAX_MONITOREO_FEED_ROWS;
-      }
     }
 
     const parsed = parseTopic(topic);
@@ -847,9 +941,17 @@
             rawEstado === 'nodo_silencio' ||
             rawEstado === 'recuperado'
           ) {
-            const diagMeta = getGwDiagMeta(rawEstado);
+            const diagMeta = getGwDiagMeta(rawEstado, reintentosRx);
+            const humanMotivo = humanizeSorderaMotivo(motivo, {
+              estado: rawEstado,
+              reintentosRx,
+              silencioS,
+              nodo,
+            });
             const detail =
-              motivo || buildDefaultDiagReason(rawEstado, silencioS, reintentosRx, nodo);
+              rawEstado === 'nodo_silencio' && nodo && !humanMotivo.includes(nodo)
+                ? humanMotivo + ' · ' + nodo
+                : humanMotivo;
             const dedupeStamp = diagData.ts
               ? String(diagData.ts)
               : isRetained
@@ -916,8 +1018,8 @@
           (!prevConn && !isRetained && clean === 'fuera_de_linea')
         ) {
           const depNote = simulado
-            ? 'Simulado'
-            : 'Hardware · depende de ' + (state.gwId || 'gw01');
+            ? 'Directo MQTT'
+            : 'Vía LoRa (' + (state.gwId || 'gw01') + ')';
           recordEvent('conn:' + node.key + ':' + clean + ':' + now, {
             ts: now,
             station: node.nombre || node.key,
@@ -1157,6 +1259,8 @@
     }
     state.connected = false;
     state.connecting = false;
+    state.stationCache.clear();
+    state.topicFeedCache.clear();
     disconnectInspectorBroker();
     updateConnectionUI();
   }
@@ -1451,12 +1555,36 @@
     }
 
     const prevTopic = state.monitoreoTopic;
+    const prevSelectedKey = state.selectedKey;
+
+    for (const [key, node] of state.nodes.entries()) {
+      state.stationCache.set(key, node);
+    }
+    state.topicFeedCache.set(
+      prevTopic,
+      dedupeMonitoreoFeedRows(state.monitoreoFeedRows.slice(0, MAX_MONITOREO_FEED_ROWS))
+    );
+
     state.monitoreoTopic = nextTopic;
     state.nodes.clear();
     state.selectedKey = null;
     state.monitoreoFeedRows = [];
     state.hasAutoFittedMap = false;
     clearMonitoreoMarkers();
+
+    for (const [key, cached] of state.stationCache.entries()) {
+      if (topicFilterMatchesStation(nextTopic, cached)) {
+        state.nodes.set(key, cached);
+      }
+    }
+    if (prevSelectedKey && state.nodes.has(prevSelectedKey)) {
+      state.selectedKey = prevSelectedKey;
+    }
+
+    const cachedFeed = state.topicFeedCache.get(nextTopic);
+    state.monitoreoFeedRows = Array.isArray(cachedFeed)
+      ? dedupeMonitoreoFeedRows(cachedFeed)
+      : [];
 
     updateMonitoreoTopicUI();
 
@@ -1593,7 +1721,10 @@
       compactLabel = gwId + ' · offline';
     } else if (isSordera) {
       pillClass = state.gwDiag.estado === 'sordera_reinicio' ? 'pill--bad' : 'pill--warn';
-      label = gwId + ': sordera RX (' + (state.gwDiag.estado || 'alerta') + ')';
+      label =
+        state.gwDiag.estado === 'sordera_reinicio'
+          ? gwId + ': reinicio sordera'
+          : gwId + ': rearmando RX (' + (state.gwDiag.reintentosRx || 0) + '/3)';
       compactLabel = gwId + ' · sordera';
     } else if (state.gwDiag.estado === 'nodo_silencio') {
       pillClass = 'pill--warn';
@@ -1633,6 +1764,7 @@
   function renderAll() {
     const now = Date.now();
     const nodes = getSortedNodes();
+    const showTelemetry = isTelemetryTopicFilter(state.monitoreoTopic);
 
     if (nodes.length > 0 && (!state.selectedKey || !state.nodes.has(state.selectedKey))) {
       state.selectedKey = nodes[0].key;
@@ -1640,11 +1772,38 @@
       state.selectedKey = null;
     }
 
+    const coverageEl = getEl('monitoreo-coverage');
+    const telemetryEl = getEl('monitoreo-telemetry');
+    const wasCoverageHidden = coverageEl ? coverageEl.hidden : false;
+    const wasTelemetryHidden = telemetryEl ? telemetryEl.hidden : false;
+    const wasHidden = wasCoverageHidden || wasTelemetryHidden;
+    if (coverageEl) coverageEl.hidden = !showTelemetry;
+    if (telemetryEl) telemetryEl.hidden = !showTelemetry;
+
     renderMonitoreoTopicFeed(nodes);
-    renderStationsList(nodes, now);
-    renderSummaryStrip(nodes, now);
-    renderMap(nodes, now);
-    renderSelectedTelemetry(nodes, now);
+    if (showTelemetry) {
+      if (wasCoverageHidden && state.map && state.mapMode === 'leaflet') {
+        state.map.invalidateSize();
+      }
+      renderStationsList(nodes, now);
+      renderSummaryStrip(nodes, now);
+      renderMap(nodes, now);
+      renderSelectedTelemetry(nodes, now);
+      if (wasHidden) {
+        window.requestAnimationFrame(() => {
+          if (state.activeView !== 'monitoreo' || !isTelemetryTopicFilter(state.monitoreoTopic)) {
+            return;
+          }
+          if (state.map && state.mapMode === 'leaflet') {
+            state.map.invalidateSize();
+            if (state.hasAutoFittedMap) {
+              fitMapToStations();
+            }
+          }
+          renderCharts();
+        });
+      }
+    }
     renderLwtPanel();
     renderEventsViews();
     renderInspectorTable();
@@ -2240,6 +2399,7 @@
   }
 
   function renderMap(nodes, now) {
+    if (!isTelemetryTopicFilter(state.monitoreoTopic)) return;
     if (!ensureLeafletMap()) {
       renderSvgMap(nodes, now);
       return;
@@ -2777,7 +2937,7 @@
   }
 
   function renderCharts() {
-    if (state.activeView !== 'monitoreo') return;
+    if (state.activeView !== 'monitoreo' || !isTelemetryTopicFilter(state.monitoreoTopic)) return;
     const node = state.selectedKey ? state.nodes.get(state.selectedKey) : null;
     if (!node) return;
 
@@ -2913,16 +3073,16 @@
     }
   }
 
-  function renderMonitoreoTopicFeed(nodes) {
+  function renderMonitoreoTopicFeed(_nodes) {
     const panel = getEl('monitoreo-topic-feed');
     const listEl = getEl('monitoreo-feed-list');
     const countEl = getEl('monitoreo-feed-count');
     if (!panel || !listEl) return;
 
+    const showTelemetry = isTelemetryTopicFilter(state.monitoreoTopic);
     const isNonStandard = !STANDARD_MONITOREO_TOPICS.has(state.monitoreoTopic);
-    const hasTelemetryNodes = nodes.some((n) => n.hasTelemetry);
     const shouldShow =
-      isNonStandard && (state.monitoreoFeedRows.length > 0 || !hasTelemetryNodes);
+      !showTelemetry || (isNonStandard && state.monitoreoFeedRows.length > 0);
 
     panel.hidden = !shouldShow;
     if (!shouldShow) return;
@@ -3024,24 +3184,22 @@
     if (gwStatePill) {
       if (state.gwOnline === true) {
         gwStatePill.className = 'pill pill--ok';
-        gwStatePill.textContent = 'en_linea';
+        gwStatePill.textContent = 'En línea';
       } else if (state.gwOnline === false) {
         gwStatePill.className = 'pill pill--bad';
-        gwStatePill.textContent = 'fuera_de_linea';
+        gwStatePill.textContent = 'Fuera de línea (LWT)';
       } else {
         gwStatePill.className = 'pill pill--neutral';
-        gwStatePill.textContent = 'esperando';
+        gwStatePill.textContent = 'Esperando';
       }
     }
 
     if (gwOriginEl) {
       if (state.gwOnline !== null) {
-        gwOriginEl.className = 'pill ' + (state.gwLwtRetained ? 'pill--neutral' : 'pill--ok');
         gwOriginEl.textContent =
           (state.gwLwtRetained ? 'Retenido' : 'En vivo') +
           (state.gwLwtTsMs ? ' · ' + formatClockTime(state.gwLwtTsMs) : '');
       } else {
-        gwOriginEl.className = 'pill pill--neutral';
         gwOriginEl.textContent = 'Sin mensajes';
       }
     }
@@ -3050,63 +3208,37 @@
       if (state.gwOnline === false) {
         gwMsgEl.textContent = state.lwtCustomMessage;
       } else if (state.gwOnline === true) {
-        gwMsgEl.textContent =
-          'Enlace MQTT del gateway activo.' +
-          (state.gwLwtTsMs ? ' Última actualización: ' + formatClockTime(state.gwLwtTsMs) + '.' : '');
+        gwMsgEl.textContent = 'Enlace MQTT activo';
       } else {
         gwMsgEl.textContent = 'Esperando publicación LWT del gateway.';
       }
     }
 
-    const diagMeta = getGwDiagMeta(state.gwDiag.estado);
+    const diagMeta = getGwDiagMeta(state.gwDiag.estado, state.gwDiag.reintentosRx);
     if (diagPill) {
       diagPill.className = 'pill ' + diagMeta.pillClass;
-      diagPill.textContent = state.gwDiag.estado || 'sin diagnóstico';
+      diagPill.textContent = diagMeta.label;
     }
     if (diagRetriesEl) {
       diagRetriesEl.textContent =
         'Reintentos RX: ' +
-        state.gwDiag.reintentosRx +
-        (state.gwDiag.silencioS > 0 ? ' · Silencio ' + state.gwDiag.silencioS + ' s' : '');
+        (state.gwDiag.reintentosRx || 0) +
+        (state.gwDiag.silencioS > 0 ? ' · Silencio ' + state.gwDiag.silencioS + ' s' : '') +
+        (state.gwDiag.tsMs ? ' · ' + formatClockTime(state.gwDiag.tsMs) : '');
     }
 
     if (diagMotivoEl) {
-      diagMotivoEl.innerHTML = '';
       if (state.gwDiag.estado) {
-        const reason =
-          state.gwDiag.motivo ||
-          buildDefaultDiagReason(
-            state.gwDiag.estado,
-            state.gwDiag.silencioS,
-            state.gwDiag.reintentosRx,
-            state.gwDiag.nodo
-          );
-        const lineText =
-          reason +
-          (state.gwDiag.nodo && !reason.includes(state.gwDiag.nodo)
-            ? ' (' + state.gwDiag.nodo + ')'
-            : '') +
-          ' · ' +
-          (state.gwDiag.retained ? 'Retenido' : 'En vivo') +
-          (state.gwDiag.tsMs ? ' · ' + formatClockTime(state.gwDiag.tsMs) : '') +
-          '. ';
-        diagMotivoEl.appendChild(document.createTextNode(lineText));
+        const humanMotivo = humanizeSorderaMotivo(state.gwDiag.motivo, state.gwDiag);
+        diagMotivoEl.textContent =
+          state.gwDiag.estado === 'nodo_silencio' &&
+          state.gwDiag.nodo &&
+          !humanMotivo.includes(state.gwDiag.nodo)
+            ? humanMotivo + ' · ' + state.gwDiag.nodo
+            : humanMotivo;
+      } else {
+        diagMotivoEl.textContent = 'Esperando diagnóstico de radio LoRa.';
       }
-      diagMotivoEl.appendChild(document.createTextNode('Nodos '));
-      diagMotivoEl.appendChild(createEl('strong', '', 'Hardware'));
-      diagMotivoEl.appendChild(document.createTextNode(' ('));
-      diagMotivoEl.appendChild(createEl('code', '', 'qm01'));
-      diagMotivoEl.appendChild(document.createTextNode(') dependen de '));
-      diagMotivoEl.appendChild(createEl('code', '', gwId));
-      diagMotivoEl.appendChild(
-        document.createTextNode(' y dejan de reportar ante sordera o LWT; los nodos ')
-      );
-      diagMotivoEl.appendChild(createEl('strong', '', 'Simulado'));
-      diagMotivoEl.appendChild(document.createTextNode(' ('));
-      diagMotivoEl.appendChild(createEl('code', '', 'qm02'));
-      diagMotivoEl.appendChild(document.createTextNode(', '));
-      diagMotivoEl.appendChild(createEl('code', '', 'qm03'));
-      diagMotivoEl.appendChild(document.createTextNode(') publican directo al broker.'));
     }
 
     if (!presenceListEl) return;
@@ -3131,70 +3263,71 @@
     }
 
     for (const ent of entities) {
-      const row = createEl(
-        'div',
-        'lwt-presence-item' + (ent.online ? '' : ' lwt-presence-item--offline')
-      );
+      const isImpactedHw =
+        ent.kind === 'node' && !ent.simulado && (state.gwOnline === false || isSordera);
+      const isNodeSilenced =
+        ent.kind === 'node' &&
+        state.gwDiag.estado === 'nodo_silencio' &&
+        state.gwDiag.nodo === ent.id;
 
-      const top = createEl('div', 'lwt-presence-item__top');
-      const identity = createEl('div', 'lwt-presence-item__identity');
-      identity.appendChild(createEl('span', 'lwt-presence-item__name', ent.label));
+      const row = createEl('div', 'lwt-row' + (ent.online ? '' : ' lwt-row--offline'));
 
-      const depText =
+      const main = createEl('div', 'lwt-row__main');
+      main.appendChild(createEl('div', 'lwt-row__title', ent.label));
+
+      const subLabel =
         ent.kind === 'gw'
-          ? 'Puente LoRa · afecta nodos Hardware'
+          ? 'Puente LoRa · afecta Hardware'
           : ent.simulado
-            ? 'Simulado'
-            : 'Hardware · depende de ' + gwId;
-      identity.appendChild(createEl('span', 'panel__meta', depText));
-      top.appendChild(identity);
+            ? 'Directo MQTT'
+            : 'Vía LoRa (' + gwId + ')';
+      main.appendChild(createEl('span', 'lwt-row__sub', subLabel));
 
-      const badges = createEl('div', 'lwt-presence-item__badges');
-      badges.appendChild(createEl('code', 'topic-slug', ent.payload));
-      badges.appendChild(
-        createEl(
-          'span',
-          ent.online ? 'pill pill--ok' : 'pill pill--bad',
-          ent.online ? 'En línea' : 'Fuera de línea'
-        )
-      );
-      badges.appendChild(
-        createEl(
-          'span',
-          ent.retained ? 'pill pill--neutral' : 'pill pill--ok',
-          ent.retained ? 'Retenido' : 'En vivo'
-        )
-      );
-      top.appendChild(badges);
-      row.appendChild(top);
-
-      const meta = createEl('div', 'lwt-presence-item__meta');
-      meta.appendChild(createEl('code', 'topic-slug', ent.topic));
-      meta.appendChild(createEl('span', 'num', 'Hora: ' + formatClockTime(ent.tsMs)));
-      row.appendChild(meta);
-
-      let reasonText = '';
+      let noteText = '';
       if (!ent.online) {
-        reasonText = state.lwtCustomMessage;
-        if (ent.kind === 'node' && !ent.simulado && (state.gwOnline === false || isSordera)) {
-          reasonText +=
-            ' · Nota: ' +
+        noteText = state.lwtCustomMessage;
+        if (isImpactedHw) {
+          noteText +=
+            ' · ' +
             gwId +
-            (state.gwOnline === false ? ' está fuera de línea (LWT).' : ' reporta sordera RX.');
+            (state.gwOnline === false ? ' fuera de línea (LWT)' : ' en sordera RX');
         }
-      } else if (ent.kind === 'gw' && state.gwDiag.motivo) {
-        reasonText = state.gwDiag.motivo;
-      } else if (ent.kind === 'node' && !ent.simulado && (state.gwOnline === false || isSordera)) {
-        reasonText =
-          'Depende de ' +
-          gwId +
-          (state.gwOnline === false
-            ? ' (gateway fuera de línea por LWT).'
-            : ' (gateway en recuperación de sordera RX).');
-      } else {
-        reasonText = 'Enlace MQTT activo.';
+      } else if (ent.kind === 'gw' && isSordera) {
+        noteText = humanizeSorderaMotivo(state.gwDiag.motivo, state.gwDiag);
+      } else if (isImpactedHw) {
+        noteText =
+          state.gwOnline === false
+            ? 'Impactado: ' + gwId + ' fuera de línea (LWT)'
+            : 'Impactado: ' + gwId + ' sin tramas LoRa';
       }
-      row.appendChild(createEl('p', 'lwt-presence-item__reason', reasonText));
+      if (noteText) {
+        main.appendChild(createEl('p', 'lwt-row__note', noteText));
+      }
+      row.appendChild(main);
+
+      const side = createEl('div', 'lwt-row__side');
+      let sidePillClass = 'pill pill--ok';
+      let sidePillLabel = 'En línea';
+      if (!ent.online) {
+        sidePillClass = 'pill pill--bad';
+        sidePillLabel = 'Fuera de línea';
+      } else if ((ent.kind === 'gw' && isSordera) || isImpactedHw || isNodeSilenced) {
+        sidePillClass =
+          'pill ' +
+          (ent.kind === 'gw' && state.gwDiag.estado === 'sordera_reinicio'
+            ? 'pill--bad'
+            : 'pill--warn');
+        sidePillLabel = 'Silencio LoRa';
+      }
+      side.appendChild(createEl('span', sidePillClass, sidePillLabel));
+      side.appendChild(
+        createEl(
+          'span',
+          'lwt-row__meta num',
+          (ent.retained ? 'Retenido' : 'En vivo') + ' · ' + formatClockTime(ent.tsMs)
+        )
+      );
+      row.appendChild(side);
 
       presenceListEl.appendChild(row);
     }

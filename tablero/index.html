@@ -258,7 +258,7 @@
           <div id="monitoreo-feed-list" class="topic-feed-list"></div>
         </div>
 
-        <div class="coverage-split">
+        <div id="monitoreo-coverage" class="coverage-split">
           <div class="coverage-left">
             <article class="panel panel--stations">
               <header class="panel__header">
@@ -317,7 +317,7 @@
           </article>
         </div>
 
-        <section class="panel telemetry-tray" aria-label="Estación seleccionada">
+        <section id="monitoreo-telemetry" class="panel telemetry-tray" aria-label="Estación seleccionada">
           <header class="telemetry-tray__header">
             <div class="telemetry-tray__identity">
               <div class="telemetry-tray__title-row">
@@ -518,59 +518,62 @@
           </header>
 
           <div class="lwt-panel__body">
-            <div class="lwt-gw-strip">
-              <div class="lwt-gw-card">
-                <div class="lwt-gw-card__head">
-                  <span class="lwt-gw-card__title">Gateway LoRa (<span id="lwt-gw-id">gw01</span>)</span>
-                  <span id="lwt-gw-state-pill" class="pill pill--neutral">esperando</span>
+            <div class="lwt-summary-grid">
+              <div class="lwt-summary-card">
+                <div class="lwt-summary-card__head">
+                  <span class="lwt-summary-card__title">Gateway LoRa (<span id="lwt-gw-id">gw01</span>)</span>
+                  <span id="lwt-gw-state-pill" class="pill pill--neutral">Esperando</span>
                 </div>
-                <div class="lwt-gw-card__meta">
-                  <code id="lwt-gw-topic" class="topic-slug">qawapmayu/v1/gw/gw01/conexion</code>
-                  <span id="lwt-gw-origin" class="pill pill--neutral">Sin mensajes</span>
-                </div>
-                <p id="lwt-gw-message" class="lwt-gw-card__detail">
+                <p id="lwt-gw-message" class="lwt-summary-card__status">
                   Esperando publicación LWT del gateway.
                 </p>
+                <div class="lwt-summary-card__foot">
+                  <span id="lwt-gw-origin" class="lwt-summary-card__origin num">Sin mensajes</span>
+                  <code id="lwt-gw-topic" class="lwt-summary-card__topic">qawapmayu/v1/gw/gw01/conexion</code>
+                </div>
               </div>
 
-              <div class="lwt-gw-card">
-                <div class="lwt-gw-card__head">
-                  <span class="lwt-gw-card__title">Diagnóstico RX / Sordera</span>
-                  <span id="lwt-diag-pill" class="pill pill--neutral">sin diagnóstico</span>
+              <div class="lwt-summary-card">
+                <div class="lwt-summary-card__head">
+                  <span class="lwt-summary-card__title">Radio RX / Sordera</span>
+                  <span id="lwt-diag-pill" class="pill pill--neutral">Sin diagnóstico</span>
                 </div>
-                <div class="lwt-gw-card__meta">
-                  <code id="lwt-diag-topic" class="topic-slug">qawapmayu/v1/gw/gw01/diagnostico</code>
-                  <span id="lwt-diag-retries" class="panel__meta num">Reintentos RX: 0</span>
-                </div>
-                <p id="lwt-diag-motivo" class="lwt-gw-card__detail">
-                  Los nodos <strong>Hardware</strong> (<code>qm01</code>) dependen de <code>gw01</code>; si <code>gw01</code> entra en sordera o cae por LWT, dejan de reportar, a diferencia de los nodos <strong>Simulado</strong> (<code>qm02</code>, <code>qm03</code>).
+                <p id="lwt-diag-motivo" class="lwt-summary-card__status">
+                  Esperando diagnóstico de radio LoRa.
                 </p>
+                <div class="lwt-summary-card__foot">
+                  <span id="lwt-diag-retries" class="lwt-summary-card__origin num">Reintentos: 0</span>
+                  <code id="lwt-diag-topic" class="lwt-summary-card__topic">qawapmayu/v1/gw/gw01/diagnostico</code>
+                </div>
               </div>
             </div>
-
-            <form id="lwt-custom-msg-form" class="lwt-msg-form" autocomplete="off">
-              <label for="lwt-custom-msg-input">Mensaje mostrado ante LWT</label>
-              <div class="lwt-msg-form__row">
-                <input
-                  id="lwt-custom-msg-input"
-                  class="input input--sm"
-                  type="text"
-                  maxlength="120"
-                />
-                <button class="btn btn--sm" type="submit">Guardar texto</button>
-              </div>
-              <p class="field-hint">
-                Define el texto mostrado en el tablero cuando el broker entrega <code>fuera_de_linea</code>.
-              </p>
-            </form>
 
             <div class="lwt-presence-wrap">
               <div class="lwt-presence-wrap__head">
-                <h3>Entidades LWT observadas</h3>
+                <h3>Entidades y transporte</h3>
                 <span id="lwt-presence-count" class="panel__meta num">0 entidades</span>
               </div>
-              <div id="lwt-presence-list" class="lwt-presence-list"></div>
+              <div id="lwt-presence-list" class="lwt-presence-table"></div>
             </div>
+
+            <details id="lwt-msg-details" class="lwt-msg-details">
+              <summary class="lwt-msg-details__summary">Personalizar mensaje cuando cae por LWT</summary>
+              <form id="lwt-custom-msg-form" class="lwt-msg-form" autocomplete="off">
+                <label class="sr-only" for="lwt-custom-msg-input">Mensaje mostrado ante LWT</label>
+                <div class="lwt-msg-form__row">
+                  <input
+                    id="lwt-custom-msg-input"
+                    class="input input--sm"
+                    type="text"
+                    maxlength="120"
+                  />
+                  <button class="btn btn--sm btn--primary" type="submit">Guardar</button>
+                </div>
+                <p class="field-hint">
+                  Define el texto mostrado en el tablero cuando el broker entrega <code>fuera_de_linea</code>.
+                </p>
+              </form>
+            </details>
           </div>
         </article>
 
