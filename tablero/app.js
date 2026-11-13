@@ -6,14 +6,34 @@
   const STALE_CHECK_INTERVAL_MS = 2000;
   const MAX_EVENTS = 100;
   const MAX_INSPECTOR_ROWS = 1000;
+  const MAX_MONITOREO_FEED_ROWS = 12;
+  const MAX_DISCOVERED_TOPICS = 200;
   const MISSING_MARK = '\u2014';
 
-  const GW_SUB_TOPIC = 'qawapmayu/v1/gw/+/conexion';
-  const ZONE_TOPICS = {
-    todas: 'qawapmayu/v1/+/+/+/+',
-    barranco: 'qawapmayu/v1/barranco/#',
-    chorrillos: 'qawapmayu/v1/chorrillos/#',
-  };
+  const GW_SUB_TOPIC = 'qawapmayu/v1/gw/+/+';
+  const DEFAULT_MONITOREO_TOPIC = 'qawapmayu/v1/+/+/+/+';
+  const STANDARD_MONITOREO_TOPICS = new Set([
+    'qawapmayu/v1/+/+/+/+',
+    'qawapmayu/v1/barranco/#',
+    'qawapmayu/v1/chorrillos/#',
+  ]);
+  const LWT_MSG_STORAGE_KEY = 'qawapmayu.lwtMessage';
+  const DEFAULT_LWT_MESSAGE = 'Desconexión abrupta detectada (LWT)';
+
+  const QUICK_FILTER_TOPICS = [
+    { topic: 'qawapmayu/v1/+/+/+/+', label: 'Todas las estaciones' },
+    { topic: 'qawapmayu/v1/barranco/#', label: 'Distrito Barranco' },
+    { topic: 'qawapmayu/v1/chorrillos/#', label: 'Distrito Chorrillos' },
+    { topic: 'qawapmayu/v1/#', label: 'Todo QawapMayu' },
+  ];
+
+  const CHANNEL_DIAG_TOPICS = [
+    { topic: 'qawapmayu/v1/+/+/+/telemetria', label: 'Telemetría de estaciones' },
+    { topic: 'qawapmayu/v1/+/+/+/estado', label: 'Transiciones de estado FSM' },
+    { topic: 'qawapmayu/v1/+/+/+/meta', label: 'Metadatos y coordenadas' },
+    { topic: 'qawapmayu/v1/+/+/+/conexion', label: 'Presencia LWT de estaciones' },
+    { topic: 'qawapmayu/v1/gw/+/+', label: 'Gateway gw01 (LWT y diagnóstico)' },
+  ];
 
   const VAL_PH = 0x01;
   const VAL_TDS = 0x02;
@@ -178,17 +198,60 @@
     );
   }
 
+  function loadLwtCustomMessage() {
+    try {
+      const saved = window.localStorage.getItem(LWT_MSG_STORAGE_KEY);
+      if (typeof saved === 'string' && saved.trim()) {
+        return saved.trim();
+      }
+    } catch (_err) {
+      // Ignorar si localStorage no está disponible.
+    }
+    return DEFAULT_LWT_MESSAGE;
+  }
+
+  function saveLwtCustomMessage(rawMsg) {
+    const clean = String(rawMsg || '').trim() || DEFAULT_LWT_MESSAGE;
+    state.lwtCustomMessage = clean;
+    try {
+      window.localStorage.setItem(LWT_MSG_STORAGE_KEY, clean);
+    } catch (_err) {
+      // Ignorar si localStorage no está disponible.
+    }
+    const inputEl = getEl('lwt-custom-msg-input');
+    if (inputEl && inputEl.value !== clean) {
+      inputEl.value = clean;
+    }
+    return clean;
+  }
+
   const state = {
     client: null,
     connected: false,
     connecting: false,
     brokerUrl: getDefaultBrokerUrl(),
     activeView: 'monitoreo',
-    activeZone: 'todas',
-    subscribedZoneTopic: ZONE_TOPICS.todas,
+    monitoreoTopic: DEFAULT_MONITOREO_TOPIC,
+    monitoreoFeedRows: [],
+    discoveredTopics: new Map(),
+    knownStations: new Map(),
+    lwtEntities: new Map(),
     gwOnline: null,
     gwId: 'gw01',
     gwLwtRetained: false,
+    gwLwtTsMs: null,
+    gwDiag: {
+      estado: null,
+      sordera: false,
+      reintentosRx: 0,
+      silencioS: 0,
+      nodosOffline: 0,
+      motivo: '',
+      nodo: '',
+      tsMs: null,
+      retained: false,
+    },
+    lwtCustomMessage: loadLwtCustomMessage(),
     nodes: new Map(),
     selectedKey: null,
     activeMetric: 'ph',
@@ -228,6 +291,7 @@
     },
     staleTimerId: null,
     renderScheduled: false,
+    comboboxControllers: [],
   };
 
   function announce(text) {
@@ -380,8 +444,12 @@
   function parseTopic(topic) {
     const parts = String(topic || '').split('/');
     if (parts[0] !== 'qawapmayu' || parts[1] !== 'v1') return null;
-    if (parts.length === 5 && parts[2] === 'gw' && parts[4] === 'conexion') {
-      return { kind: 'gw', gwId: parts[3] || 'gw01' };
+    if (parts.length === 5 && parts[2] === 'gw') {
+      return {
+        kind: 'gw',
+        gwId: parts[3] || 'gw01',
+        canal: parts[4] || '',
+      };
     }
     if (parts.length === 6) {
       return {
@@ -393,6 +461,113 @@
       };
     }
     return null;
+  }
+
+  function mqttTopicMatches(filter, topic) {
+    if (typeof filter !== 'string' || typeof topic !== 'string' || !filter || !topic) {
+      return false;
+    }
+    if (topic.startsWith('$') && (filter.startsWith('+') || filter.startsWith('#'))) {
+      return false;
+    }
+    const fParts = filter.split('/');
+    const tParts = topic.split('/');
+    for (let i = 0; i < fParts.length; i += 1) {
+      const fSeg = fParts[i];
+      if (fSeg === '#') return true;
+      if (i >= tParts.length) return false;
+      if (fSeg !== '+' && fSeg !== tParts[i]) return false;
+    }
+    return fParts.length === tParts.length;
+  }
+
+  function makePayloadPreview(payloadStr) {
+    const compact = String(payloadStr || '').replace(/\s+/g, ' ').trim();
+    if (compact.length <= 44) return compact;
+    return compact.slice(0, 41) + '...';
+  }
+
+  function recordDiscoveredTopic(topic, payloadStr, isRetained, now) {
+    if (!topic) return false;
+    const isNew = !state.discoveredTopics.has(topic);
+    state.discoveredTopics.set(topic, {
+      topic,
+      lastSeenMs: now,
+      retained: isRetained,
+      payloadPreview: makePayloadPreview(payloadStr),
+    });
+    if (state.discoveredTopics.size > MAX_DISCOVERED_TOPICS) {
+      const oldestKey = state.discoveredTopics.keys().next().value;
+      if (oldestKey) state.discoveredTopics.delete(oldestKey);
+    }
+
+    const parsed = parseTopic(topic);
+    if (parsed && parsed.kind === 'node') {
+      const stationKey = parsed.zona + '/' + parsed.sitio + '/' + parsed.nodo;
+      if (!state.knownStations.has(stationKey)) {
+        state.knownStations.set(stationKey, {
+          key: stationKey,
+          zona: parsed.zona,
+          sitio: parsed.sitio,
+          nodo: parsed.nodo,
+          nombre: parsed.nodo,
+          simulado: false,
+        });
+      }
+    }
+    return isNew;
+  }
+
+  function normalizeDiagTs(rawTs, fallbackMs) {
+    if (typeof rawTs !== 'number' || !Number.isFinite(rawTs) || rawTs <= 0) {
+      return fallbackMs;
+    }
+    if (rawTs > 1e9 && rawTs < 1e12) {
+      return Math.round(rawTs * 1000);
+    }
+    return rawTs;
+  }
+
+  function getGwDiagMeta(estado) {
+    switch (estado) {
+      case 'escuchando':
+        return { label: 'Escuchando', pillClass: 'pill--ok' };
+      case 'recuperado':
+        return { label: 'Recuperado', pillClass: 'pill--ok' };
+      case 'sordera_rearmando':
+        return { label: 'Rearmando RX', pillClass: 'pill--warn' };
+      case 'nodo_silencio':
+        return { label: 'Nodo en silencio', pillClass: 'pill--warn' };
+      case 'sordera_reinicio':
+        return { label: 'Reinicio por sordera', pillClass: 'pill--bad' };
+      default:
+        return { label: estado || 'Sin diagnóstico', pillClass: 'pill--neutral' };
+    }
+  }
+
+  function buildDefaultDiagReason(estado, silencioS, reintentosRx, nodo) {
+    switch (estado) {
+      case 'sordera_rearmando':
+        return (
+          'Sin tramas LoRa (' +
+          silencioS +
+          ' s), rearmando RX (' +
+          reintentosRx +
+          '/3)'
+        );
+      case 'sordera_reinicio':
+        return 'Reinicio ESP32 tras ' + (reintentosRx || 3) + ' fallos de RX';
+      case 'nodo_silencio':
+        return (
+          'Silencio del nodo ' +
+          (nodo || 'Hardware') +
+          (silencioS > 0 ? ' (' + silencioS + ' s)' : '')
+        );
+      case 'recuperado':
+        return 'Recepción LoRa recuperada' + (nodo ? ' (' + nodo + ')' : '');
+      default:
+        return 'Gateway escuchando tramas LoRa';
+    }
   }
 
   function stripQuotes(text) {
@@ -421,6 +596,8 @@
         lon: null,
         simulado: false,
         conexion: null,
+        conexionRetained: false,
+        conexionTsMs: null,
         estado: null,
         hasTelemetry: false,
         ph: null,
@@ -555,6 +732,23 @@
     state.totalMessages += 1;
     if (isRetained) state.retainedMessages += 1;
 
+    recordDiscoveredTopic(topic, payloadStr, isRetained, now);
+
+    if (
+      !STANDARD_MONITOREO_TOPICS.has(state.monitoreoTopic) &&
+      mqttTopicMatches(state.monitoreoTopic, topic)
+    ) {
+      state.monitoreoFeedRows.unshift({
+        timeMs: now,
+        retained: isRetained,
+        topic,
+        payload: payloadStr,
+      });
+      if (state.monitoreoFeedRows.length > MAX_MONITOREO_FEED_ROWS) {
+        state.monitoreoFeedRows.length = MAX_MONITOREO_FEED_ROWS;
+      }
+    }
+
     const parsed = parseTopic(topic);
     if (!parsed) {
       scheduleRender();
@@ -562,38 +756,133 @@
     }
 
     if (parsed.kind === 'gw') {
-      const clean = stripQuotes(payloadStr).toLowerCase();
-      const prevGw = state.gwOnline;
       state.gwId = parsed.gwId;
-      if (clean === 'en_linea' || clean === 'fuera_de_linea') {
-        state.gwOnline = clean === 'en_linea';
-        state.gwLwtRetained = isRetained;
-        if (prevGw !== null && prevGw !== state.gwOnline) {
-          recordEvent('gw:' + state.gwId + ':' + clean + ':' + now, {
-            ts: now,
-            station: 'Gateway ' + state.gwId,
-            slug: 'gw/' + state.gwId,
-            badgeText: state.gwOnline ? 'En línea' : 'Fuera de línea',
-            pillClass: state.gwOnline ? 'pill--ok' : 'pill--bad',
-            detail: state.gwOnline
-              ? 'Gateway LoRa conectado al broker'
-              : 'Gateway desconectado (LWT activado)',
+      if (parsed.canal === 'conexion') {
+        const clean = stripQuotes(payloadStr).toLowerCase();
+        const prevGw = state.gwOnline;
+        if (clean === 'en_linea' || clean === 'fuera_de_linea') {
+          state.gwOnline = clean === 'en_linea';
+          state.gwLwtRetained = isRetained;
+          state.gwLwtTsMs = now;
+          state.lwtEntities.set(topic, {
+            key: 'gw/' + state.gwId,
+            kind: 'gw',
+            id: state.gwId,
+            label: 'Gateway ' + state.gwId,
+            topic,
+            payload: clean,
+            online: state.gwOnline,
+            retained: isRetained,
+            tsMs: now,
+            simulado: false,
           });
-          announce(
-            state.gwOnline
-              ? 'Gateway ' + state.gwId + ' en línea'
-              : 'Gateway ' + state.gwId + ' fuera de línea'
-          );
+          if (
+            (prevGw !== null && prevGw !== state.gwOnline) ||
+            (prevGw === null && !isRetained && !state.gwOnline)
+          ) {
+            recordEvent('gw:' + state.gwId + ':' + clean + ':' + now, {
+              ts: now,
+              station: 'Gateway ' + state.gwId,
+              slug: 'gw/' + state.gwId,
+              badgeText: state.gwOnline ? 'En línea' : 'Fuera de línea',
+              pillClass: state.gwOnline ? 'pill--ok' : 'pill--bad',
+              detail: state.gwOnline
+                ? 'Gateway LoRa conectado al broker'
+                : state.lwtCustomMessage + ' (gw/' + state.gwId + ')',
+            });
+            announce(
+              state.gwOnline
+                ? 'Gateway ' + state.gwId + ' en línea'
+                : 'Gateway ' + state.gwId + ' fuera de línea'
+            );
+          }
+        }
+      } else if (parsed.canal === 'diagnostico') {
+        let diagData = null;
+        try {
+          diagData = JSON.parse(payloadStr);
+        } catch (_err) {
+          diagData = null;
+        }
+        if (diagData && typeof diagData === 'object') {
+          const rawEstado =
+            typeof diagData.estado === 'string'
+              ? diagData.estado.trim().toLowerCase()
+              : null;
+          const reintentosRx =
+            typeof diagData.reintentos_rx === 'number' && Number.isFinite(diagData.reintentos_rx)
+              ? diagData.reintentos_rx
+              : 0;
+          const silencioS =
+            typeof diagData.silencio_s === 'number' && Number.isFinite(diagData.silencio_s)
+              ? diagData.silencio_s
+              : 0;
+          const nodosOffline =
+            typeof diagData.nodos_offline === 'number' && Number.isFinite(diagData.nodos_offline)
+              ? diagData.nodos_offline
+              : 0;
+          const motivo = typeof diagData.motivo === 'string' ? diagData.motivo.trim() : '';
+          const nodo = typeof diagData.nodo === 'string' ? diagData.nodo.trim() : '';
+          const sordera =
+            typeof diagData.sordera === 'boolean'
+              ? diagData.sordera
+              : rawEstado === 'sordera_rearmando' || rawEstado === 'sordera_reinicio';
+          const tsMs = normalizeDiagTs(diagData.ts, now);
+
+          state.gwDiag = {
+            estado: rawEstado,
+            sordera,
+            reintentosRx,
+            silencioS,
+            nodosOffline,
+            motivo,
+            nodo,
+            tsMs,
+            retained: isRetained,
+          };
+
+          if (
+            rawEstado === 'sordera_rearmando' ||
+            rawEstado === 'sordera_reinicio' ||
+            rawEstado === 'nodo_silencio' ||
+            rawEstado === 'recuperado'
+          ) {
+            const diagMeta = getGwDiagMeta(rawEstado);
+            const detail =
+              motivo || buildDefaultDiagReason(rawEstado, silencioS, reintentosRx, nodo);
+            const dedupeStamp = diagData.ts
+              ? String(diagData.ts)
+              : isRetained
+                ? 'ret'
+                : String(now);
+            const dedupeKey =
+              'gwdiag:' +
+              state.gwId +
+              ':' +
+              rawEstado +
+              ':' +
+              reintentosRx +
+              ':' +
+              dedupeStamp;
+            recordEvent(dedupeKey, {
+              ts: tsMs,
+              station: 'Gateway ' + state.gwId,
+              slug: 'gw/' + state.gwId + '/diagnostico',
+              badgeText: diagMeta.label,
+              pillClass: diagMeta.pillClass,
+              detail,
+            });
+            if (rawEstado === 'sordera_rearmando' || rawEstado === 'sordera_reinicio') {
+              announce('Gateway ' + state.gwId + ': ' + detail);
+            }
+          }
         }
       }
       scheduleRender();
       return;
     }
 
-    if (
-      state.activeZone !== 'todas' &&
-      parsed.zona !== state.activeZone
-    ) {
+    if (!mqttTopicMatches(state.monitoreoTopic, topic)) {
       scheduleRender();
       return;
     }
@@ -606,7 +895,29 @@
       const prevConn = node.conexion;
       if (clean === 'en_linea' || clean === 'fuera_de_linea') {
         node.conexion = clean;
-        if (prevConn && prevConn !== clean && !isRetained) {
+        node.conexionRetained = isRetained;
+        node.conexionTsMs = now;
+        const known = state.knownStations.get(node.key);
+        const simulado = known ? known.simulado : node.simulado;
+        state.lwtEntities.set(topic, {
+          key: node.key,
+          kind: 'node',
+          id: node.nodo,
+          label: (known && known.nombre) || node.nombre || node.nodo,
+          topic,
+          payload: clean,
+          online: clean === 'en_linea',
+          retained: isRetained,
+          tsMs: now,
+          simulado,
+        });
+        if (
+          (prevConn && prevConn !== clean && !isRetained) ||
+          (!prevConn && !isRetained && clean === 'fuera_de_linea')
+        ) {
+          const depNote = simulado
+            ? 'Simulado'
+            : 'Hardware · depende de ' + (state.gwId || 'gw01');
           recordEvent('conn:' + node.key + ':' + clean + ':' + now, {
             ts: now,
             station: node.nombre || node.key,
@@ -615,8 +926,8 @@
             pillClass: clean === 'en_linea' ? 'pill--ok' : 'pill--bad',
             detail:
               clean === 'en_linea'
-                ? 'Estación reconectada por gateway'
-                : 'Estación marcada fuera de línea',
+                ? 'Estación reconectada (' + depNote + ')'
+                : state.lwtCustomMessage + ' (' + depNote + ')',
           });
           if (clean === 'fuera_de_linea') {
             announce((node.nombre || node.key) + ' fuera de línea');
@@ -655,6 +966,20 @@
         }
         if (typeof data.simulado === 'boolean') {
           node.simulado = data.simulado;
+        }
+        state.knownStations.set(node.key, {
+          key: node.key,
+          zona: node.zona,
+          sitio: node.sitio,
+          nodo: node.nodo,
+          nombre: node.nombre,
+          simulado: node.simulado,
+        });
+        const connTopic = 'qawapmayu/v1/' + parsed.zona + '/' + parsed.sitio + '/' + parsed.nodo + '/conexion';
+        const lwtEnt = state.lwtEntities.get(connTopic);
+        if (lwtEnt) {
+          lwtEnt.label = node.nombre || node.nodo;
+          lwtEnt.simulado = node.simulado;
         }
         if (!state.selectedKey) {
           state.selectedKey = node.key;
@@ -918,12 +1243,15 @@
 
     client.on('message', (topic, payloadBuffer, packet) => {
       if (state.inspectorClient !== client) return;
+      const payloadText = payloadBuffer ? payloadBuffer.toString() : '';
+      const retained = Boolean(packet && packet.retain);
+      recordDiscoveredTopic(topic, payloadText, retained, Date.now());
       if (state.inspectorPaused) return;
       state.inspectorRows.unshift({
         timeMs: Date.now(),
-        retained: Boolean(packet && packet.retain),
+        retained,
         topic,
-        payload: payloadBuffer ? payloadBuffer.toString() : '',
+        payload: payloadText,
       });
       if (state.inspectorRows.length > MAX_INSPECTOR_ROWS) {
         state.inspectorRows.length = MAX_INSPECTOR_ROWS;
@@ -980,11 +1308,6 @@
     }
 
     state.inspectorTopic = nextTopic;
-
-    const chipButtons = document.querySelectorAll('.chip-btn[data-sub-topic]');
-    for (const btn of chipButtons) {
-      btn.setAttribute('aria-pressed', btn.dataset.subTopic === nextTopic ? 'true' : 'false');
-    }
 
     state.inspectorRows = [];
     state.inspectorPage = 1;
@@ -1050,9 +1373,11 @@
       state.connecting = false;
       setConnectionError('');
 
-      const zoneTopic = ZONE_TOPICS[state.activeZone] || ZONE_TOPICS.todas;
-      state.subscribedZoneTopic = zoneTopic;
-      client.subscribe([GW_SUB_TOPIC, zoneTopic], { qos: 1 }, (err) => {
+      const initialTopics =
+        state.monitoreoTopic === GW_SUB_TOPIC
+          ? [GW_SUB_TOPIC]
+          : [GW_SUB_TOPIC, state.monitoreoTopic];
+      client.subscribe(initialTopics, { qos: 1 }, (err) => {
         if (err) {
           setConnectionError('Error al suscribirse al tópico MQTT: ' + err.message);
         }
@@ -1098,53 +1423,98 @@
     connectInspectorBroker(targetUrl);
   }
 
-  function changeZoneFilter(nextZone) {
-    if (!ZONE_TOPICS[nextZone] || nextZone === state.activeZone) return;
-    const prevTopic = state.subscribedZoneTopic;
-    const nextTopic = ZONE_TOPICS[nextZone];
-
-    state.activeZone = nextZone;
-    state.subscribedZoneTopic = nextTopic;
-
-    if (nextZone !== 'todas') {
-      for (const [key, node] of state.nodes.entries()) {
-        if (node.zona !== nextZone) {
-          state.nodes.delete(key);
-        }
-      }
-      if (state.selectedKey && !state.nodes.has(state.selectedKey)) {
-        const first = getSortedNodes()[0];
-        state.selectedKey = first ? first.key : null;
+  function clearMonitoreoMarkers() {
+    if (state.map && state.mapMode === 'leaflet') {
+      for (const marker of state.markers.values()) {
+        state.map.removeLayer(marker);
       }
     }
-
-    if (state.client && state.connected) {
-      state.client.unsubscribe(prevTopic, () => {
-        state.client.subscribe(nextTopic, { qos: 1 });
-      });
-    }
-
-    updateZoneControls();
-    announce('Filtro de distrito cambiado a ' + nextZone);
-    scheduleRender();
+    state.markers.clear();
   }
 
-  function updateZoneControls() {
-    const segButtons = document.querySelectorAll('#zone-segmented .seg-btn[data-zone]');
-    for (const btn of segButtons) {
-      btn.setAttribute('aria-pressed', btn.dataset.zone === state.activeZone ? 'true' : 'false');
+  function changeMonitoreoTopic(rawTopic) {
+    const nextTopic = String(rawTopic || '').trim();
+    const validation = validateMqttTopicFilter(nextTopic);
+    const errorEl = getEl('monitoreo-sub-error');
+
+    if (!validation.valid) {
+      if (errorEl) {
+        errorEl.textContent = validation.error;
+        errorEl.hidden = false;
+      }
+      return false;
     }
 
-    const selectEl = getEl('zone-filter');
-    if (selectEl && selectEl.value !== state.activeZone) {
-      selectEl.value = state.activeZone;
+    if (errorEl) {
+      errorEl.textContent = '';
+      errorEl.hidden = true;
     }
 
-    const activeTopic = ZONE_TOPICS[state.activeZone] || ZONE_TOPICS.todas;
+    const prevTopic = state.monitoreoTopic;
+    state.monitoreoTopic = nextTopic;
+    state.nodes.clear();
+    state.selectedKey = null;
+    state.monitoreoFeedRows = [];
+    state.hasAutoFittedMap = false;
+    clearMonitoreoMarkers();
+
+    updateMonitoreoTopicUI();
+
+    if (state.client && state.connected) {
+      const doSubscribe = () => {
+        if (!state.client || !state.connected) return;
+        state.client.subscribe(nextTopic, { qos: 1 }, (err) => {
+          if (err) {
+            setConnectionError('Error al suscribirse al tópico MQTT: ' + err.message);
+          }
+        });
+      };
+
+      if (prevTopic && prevTopic !== GW_SUB_TOPIC) {
+        state.client.unsubscribe(prevTopic, doSubscribe);
+      } else {
+        doSubscribe();
+      }
+    }
+
+    announce('Suscripción de monitoreo actualizada a ' + nextTopic);
+    scheduleRender();
+    return true;
+  }
+
+  function updateMonitoreoTopicUI() {
+    const activeTopic = state.monitoreoTopic || DEFAULT_MONITOREO_TOPIC;
+
+    const inputEl = getEl('monitoreo-sub-input');
+    if (inputEl && inputEl.value !== activeTopic) {
+      inputEl.value = activeTopic;
+    }
+
     const topSub = getEl('active-sub-pill');
     if (topSub) topSub.textContent = activeTopic;
     const settingsSub = getEl('settings-active-sub');
     if (settingsSub) settingsSub.textContent = activeTopic;
+
+    const selectEl = getEl('zone-filter');
+    if (selectEl) {
+      let customOpt = selectEl.querySelector('option[data-custom-topic="true"]');
+      const hasPreset = Array.from(selectEl.options).some(
+        (opt) => opt.dataset.customTopic !== 'true' && opt.value === activeTopic
+      );
+      if (hasPreset) {
+        if (customOpt) customOpt.remove();
+        selectEl.value = activeTopic;
+      } else {
+        if (!customOpt) {
+          customOpt = document.createElement('option');
+          customOpt.dataset.customTopic = 'true';
+          selectEl.appendChild(customOpt);
+        }
+        customOpt.value = activeTopic;
+        customOpt.textContent = 'Personalizado (' + activeTopic + ')';
+        selectEl.value = activeTopic;
+      }
+    }
   }
 
   function updateConnectionUI() {
@@ -1200,49 +1570,6 @@
     if (settingsStatus) settingsStatus.textContent = settingsLabel;
 
     updateGatewayUI();
-    updateLwtBanner();
-  }
-
-  function updateLwtBanner() {
-    const banner = getEl('lwt-banner');
-    const titleEl = getEl('lwt-banner-title');
-    const textEl = getEl('lwt-banner-text');
-    if (!banner || !titleEl || !textEl) return;
-
-    if (!state.connected) {
-      banner.hidden = true;
-      return;
-    }
-
-    if (state.gwOnline === false) {
-      banner.className = 'alert-banner alert-banner--error';
-      titleEl.textContent = 'Alerta LWT (Gateway):';
-      textEl.textContent =
-        'Gateway ' +
-        state.gwId +
-        ' fuera de línea (' +
-        (state.gwLwtRetained ? 'mensaje retenido' : 'desconexión abrupta') +
-        ').';
-      banner.hidden = false;
-      return;
-    }
-
-    const offlineIds = [];
-    for (const node of state.nodes.values()) {
-      if (node.conexion === 'fuera_de_linea') {
-        offlineIds.push(node.nodo || node.key);
-      }
-    }
-
-    if (offlineIds.length > 0) {
-      banner.className = 'alert-banner alert-banner--warn';
-      titleEl.textContent = 'Aviso LWT (Estaciones):';
-      textEl.textContent = offlineIds.join(', ') + ' fuera de línea.';
-      banner.hidden = false;
-      return;
-    }
-
-    banner.hidden = true;
   }
 
   function updateGatewayUI() {
@@ -1251,18 +1578,31 @@
     const gwText = getEl('gw-badge-text');
     const sidebarGwPill = getEl('sidebar-gw-pill');
 
+    const isSordera =
+      state.gwDiag.sordera ||
+      state.gwDiag.estado === 'sordera_rearmando' ||
+      state.gwDiag.estado === 'sordera_reinicio';
+
     let pillClass = 'pill--neutral';
     let label = gwId + ': esperando LWT';
     let compactLabel = gwId + ' · esperando';
 
-    if (state.gwOnline === true) {
-      pillClass = 'pill--ok';
-      label = gwId + ': en línea';
-      compactLabel = gwId + ' · en línea';
-    } else if (state.gwOnline === false) {
+    if (state.gwOnline === false) {
       pillClass = 'pill--bad';
       label = gwId + ': fuera de línea (LWT)';
       compactLabel = gwId + ' · offline';
+    } else if (isSordera) {
+      pillClass = state.gwDiag.estado === 'sordera_reinicio' ? 'pill--bad' : 'pill--warn';
+      label = gwId + ': sordera RX (' + (state.gwDiag.estado || 'alerta') + ')';
+      compactLabel = gwId + ' · sordera';
+    } else if (state.gwDiag.estado === 'nodo_silencio') {
+      pillClass = 'pill--warn';
+      label = gwId + ': nodo en silencio';
+      compactLabel = gwId + ' · silencio';
+    } else if (state.gwOnline === true) {
+      pillClass = 'pill--ok';
+      label = gwId + ': en línea';
+      compactLabel = gwId + ' · en línea';
     }
 
     if (gwBadge) gwBadge.className = 'pill ' + pillClass;
@@ -1300,14 +1640,15 @@
       state.selectedKey = null;
     }
 
+    renderMonitoreoTopicFeed(nodes);
     renderStationsList(nodes, now);
     renderSummaryStrip(nodes, now);
     renderMap(nodes, now);
     renderSelectedTelemetry(nodes, now);
+    renderLwtPanel();
     renderEventsViews();
     renderInspectorTable();
     updateGatewayUI();
-    updateLwtBanner();
   }
 
   function buildInlineChannelChip(label, val, decimals, unit, valid, isAnom) {
@@ -1348,7 +1689,7 @@
         createEl(
           'code',
           'topic-slug',
-          ZONE_TOPICS[state.activeZone] || ZONE_TOPICS.todas
+          state.monitoreoTopic || DEFAULT_MONITOREO_TOPIC
         )
       );
       desc.appendChild(document.createTextNode('.'));
@@ -2468,6 +2809,397 @@
     }
   }
 
+  /* ---------- Topic Combobox, Feed & LWT Panel ---------- */
+
+  function renderTopicMenu(menuEl, filterQuery, mode) {
+    if (!menuEl) return;
+    const resolvedMode = mode === 'inspector' ? 'inspector' : 'monitoreo';
+    menuEl.dataset.menuMode = resolvedMode;
+
+    const query = String(filterQuery || '').trim().toLowerCase();
+    const activeTopic =
+      resolvedMode === 'inspector' ? state.inspectorTopic : state.monitoreoTopic;
+
+    const stationMap = new Map();
+    for (const [k, s] of state.knownStations.entries()) {
+      stationMap.set(k, Object.assign({}, s));
+    }
+    for (const [k, n] of state.nodes.entries()) {
+      stationMap.set(k, {
+        key: k,
+        zona: n.zona,
+        sitio: n.sitio,
+        nodo: n.nodo,
+        nombre: n.nombre,
+        simulado: n.simulado,
+      });
+    }
+
+    const stationItems = Array.from(stationMap.values())
+      .sort(
+        (a, b) =>
+          String(a.nodo).localeCompare(String(b.nodo), 'es') ||
+          String(a.key).localeCompare(String(b.key), 'es')
+      )
+      .map((s) => ({
+        topic: 'qawapmayu/v1/' + s.zona + '/' + s.sitio + '/' + s.nodo + '/#',
+        label:
+          (s.nombre && s.nombre !== s.nodo ? s.nombre + ' (' + s.nodo + ')' : s.nodo) +
+          ' · ' +
+          s.zona +
+          (s.simulado ? ' · Simulado' : ''),
+      }));
+
+    const liveItems = Array.from(state.discoveredTopics.values())
+      .sort((a, b) => a.topic.localeCompare(b.topic, 'es'))
+      .map((entry) => ({
+        topic: entry.topic,
+        label:
+          (entry.retained ? 'Retenido' : 'En vivo') +
+          (entry.payloadPreview ? ' · ' + entry.payloadPreview : ''),
+      }));
+
+    const groups = [
+      { title: 'Filtros rápidos', items: QUICK_FILTER_TOPICS },
+      { title: 'Estaciones detectadas', items: stationItems },
+      { title: 'Canales y diagnóstico', items: CHANNEL_DIAG_TOPICS },
+      { title: 'Tópicos en vivo', items: liveItems },
+    ];
+
+    menuEl.innerHTML = '';
+    let renderedCount = 0;
+
+    for (const group of groups) {
+      const matched = query
+        ? group.items.filter(
+            (item) =>
+              item.topic.toLowerCase().includes(query) ||
+              item.label.toLowerCase().includes(query)
+          )
+        : group.items;
+
+      if (matched.length === 0) continue;
+
+      const header = createEl('div', 'topic-menu__group', group.title);
+      header.setAttribute('role', 'presentation');
+      menuEl.appendChild(header);
+
+      for (const item of matched) {
+        const isSelected = item.topic === activeTopic;
+        const btn = createEl(
+          'button',
+          'topic-menu__item' + (isSelected ? ' topic-menu__item--active' : '')
+        );
+        btn.type = 'button';
+        btn.setAttribute('role', 'option');
+        btn.setAttribute('aria-selected', isSelected ? 'true' : 'false');
+        btn.dataset.topic = item.topic;
+        btn.appendChild(createEl('span', 'topic-menu__slug', item.topic));
+        btn.appendChild(createEl('span', 'topic-menu__label', item.label));
+        menuEl.appendChild(btn);
+        renderedCount += 1;
+      }
+    }
+
+    if (renderedCount === 0) {
+      const actionLabel = resolvedMode === 'inspector' ? 'Suscribir' : 'Aplicar';
+      menuEl.appendChild(
+        createEl(
+          'div',
+          'topic-menu__empty',
+          'Sin sugerencias coincidentes. Pulsa ' + actionLabel + ' para suscribir el tópico escrito.'
+        )
+      );
+    }
+  }
+
+  function renderMonitoreoTopicFeed(nodes) {
+    const panel = getEl('monitoreo-topic-feed');
+    const listEl = getEl('monitoreo-feed-list');
+    const countEl = getEl('monitoreo-feed-count');
+    if (!panel || !listEl) return;
+
+    const isNonStandard = !STANDARD_MONITOREO_TOPICS.has(state.monitoreoTopic);
+    const hasTelemetryNodes = nodes.some((n) => n.hasTelemetry);
+    const shouldShow =
+      isNonStandard && (state.monitoreoFeedRows.length > 0 || !hasTelemetryNodes);
+
+    panel.hidden = !shouldShow;
+    if (!shouldShow) return;
+
+    if (countEl) {
+      countEl.textContent =
+        state.monitoreoFeedRows.length +
+        (state.monitoreoFeedRows.length === 1 ? ' mensaje' : ' mensajes');
+    }
+
+    listEl.innerHTML = '';
+
+    if (state.monitoreoFeedRows.length === 0) {
+      const empty = createEl('div', 'empty-state empty-state--compact');
+      const desc = createEl('p', 'empty-state__desc');
+      desc.appendChild(document.createTextNode('Esperando mensajes en '));
+      desc.appendChild(createEl('code', 'topic-slug', state.monitoreoTopic));
+      desc.appendChild(document.createTextNode('.'));
+      empty.appendChild(desc);
+      listEl.appendChild(empty);
+      return;
+    }
+
+    for (const row of state.monitoreoFeedRows) {
+      const item = createEl('div', 'topic-feed-item');
+      const top = createEl('div', 'topic-feed-item__top');
+      top.appendChild(createEl('code', 'topic-slug', row.topic));
+
+      const meta = createEl('div', 'topic-feed-item__meta');
+      meta.appendChild(
+        createEl(
+          'span',
+          row.retained ? 'pill pill--neutral' : 'pill pill--ok',
+          row.retained ? 'Retenido' : 'En vivo'
+        )
+      );
+      meta.appendChild(createEl('span', 'topic-feed-item__time num', formatClockWithMs(row.timeMs)));
+      top.appendChild(meta);
+      item.appendChild(top);
+
+      const pre = createEl('pre', 'topic-feed-item__payload');
+      pre.appendChild(createEl('code', 'num', row.payload || '(vacío)'));
+      item.appendChild(pre);
+
+      listEl.appendChild(item);
+    }
+  }
+
+  function renderLwtPanel() {
+    const gwId = state.gwId || 'gw01';
+    const panelBadge = getEl('lwt-panel-badge');
+    const gwIdEl = getEl('lwt-gw-id');
+    const gwStatePill = getEl('lwt-gw-state-pill');
+    const gwTopicEl = getEl('lwt-gw-topic');
+    const gwOriginEl = getEl('lwt-gw-origin');
+    const gwMsgEl = getEl('lwt-gw-message');
+    const diagPill = getEl('lwt-diag-pill');
+    const diagTopicEl = getEl('lwt-diag-topic');
+    const diagRetriesEl = getEl('lwt-diag-retries');
+    const diagMotivoEl = getEl('lwt-diag-motivo');
+    const presenceCountEl = getEl('lwt-presence-count');
+    const presenceListEl = getEl('lwt-presence-list');
+
+    if (gwIdEl) gwIdEl.textContent = gwId;
+    if (gwTopicEl) gwTopicEl.textContent = 'qawapmayu/v1/gw/' + gwId + '/conexion';
+    if (diagTopicEl) diagTopicEl.textContent = 'qawapmayu/v1/gw/' + gwId + '/diagnostico';
+
+    const isSordera =
+      state.gwDiag.sordera ||
+      state.gwDiag.estado === 'sordera_rearmando' ||
+      state.gwDiag.estado === 'sordera_reinicio';
+
+    let offlineStations = 0;
+    for (const ent of state.lwtEntities.values()) {
+      if (ent.kind === 'node' && !ent.online) offlineStations += 1;
+    }
+
+    if (panelBadge) {
+      if (state.gwOnline === false) {
+        panelBadge.className = 'pill pill--bad';
+        panelBadge.textContent = 'Gateway offline (LWT)';
+      } else if (isSordera) {
+        panelBadge.className =
+          'pill ' + (state.gwDiag.estado === 'sordera_reinicio' ? 'pill--bad' : 'pill--warn');
+        panelBadge.textContent = 'Sordera RX (' + (state.gwDiag.reintentosRx || 0) + '/3)';
+      } else if (offlineStations > 0) {
+        panelBadge.className = 'pill pill--warn';
+        panelBadge.textContent =
+          offlineStations + (offlineStations === 1 ? ' estación offline' : ' estaciones offline');
+      } else if (state.gwOnline === true) {
+        panelBadge.className = 'pill pill--ok';
+        panelBadge.textContent = 'Enlace nominal';
+      } else {
+        panelBadge.className = 'pill pill--neutral';
+        panelBadge.textContent = 'Esperando LWT';
+      }
+    }
+
+    if (gwStatePill) {
+      if (state.gwOnline === true) {
+        gwStatePill.className = 'pill pill--ok';
+        gwStatePill.textContent = 'en_linea';
+      } else if (state.gwOnline === false) {
+        gwStatePill.className = 'pill pill--bad';
+        gwStatePill.textContent = 'fuera_de_linea';
+      } else {
+        gwStatePill.className = 'pill pill--neutral';
+        gwStatePill.textContent = 'esperando';
+      }
+    }
+
+    if (gwOriginEl) {
+      if (state.gwOnline !== null) {
+        gwOriginEl.className = 'pill ' + (state.gwLwtRetained ? 'pill--neutral' : 'pill--ok');
+        gwOriginEl.textContent =
+          (state.gwLwtRetained ? 'Retenido' : 'En vivo') +
+          (state.gwLwtTsMs ? ' · ' + formatClockTime(state.gwLwtTsMs) : '');
+      } else {
+        gwOriginEl.className = 'pill pill--neutral';
+        gwOriginEl.textContent = 'Sin mensajes';
+      }
+    }
+
+    if (gwMsgEl) {
+      if (state.gwOnline === false) {
+        gwMsgEl.textContent = state.lwtCustomMessage;
+      } else if (state.gwOnline === true) {
+        gwMsgEl.textContent =
+          'Enlace MQTT del gateway activo.' +
+          (state.gwLwtTsMs ? ' Última actualización: ' + formatClockTime(state.gwLwtTsMs) + '.' : '');
+      } else {
+        gwMsgEl.textContent = 'Esperando publicación LWT del gateway.';
+      }
+    }
+
+    const diagMeta = getGwDiagMeta(state.gwDiag.estado);
+    if (diagPill) {
+      diagPill.className = 'pill ' + diagMeta.pillClass;
+      diagPill.textContent = state.gwDiag.estado || 'sin diagnóstico';
+    }
+    if (diagRetriesEl) {
+      diagRetriesEl.textContent =
+        'Reintentos RX: ' +
+        state.gwDiag.reintentosRx +
+        (state.gwDiag.silencioS > 0 ? ' · Silencio ' + state.gwDiag.silencioS + ' s' : '');
+    }
+
+    if (diagMotivoEl) {
+      diagMotivoEl.innerHTML = '';
+      if (state.gwDiag.estado) {
+        const reason =
+          state.gwDiag.motivo ||
+          buildDefaultDiagReason(
+            state.gwDiag.estado,
+            state.gwDiag.silencioS,
+            state.gwDiag.reintentosRx,
+            state.gwDiag.nodo
+          );
+        const lineText =
+          reason +
+          (state.gwDiag.nodo && !reason.includes(state.gwDiag.nodo)
+            ? ' (' + state.gwDiag.nodo + ')'
+            : '') +
+          ' · ' +
+          (state.gwDiag.retained ? 'Retenido' : 'En vivo') +
+          (state.gwDiag.tsMs ? ' · ' + formatClockTime(state.gwDiag.tsMs) : '') +
+          '. ';
+        diagMotivoEl.appendChild(document.createTextNode(lineText));
+      }
+      diagMotivoEl.appendChild(document.createTextNode('Nodos '));
+      diagMotivoEl.appendChild(createEl('strong', '', 'Hardware'));
+      diagMotivoEl.appendChild(document.createTextNode(' ('));
+      diagMotivoEl.appendChild(createEl('code', '', 'qm01'));
+      diagMotivoEl.appendChild(document.createTextNode(') dependen de '));
+      diagMotivoEl.appendChild(createEl('code', '', gwId));
+      diagMotivoEl.appendChild(
+        document.createTextNode(' y dejan de reportar ante sordera o LWT; los nodos ')
+      );
+      diagMotivoEl.appendChild(createEl('strong', '', 'Simulado'));
+      diagMotivoEl.appendChild(document.createTextNode(' ('));
+      diagMotivoEl.appendChild(createEl('code', '', 'qm02'));
+      diagMotivoEl.appendChild(document.createTextNode(', '));
+      diagMotivoEl.appendChild(createEl('code', '', 'qm03'));
+      diagMotivoEl.appendChild(document.createTextNode(') publican directo al broker.'));
+    }
+
+    if (!presenceListEl) return;
+    const entities = Array.from(state.lwtEntities.values()).sort((a, b) => {
+      if (a.kind !== b.kind) return a.kind === 'gw' ? -1 : 1;
+      return a.key.localeCompare(b.key, 'es');
+    });
+
+    if (presenceCountEl) {
+      presenceCountEl.textContent =
+        entities.length + (entities.length === 1 ? ' entidad' : ' entidades');
+    }
+
+    presenceListEl.innerHTML = '';
+    if (entities.length === 0) {
+      const empty = createEl('div', 'empty-state empty-state--compact');
+      empty.appendChild(
+        createEl('p', 'empty-state__desc', 'Aún no se registran estados de presencia en .../conexion.')
+      );
+      presenceListEl.appendChild(empty);
+      return;
+    }
+
+    for (const ent of entities) {
+      const row = createEl(
+        'div',
+        'lwt-presence-item' + (ent.online ? '' : ' lwt-presence-item--offline')
+      );
+
+      const top = createEl('div', 'lwt-presence-item__top');
+      const identity = createEl('div', 'lwt-presence-item__identity');
+      identity.appendChild(createEl('span', 'lwt-presence-item__name', ent.label));
+
+      const depText =
+        ent.kind === 'gw'
+          ? 'Puente LoRa · afecta nodos Hardware'
+          : ent.simulado
+            ? 'Simulado'
+            : 'Hardware · depende de ' + gwId;
+      identity.appendChild(createEl('span', 'panel__meta', depText));
+      top.appendChild(identity);
+
+      const badges = createEl('div', 'lwt-presence-item__badges');
+      badges.appendChild(createEl('code', 'topic-slug', ent.payload));
+      badges.appendChild(
+        createEl(
+          'span',
+          ent.online ? 'pill pill--ok' : 'pill pill--bad',
+          ent.online ? 'En línea' : 'Fuera de línea'
+        )
+      );
+      badges.appendChild(
+        createEl(
+          'span',
+          ent.retained ? 'pill pill--neutral' : 'pill pill--ok',
+          ent.retained ? 'Retenido' : 'En vivo'
+        )
+      );
+      top.appendChild(badges);
+      row.appendChild(top);
+
+      const meta = createEl('div', 'lwt-presence-item__meta');
+      meta.appendChild(createEl('code', 'topic-slug', ent.topic));
+      meta.appendChild(createEl('span', 'num', 'Hora: ' + formatClockTime(ent.tsMs)));
+      row.appendChild(meta);
+
+      let reasonText = '';
+      if (!ent.online) {
+        reasonText = state.lwtCustomMessage;
+        if (ent.kind === 'node' && !ent.simulado && (state.gwOnline === false || isSordera)) {
+          reasonText +=
+            ' · Nota: ' +
+            gwId +
+            (state.gwOnline === false ? ' está fuera de línea (LWT).' : ' reporta sordera RX.');
+        }
+      } else if (ent.kind === 'gw' && state.gwDiag.motivo) {
+        reasonText = state.gwDiag.motivo;
+      } else if (ent.kind === 'node' && !ent.simulado && (state.gwOnline === false || isSordera)) {
+        reasonText =
+          'Depende de ' +
+          gwId +
+          (state.gwOnline === false
+            ? ' (gateway fuera de línea por LWT).'
+            : ' (gateway en recuperación de sordera RX).');
+      } else {
+        reasonText = 'Enlace MQTT activo.';
+      }
+      row.appendChild(createEl('p', 'lwt-presence-item__reason', reasonText));
+
+      presenceListEl.appendChild(row);
+    }
+  }
+
   /* ---------- Events & Inspector Views ---------- */
 
   function renderEventsViews() {
@@ -2678,6 +3410,136 @@
     });
   }
 
+  function wireTopicCombobox({ formId, inputId, toggleId, menuId, errorId, mode, onSubmit }) {
+    const formEl = getEl(formId);
+    const inputEl = getEl(inputId);
+    const toggleEl = getEl(toggleId);
+    const menuEl = getEl(menuId);
+    const errorEl = getEl(errorId);
+    if (!formEl || !inputEl || !toggleEl || !menuEl) return null;
+
+    let dirtyFilter = false;
+    let activeIndex = -1;
+
+    function getOptionNodes() {
+      return Array.from(menuEl.querySelectorAll('.topic-menu__item[data-topic]'));
+    }
+
+    function updateFocusedOption(nextIdx) {
+      const items = getOptionNodes();
+      for (const item of items) {
+        item.classList.remove('topic-menu__item--focused');
+      }
+      if (items.length === 0 || nextIdx < 0) {
+        activeIndex = -1;
+        return;
+      }
+      const bounded = ((nextIdx % items.length) + items.length) % items.length;
+      activeIndex = bounded;
+      const target = items[bounded];
+      target.classList.add('topic-menu__item--focused');
+      target.scrollIntoView({ block: 'nearest' });
+    }
+
+    function openMenu(useFilter) {
+      for (const ctrl of state.comboboxControllers) {
+        if (ctrl.menuEl !== menuEl) ctrl.closeMenu();
+      }
+      activeIndex = -1;
+      renderTopicMenu(menuEl, useFilter ? inputEl.value : '', mode);
+      menuEl.hidden = false;
+      inputEl.setAttribute('aria-expanded', 'true');
+      toggleEl.setAttribute('aria-expanded', 'true');
+    }
+
+    function closeMenu() {
+      if (menuEl.hidden) return;
+      menuEl.hidden = true;
+      activeIndex = -1;
+      inputEl.setAttribute('aria-expanded', 'false');
+      toggleEl.setAttribute('aria-expanded', 'false');
+    }
+
+    function commitTopic(topic) {
+      dirtyFilter = false;
+      inputEl.value = topic;
+      closeMenu();
+      onSubmit(topic);
+    }
+
+    inputEl.addEventListener('focus', () => {
+      openMenu(dirtyFilter);
+    });
+
+    inputEl.addEventListener('input', () => {
+      dirtyFilter = true;
+      if (errorEl) {
+        errorEl.textContent = '';
+        errorEl.hidden = true;
+      }
+      openMenu(true);
+    });
+
+    inputEl.addEventListener('keydown', (evt) => {
+      if (evt.key === 'ArrowDown') {
+        evt.preventDefault();
+        if (menuEl.hidden) {
+          openMenu(dirtyFilter);
+        }
+        updateFocusedOption(activeIndex + 1);
+      } else if (evt.key === 'ArrowUp') {
+        if (!menuEl.hidden) {
+          evt.preventDefault();
+          updateFocusedOption(activeIndex <= 0 ? getOptionNodes().length - 1 : activeIndex - 1);
+        }
+      } else if (evt.key === 'Escape') {
+        if (!menuEl.hidden) {
+          evt.preventDefault();
+          evt.stopPropagation();
+          closeMenu();
+        }
+      } else if (evt.key === 'Enter' && !menuEl.hidden && activeIndex >= 0) {
+        const items = getOptionNodes();
+        const chosen = items[activeIndex];
+        if (chosen && chosen.dataset.topic) {
+          evt.preventDefault();
+          commitTopic(chosen.dataset.topic);
+        }
+      }
+    });
+
+    toggleEl.addEventListener('click', () => {
+      if (!menuEl.hidden) {
+        closeMenu();
+      } else {
+        openMenu(false);
+        inputEl.focus();
+      }
+    });
+
+    menuEl.addEventListener('click', (evt) => {
+      const targetBtn = evt.target && evt.target.closest
+        ? evt.target.closest('.topic-menu__item[data-topic]')
+        : null;
+      if (!targetBtn) return;
+      const chosenTopic = targetBtn.dataset.topic;
+      if (chosenTopic) {
+        commitTopic(chosenTopic);
+      }
+    });
+
+    formEl.addEventListener('submit', (evt) => {
+      evt.preventDefault();
+      dirtyFilter = false;
+      closeMenu();
+      onSubmit(inputEl.value);
+    });
+
+    const controller = { formEl, inputEl, menuEl, closeMenu };
+    state.comboboxControllers.push(controller);
+    return controller;
+  }
+
   function wireDOMEvents() {
     const navButtons = document.querySelectorAll('.nav-item[data-view]');
     for (const btn of navButtons) {
@@ -2689,9 +3551,38 @@
     const menuClose = getEl('btn-menu-close');
     if (menuClose) menuClose.addEventListener('click', () => closeMobileDrawer(true));
 
+    document.addEventListener('pointerdown', (evt) => {
+      for (const ctrl of state.comboboxControllers) {
+        if (!ctrl.menuEl.hidden && !ctrl.formEl.contains(evt.target)) {
+          ctrl.closeMenu();
+        }
+      }
+    });
+
+    document.addEventListener('focusin', (evt) => {
+      for (const ctrl of state.comboboxControllers) {
+        if (!ctrl.menuEl.hidden && !ctrl.formEl.contains(evt.target)) {
+          ctrl.closeMenu();
+        }
+      }
+    });
+
     document.addEventListener('keydown', (evt) => {
       if (evt.key === 'Escape') {
-        closeMobileDrawer(true);
+        let closedAnyMenu = false;
+        for (const ctrl of state.comboboxControllers) {
+          if (!ctrl.menuEl.hidden) {
+            const hadFocusInsideMenu = ctrl.menuEl.contains(document.activeElement);
+            ctrl.closeMenu();
+            if (hadFocusInsideMenu && ctrl.inputEl) {
+              ctrl.inputEl.focus();
+            }
+            closedAnyMenu = true;
+          }
+        }
+        if (!closedAnyMenu) {
+          closeMobileDrawer(true);
+        }
       }
     });
 
@@ -2729,14 +3620,29 @@
       });
     }
 
-    const segZoneButtons = document.querySelectorAll('#zone-segmented .seg-btn[data-zone]');
-    for (const btn of segZoneButtons) {
-      btn.addEventListener('click', () => changeZoneFilter(btn.dataset.zone));
-    }
+    wireTopicCombobox({
+      formId: 'monitoreo-sub-form',
+      inputId: 'monitoreo-sub-input',
+      toggleId: 'btn-monitoreo-dropdown',
+      menuId: 'monitoreo-topic-menu',
+      errorId: 'monitoreo-sub-error',
+      mode: 'monitoreo',
+      onSubmit: (topic) => changeMonitoreoTopic(topic),
+    });
+
+    wireTopicCombobox({
+      formId: 'inspector-sub-form',
+      inputId: 'inspector-sub-input',
+      toggleId: 'btn-inspector-dropdown',
+      menuId: 'inspector-topic-menu',
+      errorId: 'inspector-sub-error',
+      mode: 'inspector',
+      onSubmit: (topic) => subscribeInspectorTopic(topic),
+    });
 
     const zoneSelect = getEl('zone-filter');
     if (zoneSelect) {
-      zoneSelect.addEventListener('change', (evt) => changeZoneFilter(evt.target.value));
+      zoneSelect.addEventListener('change', (evt) => changeMonitoreoTopic(evt.target.value));
     }
 
     const stationSelect = getEl('station-select');
@@ -2761,6 +3667,17 @@
     const btnAllEvents = getEl('btn-view-all-events');
     if (btnAllEvents) btnAllEvents.addEventListener('click', () => switchView('eventos'));
 
+    const lwtMsgForm = getEl('lwt-custom-msg-form');
+    if (lwtMsgForm) {
+      lwtMsgForm.addEventListener('submit', (evt) => {
+        evt.preventDefault();
+        const inputEl = getEl('lwt-custom-msg-input');
+        saveLwtCustomMessage(inputEl ? inputEl.value : '');
+        renderLwtPanel();
+        announce('Mensaje ante LWT guardado');
+      });
+    }
+
     const eventFilter = getEl('event-filter');
     if (eventFilter) eventFilter.addEventListener('input', renderEventsViews);
 
@@ -2778,22 +3695,6 @@
       inspectorFilter.addEventListener('input', () => {
         state.inspectorPage = 1;
         renderInspectorTable();
-      });
-    }
-
-    const inspectorSubForm = getEl('inspector-sub-form');
-    if (inspectorSubForm) {
-      inspectorSubForm.addEventListener('submit', (evt) => {
-        evt.preventDefault();
-        const inputEl = getEl('inspector-sub-input');
-        subscribeInspectorTopic(inputEl ? inputEl.value : '');
-      });
-    }
-
-    const inspectorChipButtons = document.querySelectorAll('.chip-btn[data-sub-topic]');
-    for (const btn of inspectorChipButtons) {
-      btn.addEventListener('click', () => {
-        subscribeInspectorTopic(btn.dataset.subTopic || '');
       });
     }
 
@@ -2883,8 +3784,12 @@
   function init() {
     checkVendorAvailability();
     initPresets();
+    const lwtInput = getEl('lwt-custom-msg-input');
+    if (lwtInput) {
+      lwtInput.value = state.lwtCustomMessage;
+    }
     wireDOMEvents();
-    updateZoneControls();
+    updateMonitoreoTopicUI();
     updateConnectionUI();
     renderAll();
 

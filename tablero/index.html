@@ -171,12 +171,6 @@
       </div>
 
       <div class="topbar__right">
-        <div id="zone-segmented" class="segmented topbar__zone" role="group" aria-label="Filtro de distrito">
-          <button type="button" class="seg-btn" data-zone="todas" aria-pressed="true">Todas</button>
-          <button type="button" class="seg-btn" data-zone="barranco" aria-pressed="false">Barranco</button>
-          <button type="button" class="seg-btn" data-zone="chorrillos" aria-pressed="false">Chorrillos</button>
-        </div>
-
         <div id="broker-badge" class="pill pill--neutral" role="status">
           <span class="status-dot" aria-hidden="true"></span>
           <span id="broker-badge-text">MQTT: desconectado</span>
@@ -204,15 +198,66 @@
         </div>
       </div>
 
-      <div id="lwt-banner" class="alert-banner alert-banner--error" role="alert" hidden>
-        <div class="alert-banner__content">
-          <strong id="lwt-banner-title">Alerta LWT:</strong>
-          <span id="lwt-banner-text"></span>
-        </div>
-      </div>
-
       <!-- Vista 1: Monitoreo -->
       <section id="view-monitoreo" class="view-section" aria-label="Monitoreo en tiempo real">
+        <div id="monitoreo-sub-bar" class="monitoreo-sub-bar">
+          <form id="monitoreo-sub-form" class="topic-combobox" autocomplete="off">
+            <label class="sr-only" for="monitoreo-sub-input">Suscripción MQTT de monitoreo</label>
+            <div class="topic-combobox__field">
+              <input
+                id="monitoreo-sub-input"
+                class="input input--sm input--mono topic-combobox__input"
+                type="text"
+                value="qawapmayu/v1/+/+/+/+"
+                autocomplete="off"
+                spellcheck="false"
+                placeholder="Escribe o elige un tópico (+ / #)..."
+                role="combobox"
+                aria-autocomplete="list"
+                aria-expanded="false"
+                aria-controls="monitoreo-topic-menu"
+              />
+              <button
+                id="btn-monitoreo-dropdown"
+                class="topic-combobox__toggle"
+                type="button"
+                aria-expanded="false"
+                aria-controls="monitoreo-topic-menu"
+                aria-label="Mostrar tópicos sugeridos"
+              >
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                  <path
+                    d="M4 6l4 4 4-4"
+                    stroke="currentColor"
+                    stroke-width="1.6"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  />
+                </svg>
+              </button>
+            </div>
+            <button id="btn-monitoreo-apply" class="btn btn--sm btn--primary" type="submit">
+              Aplicar
+            </button>
+            <div
+              id="monitoreo-topic-menu"
+              class="topic-menu"
+              role="listbox"
+              aria-label="Tópicos sugeridos para monitoreo"
+              hidden
+            ></div>
+          </form>
+          <p id="monitoreo-sub-error" class="inspector-sub-error" role="alert" hidden></p>
+        </div>
+
+        <div id="monitoreo-topic-feed" class="topic-feed-panel panel" hidden>
+          <header class="panel__header">
+            <h2>Mensajes del tópico</h2>
+            <span id="monitoreo-feed-count" class="panel__meta num">0 mensajes</span>
+          </header>
+          <div id="monitoreo-feed-list" class="topic-feed-list"></div>
+        </div>
+
         <div class="coverage-split">
           <div class="coverage-left">
             <article class="panel panel--stations">
@@ -466,6 +511,69 @@
 
       <!-- Vista 2: Eventos -->
       <section id="view-eventos" class="view-section" aria-label="Registro de eventos FSM" hidden>
+        <article id="lwt-panel" class="panel lwt-panel" aria-label="Estado LWT, enlace y sordera">
+          <header class="panel__header panel__header--wrap">
+            <h2>Estado LWT, enlace y sordera</h2>
+            <span id="lwt-panel-badge" class="pill pill--neutral">Esperando LWT</span>
+          </header>
+
+          <div class="lwt-panel__body">
+            <div class="lwt-gw-strip">
+              <div class="lwt-gw-card">
+                <div class="lwt-gw-card__head">
+                  <span class="lwt-gw-card__title">Gateway LoRa (<span id="lwt-gw-id">gw01</span>)</span>
+                  <span id="lwt-gw-state-pill" class="pill pill--neutral">esperando</span>
+                </div>
+                <div class="lwt-gw-card__meta">
+                  <code id="lwt-gw-topic" class="topic-slug">qawapmayu/v1/gw/gw01/conexion</code>
+                  <span id="lwt-gw-origin" class="pill pill--neutral">Sin mensajes</span>
+                </div>
+                <p id="lwt-gw-message" class="lwt-gw-card__detail">
+                  Esperando publicación LWT del gateway.
+                </p>
+              </div>
+
+              <div class="lwt-gw-card">
+                <div class="lwt-gw-card__head">
+                  <span class="lwt-gw-card__title">Diagnóstico RX / Sordera</span>
+                  <span id="lwt-diag-pill" class="pill pill--neutral">sin diagnóstico</span>
+                </div>
+                <div class="lwt-gw-card__meta">
+                  <code id="lwt-diag-topic" class="topic-slug">qawapmayu/v1/gw/gw01/diagnostico</code>
+                  <span id="lwt-diag-retries" class="panel__meta num">Reintentos RX: 0</span>
+                </div>
+                <p id="lwt-diag-motivo" class="lwt-gw-card__detail">
+                  Los nodos <strong>Hardware</strong> (<code>qm01</code>) dependen de <code>gw01</code>; si <code>gw01</code> entra en sordera o cae por LWT, dejan de reportar, a diferencia de los nodos <strong>Simulado</strong> (<code>qm02</code>, <code>qm03</code>).
+                </p>
+              </div>
+            </div>
+
+            <form id="lwt-custom-msg-form" class="lwt-msg-form" autocomplete="off">
+              <label for="lwt-custom-msg-input">Mensaje mostrado ante LWT</label>
+              <div class="lwt-msg-form__row">
+                <input
+                  id="lwt-custom-msg-input"
+                  class="input input--sm"
+                  type="text"
+                  maxlength="120"
+                />
+                <button class="btn btn--sm" type="submit">Guardar texto</button>
+              </div>
+              <p class="field-hint">
+                Define el texto mostrado en el tablero cuando el broker entrega <code>fuera_de_linea</code>.
+              </p>
+            </form>
+
+            <div class="lwt-presence-wrap">
+              <div class="lwt-presence-wrap__head">
+                <h3>Entidades LWT observadas</h3>
+                <span id="lwt-presence-count" class="panel__meta num">0 entidades</span>
+              </div>
+              <div id="lwt-presence-list" class="lwt-presence-list"></div>
+            </div>
+          </div>
+        </article>
+
         <div class="view-toolbar">
           <div class="view-toolbar__search">
             <label class="sr-only" for="event-filter">Filtrar eventos</label>
@@ -494,39 +602,55 @@
       <!-- Vista 3: Inspector MQTT -->
       <section id="view-inspector" class="view-section" aria-label="Inspector de mensajes MQTT" hidden>
         <div class="inspector-sub-bar">
-          <form id="inspector-sub-form" class="inspector-sub-row" autocomplete="off">
+          <form id="inspector-sub-form" class="topic-combobox topic-combobox--inspector" autocomplete="off">
             <label class="inspector-sub-label" for="inspector-sub-input">Suscripción MQTT</label>
-            <input
-              id="inspector-sub-input"
-              class="input input--sm input--mono"
-              type="text"
-              value="qawapmayu/v1/#"
-              autocomplete="off"
-              spellcheck="false"
-            />
-            <button id="btn-inspector-subscribe" class="btn btn--sm btn--primary" type="submit">
-              Suscribir
-            </button>
-            <span id="inspector-sub-status" class="pill pill--neutral">Sin conectar</span>
+            <div class="topic-combobox__field">
+              <input
+                id="inspector-sub-input"
+                class="input input--sm input--mono topic-combobox__input"
+                type="text"
+                value="qawapmayu/v1/#"
+                autocomplete="off"
+                spellcheck="false"
+                placeholder="Escribe o elige un tópico (+ / #)..."
+                role="combobox"
+                aria-autocomplete="list"
+                aria-expanded="false"
+                aria-controls="inspector-topic-menu"
+              />
+              <button
+                id="btn-inspector-dropdown"
+                class="topic-combobox__toggle"
+                type="button"
+                aria-expanded="false"
+                aria-controls="inspector-topic-menu"
+                aria-label="Mostrar tópicos sugeridos"
+              >
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                  <path
+                    d="M4 6l4 4 4-4"
+                    stroke="currentColor"
+                    stroke-width="1.6"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  />
+                </svg>
+              </button>
+            </div>
+            <div class="topic-combobox__actions">
+              <button id="btn-inspector-subscribe" class="btn btn--sm btn--primary" type="submit">
+                Suscribir
+              </button>
+              <span id="inspector-sub-status" class="pill pill--neutral">Sin conectar</span>
+            </div>
+            <div
+              id="inspector-topic-menu"
+              class="topic-menu"
+              role="listbox"
+              aria-label="Tópicos sugeridos para Inspector MQTT"
+              hidden
+            ></div>
           </form>
-
-          <div class="inspector-presets" role="group" aria-label="Suscripciones predefinidas">
-            <button type="button" class="chip-btn" data-sub-topic="qawapmayu/v1/#" aria-pressed="true">
-              qawapmayu/v1/#
-            </button>
-            <button type="button" class="chip-btn" data-sub-topic="qawapmayu/v1/+/+/+/meta" aria-pressed="false">
-              qawapmayu/v1/+/+/+/meta
-            </button>
-            <button type="button" class="chip-btn" data-sub-topic="qawapmayu/v1/+/+/+/estado" aria-pressed="false">
-              qawapmayu/v1/+/+/+/estado
-            </button>
-            <button type="button" class="chip-btn" data-sub-topic="qawapmayu/v1/barranco/+/+/telemetria" aria-pressed="false">
-              qawapmayu/v1/barranco/+/+/telemetria
-            </button>
-            <button type="button" class="chip-btn" data-sub-topic="qawapmayu/v1/gw/+/conexion" aria-pressed="false">
-              qawapmayu/v1/gw/+/conexion
-            </button>
-          </div>
 
           <p id="inspector-sub-error" class="inspector-sub-error" role="alert" hidden></p>
         </div>
@@ -668,9 +792,10 @@
                 <div class="field">
                   <label for="zone-filter">Filtro de zona (suscripción wildcard)</label>
                   <select id="zone-filter" class="input input--form">
-                    <option value="todas">Todas (qawapmayu/v1/+/+/+/+)</option>
-                    <option value="barranco">Barranco (qawapmayu/v1/barranco/#)</option>
-                    <option value="chorrillos">Chorrillos (qawapmayu/v1/chorrillos/#)</option>
+                    <option value="qawapmayu/v1/+/+/+/+">Todas (qawapmayu/v1/+/+/+/+)</option>
+                    <option value="qawapmayu/v1/barranco/#">Barranco (qawapmayu/v1/barranco/#)</option>
+                    <option value="qawapmayu/v1/chorrillos/#">Chorrillos (qawapmayu/v1/chorrillos/#)</option>
+                    <option value="qawapmayu/v1/#">Todo QawapMayu (qawapmayu/v1/#)</option>
                   </select>
                 </div>
 
@@ -687,7 +812,7 @@
                     <span class="diag-item__label">Suscripciones QoS 1</span>
                     <div class="diag-codes">
                       <code id="settings-active-sub" class="topic-slug">qawapmayu/v1/+/+/+/+</code>
-                      <code class="topic-slug">qawapmayu/v1/gw/+/conexion</code>
+                      <code class="topic-slug">qawapmayu/v1/gw/+/+</code>
                     </div>
                   </div>
                 </div>
