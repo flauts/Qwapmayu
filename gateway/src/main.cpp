@@ -197,6 +197,47 @@ void publicar_enlace(const InfoNodo& nodo, int rssi, int snr, float pdr, uint32_
   tb.publish(topico, payload, true);
 }
 
+uint8_t contar_nodos_offline() {
+  uint8_t cnt = 0;
+  for (size_t i = 0; i < NUM_NODOS; i++) {
+    if (estados_nodos[i].vista && !estados_nodos[i].en_linea) {
+      cnt++;
+    }
+  }
+  return cnt;
+}
+
+void publicar_diagnostico_gw(const char* estado, bool sordera, const char* motivo,
+                             uint8_t intentos, uint32_t silencio_s,
+                             const char* nodo_afectado, bool inmediato = false) {
+  static const char* topico = "qawapmayu/v1/gw/gw01/diagnostico";
+  char payload[256];
+  size_t pos = 0;
+  uint8_t cnt = contar_nodos_offline();
+  uint64_t ts = epoch_ms();
+
+  append_fmt(payload, sizeof(payload), pos,
+             "{\"estado\":\"%s\",\"sordera\":%s,\"reintentos_rx\":%u,"
+             "\"silencio_s\":%lu,\"nodos_offline\":%u,\"motivo\":\"%s\"",
+             estado ? estado : "", sordera ? "true" : "false",
+             (unsigned)intentos, (unsigned long)silencio_s,
+             (unsigned)cnt, motivo ? motivo : "");
+  if (nodo_afectado != nullptr && nodo_afectado[0] != '\0') {
+    append_fmt(payload, sizeof(payload), pos, ",\"nodo\":\"%s\"", nodo_afectado);
+  }
+  if (ts > 0) {
+    append_fmt(payload, sizeof(payload), pos, ",\"ts\":%llu", (unsigned long long)ts);
+  }
+  append_fmt(payload, sizeof(payload), pos, "}");
+
+  if (inmediato && tb.connected()) {
+    tb.publish(topico, payload, true);
+    tb.loop();
+  } else {
+    encolar(topico, payload, true);
+  }
+}
+
 void publicar_al_conectar() {
   tb.publish("qawapmayu/v1/gw/gw01/conexion", "en_linea", true);
   for (size_t i = 0; i < NUM_NODOS; i++) {
@@ -209,6 +250,8 @@ void publicar_al_conectar() {
       publicar_evento(NODOS[i], est.ultimo_evento, est.ultimo_evento_estado, est.ts_ultimo_evento);
     }
   }
+  publicar_diagnostico_gw("escuchando", false, "inicio", reintentos_rx,
+                          (millis() - t_ultima_trama) / 1000UL, nullptr);
 }
 
 void procesar_linea(String linea) {
@@ -227,12 +270,18 @@ void procesar_linea(String linea) {
     return;
   }
 
+  bool estaba_sordo = (reintentos_rx > 0);
+  uint32_t silencio_prev_s = (millis() - t_ultima_trama) / 1000UL;
   t_ultima_trama = millis();
   reintentos_rx = 0;
 
   int idx = buscar_nodo(t.nodo_id);
   if (idx < 0) {
     Serial.printf("Nodo desconocido id=%u, trama descartada\n", (unsigned)t.nodo_id);
+    if (estaba_sordo) {
+      publicar_diagnostico_gw("recuperado", false, "trama_rx_recuperada",
+                              0, silencio_prev_s, nullptr);
+    }
     return;
   }
   const InfoNodo& info = NODOS[idx];
@@ -246,7 +295,14 @@ void procesar_linea(String linea) {
     est.recibidas = 0;
     Serial.printf("Nuevo boot nodo %s (id=%u): %u\n", info.nodo, (unsigned)info.id, est.boot_actual);
   }
-  if (t.seq <= est.seq_ultima) { duplicadas++; return; }
+  if (t.seq <= est.seq_ultima) {
+    duplicadas++;
+    if (estaba_sordo) {
+      publicar_diagnostico_gw("recuperado", false, "trama_rx_recuperada",
+                              0, silencio_prev_s, nullptr);
+    }
+    return;
+  }
   est.seq_ultima = t.seq;
   est.recibidas++;
   recibidas++;
@@ -265,6 +321,14 @@ void procesar_linea(String linea) {
 
   if (recien_en_linea && tb.connected()) {
     publicar_conexion_nodo(info, true);
+  }
+
+  if (estaba_sordo) {
+    publicar_diagnostico_gw("recuperado", false, "trama_rx_recuperada",
+                            0, silencio_prev_s, nullptr);
+  } else if (recien_en_linea && tb.connected()) {
+    publicar_diagnostico_gw("escuchando", false, "nodo_reconectado",
+                            0, 0, info.nodo);
   }
 
   if (primera_vez || t.estado != est.ultimo_estado || t.anomalias != est.ultimas_anomalias) {
@@ -406,6 +470,8 @@ void loop() {
       if (tb.connected()) {
         publicar_conexion_nodo(NODOS[i], false);
       }
+      publicar_diagnostico_gw("nodo_silencio", false, "timeout_lora_nodo",
+                              reintentos_rx, NODE_OFFLINE_MS / 1000UL, NODOS[i].nodo);
     }
   }
 
@@ -413,7 +479,12 @@ void loop() {
       (reintentos_rx == 0 || (ahora - t_ultimo_reintento >= 60000UL))) {
     if (reintentos_rx >= 3) {
       Serial.println("[SORDERA] 3 reintentos sin recuperar RX, reiniciando ESP32...");
-      delay(100);
+      publicar_diagnostico_gw("sordera_reinicio", true, "reinicio_por_sordera",
+                              reintentos_rx, (ahora - t_ultima_trama) / 1000UL,
+                              NUM_NODOS > 0 ? NODOS[0].nodo : nullptr, true);
+      tb.loop();
+      delay(150);
+      tb.loop();
       ESP.restart();
     } else {
       reintentos_rx++;
@@ -424,6 +495,10 @@ void loop() {
       if (tb.connected()) tb.loop();
       bool ok = rak_configurar_p2p(Serial2, true);
       Serial.println(ok ? "[SORDERA] RX rearmado OK" : "[SORDERA] !! Fallo rearmando RX");
+      publicar_diagnostico_gw("sordera_rearmando", true,
+                              ok ? "sin_tramas_lora_rearme_ok" : "sin_tramas_lora_rearme_fallo",
+                              reintentos_rx, (ahora - t_ultima_trama) / 1000UL,
+                              NUM_NODOS > 0 ? NODOS[0].nodo : nullptr, true);
     }
   }
 
