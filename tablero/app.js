@@ -1639,10 +1639,26 @@
     selectEl.dataset.scopeSig = nextSig;
   }
 
+  function describeMonitoreoTopic(topic) {
+    const resolved = String(topic || '').trim();
+    if (resolved === 'qawapmayu/v1/+/+/+/+') return 'Todas las estaciones';
+    if (resolved === 'qawapmayu/v1/barranco/#') return 'Distrito Barranco';
+    if (resolved === 'qawapmayu/v1/chorrillos/#') return 'Distrito Chorrillos';
+    const match = getAvailableStations().find((s) => s.topic === resolved);
+    if (match) {
+      return match.etiquetaNombre + (match.simulado ? ' (Simulado)' : '');
+    }
+    return 'Filtro personalizado';
+  }
+
   function syncStationScopeSelects(activeTopic) {
     const resolvedTopic = activeTopic || state.monitoreoTopic || DEFAULT_MONITOREO_TOPIC;
     populateStationScopeSelect(getEl('monitoreo-station-scope'), resolvedTopic);
     populateStationScopeSelect(getEl('zone-filter'), resolvedTopic);
+    const monitoreoActiveDesc = getEl('monitoreo-active-desc');
+    if (monitoreoActiveDesc) {
+      monitoreoActiveDesc.textContent = describeMonitoreoTopic(resolvedTopic);
+    }
   }
 
   function changeMonitoreoTopic(rawTopic) {
@@ -1705,6 +1721,8 @@
     if (topSub) topSub.textContent = activeTopic;
     const settingsSub = getEl('settings-active-sub');
     if (settingsSub) settingsSub.textContent = activeTopic;
+    const monitoreoActiveDesc = getEl('monitoreo-active-desc');
+    if (monitoreoActiveDesc) monitoreoActiveDesc.textContent = describeMonitoreoTopic(activeTopic);
     const monitoreoActiveTopic = getEl('monitoreo-active-topic');
     if (monitoreoActiveTopic) monitoreoActiveTopic.textContent = activeTopic;
 

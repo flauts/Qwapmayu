@@ -1312,6 +1312,13 @@ samp {
   color: var(--muted);
 }
 
+.monitoreo-sub-bar__desc {
+  font-weight: 600;
+  color: var(--text);
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
 .monitoreo-sub-bar__meta .topic-slug {
   background: var(--surface);
   border-color: var(--border);
