@@ -1577,7 +1577,7 @@
     const stations = getAvailableStations();
     const optionDefs = stations.map((s) => ({
       value: s.topic,
-      label: s.topic + ' · ' + s.etiquetaNombre + (s.simulado ? ' (Simulado)' : ''),
+      label: s.topic,
     }));
     const listSig = optionDefs.map((opt) => opt.value + '\u0001' + opt.label).join('\u0002');
     const nextSig = targetTopic + '\u0003' + listSig;
@@ -1630,7 +1630,7 @@
       const customOpt = document.createElement('option');
       customOpt.dataset.customTopic = 'true';
       customOpt.value = targetTopic;
-      customOpt.textContent = targetTopic + ' · Filtro personalizado';
+      customOpt.textContent = targetTopic;
       selectEl.appendChild(customOpt);
     }
 
