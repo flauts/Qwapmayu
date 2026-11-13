@@ -5,7 +5,7 @@
   const STALE_THRESHOLD_MS = 30000;
   const STALE_CHECK_INTERVAL_MS = 2000;
   const MAX_EVENTS = 100;
-  const MAX_INSPECTOR_ROWS = 150;
+  const MAX_INSPECTOR_ROWS = 1000;
   const MISSING_MARK = '\u2014';
 
   const GW_SUB_TOPIC = 'qawapmayu/v1/gw/+/conexion';
@@ -201,6 +201,8 @@
     inspectorSubscribedTopic: '',
     inspectorRows: [],
     inspectorPaused: false,
+    inspectorPage: 1,
+    inspectorPageSize: 25,
     totalMessages: 0,
     retainedMessages: 0,
     lastErrorText: '',
@@ -985,6 +987,7 @@
     }
 
     state.inspectorRows = [];
+    state.inspectorPage = 1;
     renderInspectorTable();
 
     if (state.inspectorClient && state.inspectorConnected) {
@@ -2534,17 +2537,44 @@
         )
       : state.inspectorRows;
 
+    const total = filtered.length;
+    const pageSize = state.inspectorPageSize || 25;
+    const totalPages = Math.max(1, Math.ceil(total / pageSize));
+    state.inspectorPage = Math.min(Math.max(1, state.inspectorPage), totalPages);
+    const startIdx = (state.inspectorPage - 1) * pageSize;
+    const endIdx = Math.min(startIdx + pageSize, total);
+    const pageRows = filtered.slice(startIdx, endIdx);
+
     const countEl = getEl('inspector-count');
     if (countEl) {
       countEl.textContent =
-        filtered.length + (filtered.length === 1 ? ' msg' : ' msgs');
+        total + (total === 1 ? ' msg' : ' msgs');
     }
+
+    const pageInfoEl = getEl('inspector-page-info');
+    if (pageInfoEl) {
+      pageInfoEl.textContent =
+        total > 0
+          ? 'Mostrando ' + (startIdx + 1) + '\u2013' + endIdx + ' de ' + total
+          : '0 mensajes';
+    }
+
+    const pageLabelEl = getEl('inspector-page-label');
+    if (pageLabelEl) {
+      pageLabelEl.textContent = 'P\u00e1gina ' + state.inspectorPage + ' de ' + totalPages;
+    }
+
+    const btnPrev = getEl('btn-inspector-prev');
+    if (btnPrev) btnPrev.disabled = state.inspectorPage <= 1;
+
+    const btnNext = getEl('btn-inspector-next');
+    if (btnNext) btnNext.disabled = state.inspectorPage >= totalPages;
 
     const tbody = getEl('inspector-tbody');
     if (!tbody) return;
     tbody.innerHTML = '';
 
-    if (filtered.length === 0) {
+    if (total === 0) {
       const tr = document.createElement('tr');
       const td = createEl(
         'td',
@@ -2559,7 +2589,7 @@
       return;
     }
 
-    for (const row of filtered) {
+    for (const row of pageRows) {
       const tr = document.createElement('tr');
 
       const tdTime = createEl('td', 'mqtt-table__time num', formatClockWithMs(row.timeMs));
@@ -2744,7 +2774,12 @@
     }
 
     const inspectorFilter = getEl('inspector-filter');
-    if (inspectorFilter) inspectorFilter.addEventListener('input', renderInspectorTable);
+    if (inspectorFilter) {
+      inspectorFilter.addEventListener('input', () => {
+        state.inspectorPage = 1;
+        renderInspectorTable();
+      });
+    }
 
     const inspectorSubForm = getEl('inspector-sub-form');
     if (inspectorSubForm) {
@@ -2775,6 +2810,35 @@
     if (btnClearInspector) {
       btnClearInspector.addEventListener('click', () => {
         state.inspectorRows = [];
+        state.inspectorPage = 1;
+        renderInspectorTable();
+      });
+    }
+
+    const inspectorPageSize = getEl('inspector-page-size');
+    if (inspectorPageSize) {
+      inspectorPageSize.addEventListener('change', () => {
+        const parsed = Number.parseInt(inspectorPageSize.value, 10);
+        state.inspectorPageSize = Number.isFinite(parsed) && parsed > 0 ? parsed : 25;
+        state.inspectorPage = 1;
+        renderInspectorTable();
+      });
+    }
+
+    const btnInspectorPrev = getEl('btn-inspector-prev');
+    if (btnInspectorPrev) {
+      btnInspectorPrev.addEventListener('click', () => {
+        if (state.inspectorPage > 1) {
+          state.inspectorPage -= 1;
+          renderInspectorTable();
+        }
+      });
+    }
+
+    const btnInspectorNext = getEl('btn-inspector-next');
+    if (btnInspectorNext) {
+      btnInspectorNext.addEventListener('click', () => {
+        state.inspectorPage += 1;
         renderInspectorTable();
       });
     }

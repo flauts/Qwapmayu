@@ -558,7 +558,7 @@
         >
           <table class="mqtt-table">
             <caption id="inspector-table-caption" class="sr-only">
-              Tráfico MQTT en vivo y mensajes retenidos (máximo 150 filas)
+              Tráfico MQTT en vivo y mensajes retenidos (máximo 1000 filas)
             </caption>
             <thead>
               <tr>
@@ -574,6 +574,23 @@
               </tr>
             </tbody>
           </table>
+        </div>
+
+        <div id="inspector-pagination" class="pagination-bar" aria-label="Paginación de mensajes MQTT">
+          <div class="pagination-bar__size">
+            <label for="inspector-page-size">Filas por página</label>
+            <select id="inspector-page-size" class="input input--sm">
+              <option value="25" selected>25</option>
+              <option value="50">50</option>
+              <option value="100">100</option>
+            </select>
+          </div>
+          <span id="inspector-page-info" class="pagination-bar__info num">0 mensajes</span>
+          <div class="pagination-bar__controls">
+            <button id="btn-inspector-prev" class="btn btn--sm" type="button" disabled>Anterior</button>
+            <span id="inspector-page-label" class="pagination-bar__page num">Página 1 de 1</span>
+            <button id="btn-inspector-next" class="btn btn--sm" type="button" disabled>Siguiente</button>
+          </div>
         </div>
       </section>
 

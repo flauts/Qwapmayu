@@ -1511,6 +1511,53 @@ samp {
   }
 }
 
+.pagination-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px 16px;
+  min-width: 0;
+  padding: 10px 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-control);
+  background: var(--surface);
+}
+
+.pagination-bar__size {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.pagination-bar__size .input--sm {
+  width: auto;
+  min-width: 0;
+}
+
+.pagination-bar__info {
+  font-size: 13px;
+  color: var(--muted);
+  min-width: 0;
+}
+
+.pagination-bar__controls {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  min-width: 0;
+}
+
+.pagination-bar__page {
+  font-size: 13px;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
 /* ---------- Settings / Conexión ---------- */
 
 .settings-layout {
