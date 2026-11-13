@@ -204,6 +204,13 @@
         </div>
       </div>
 
+      <div id="lwt-banner" class="alert-banner alert-banner--error" role="alert" hidden>
+        <div class="alert-banner__content">
+          <strong id="lwt-banner-title">Alerta LWT:</strong>
+          <span id="lwt-banner-text"></span>
+        </div>
+      </div>
+
       <!-- Vista 1: Monitoreo -->
       <section id="view-monitoreo" class="view-section" aria-label="Monitoreo en tiempo real">
         <div class="coverage-split">
@@ -486,6 +493,44 @@
 
       <!-- Vista 3: Inspector MQTT -->
       <section id="view-inspector" class="view-section" aria-label="Inspector de mensajes MQTT" hidden>
+        <div class="inspector-sub-bar">
+          <form id="inspector-sub-form" class="inspector-sub-row" autocomplete="off">
+            <label class="inspector-sub-label" for="inspector-sub-input">Suscripción MQTT</label>
+            <input
+              id="inspector-sub-input"
+              class="input input--sm input--mono"
+              type="text"
+              value="qawapmayu/v1/#"
+              autocomplete="off"
+              spellcheck="false"
+            />
+            <button id="btn-inspector-subscribe" class="btn btn--sm btn--primary" type="submit">
+              Suscribir
+            </button>
+            <span id="inspector-sub-status" class="pill pill--neutral">Sin conectar</span>
+          </form>
+
+          <div class="inspector-presets" role="group" aria-label="Suscripciones predefinidas">
+            <button type="button" class="chip-btn" data-sub-topic="qawapmayu/v1/#" aria-pressed="true">
+              qawapmayu/v1/#
+            </button>
+            <button type="button" class="chip-btn" data-sub-topic="qawapmayu/v1/+/+/+/meta" aria-pressed="false">
+              qawapmayu/v1/+/+/+/meta
+            </button>
+            <button type="button" class="chip-btn" data-sub-topic="qawapmayu/v1/+/+/+/estado" aria-pressed="false">
+              qawapmayu/v1/+/+/+/estado
+            </button>
+            <button type="button" class="chip-btn" data-sub-topic="qawapmayu/v1/barranco/+/+/telemetria" aria-pressed="false">
+              qawapmayu/v1/barranco/+/+/telemetria
+            </button>
+            <button type="button" class="chip-btn" data-sub-topic="qawapmayu/v1/gw/+/conexion" aria-pressed="false">
+              qawapmayu/v1/gw/+/conexion
+            </button>
+          </div>
+
+          <p id="inspector-sub-error" class="inspector-sub-error" role="alert" hidden></p>
+        </div>
+
         <div class="view-toolbar">
           <div class="view-toolbar__search">
             <label class="sr-only" for="inspector-filter">Filtrar tópicos o payload</label>

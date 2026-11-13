@@ -188,12 +188,17 @@
     subscribedZoneTopic: ZONE_TOPICS.todas,
     gwOnline: null,
     gwId: 'gw01',
+    gwLwtRetained: false,
     nodes: new Map(),
     selectedKey: null,
     activeMetric: 'ph',
     chartMode: 'single',
     events: [],
     seenEventKeys: new Set(),
+    inspectorClient: null,
+    inspectorConnected: false,
+    inspectorTopic: 'qawapmayu/v1/#',
+    inspectorSubscribedTopic: '',
     inspectorRows: [],
     inspectorPaused: false,
     totalMessages: 0,
@@ -548,18 +553,6 @@
     state.totalMessages += 1;
     if (isRetained) state.retainedMessages += 1;
 
-    if (!state.inspectorPaused) {
-      state.inspectorRows.unshift({
-        timeMs: now,
-        retained: isRetained,
-        topic,
-        payload: payloadStr,
-      });
-      if (state.inspectorRows.length > MAX_INSPECTOR_ROWS) {
-        state.inspectorRows.length = MAX_INSPECTOR_ROWS;
-      }
-    }
-
     const parsed = parseTopic(topic);
     if (!parsed) {
       scheduleRender();
@@ -572,6 +565,7 @@
       state.gwId = parsed.gwId;
       if (clean === 'en_linea' || clean === 'fuera_de_linea') {
         state.gwOnline = clean === 'en_linea';
+        state.gwLwtRetained = isRetained;
         if (prevGw !== null && prevGw !== state.gwOnline) {
           recordEvent('gw:' + state.gwId + ':' + clean + ':' + now, {
             ts: now,
@@ -836,7 +830,183 @@
     }
     state.connected = false;
     state.connecting = false;
+    disconnectInspectorBroker();
     updateConnectionUI();
+  }
+
+  function validateMqttTopicFilter(topic) {
+    if (typeof topic !== 'string' || topic.length === 0) {
+      return { valid: false, error: 'El tópico MQTT no puede estar vacío.' };
+    }
+    if (/\s/.test(topic) || topic.includes('\0')) {
+      return {
+        valid: false,
+        error: 'El tópico MQTT no puede contener espacios ni caracteres nulos.',
+      };
+    }
+
+    const segments = topic.split('/');
+    for (let i = 0; i < segments.length; i += 1) {
+      const seg = segments[i];
+      if (seg.includes('#') && (seg !== '#' || i !== segments.length - 1)) {
+        return {
+          valid: false,
+          error: 'El comodín "#" solo es válido como último segmento completo.',
+        };
+      }
+      if (seg.includes('+') && seg !== '+') {
+        return {
+          valid: false,
+          error: 'El comodín "+" debe ocupar un segmento completo entre "/".',
+        };
+      }
+    }
+
+    return { valid: true, error: '' };
+  }
+
+  function updateInspectorSubStatus(text, pillClass) {
+    const statusEl = getEl('inspector-sub-status');
+    if (!statusEl) return;
+    statusEl.className = 'pill ' + (pillClass || 'pill--neutral');
+    statusEl.textContent = text;
+  }
+
+  function disconnectInspectorBroker() {
+    if (state.inspectorClient) {
+      try {
+        state.inspectorClient.end(true);
+      } catch (_err) {
+        // Ignorar cierre forzado previo.
+      }
+      state.inspectorClient = null;
+    }
+    state.inspectorConnected = false;
+    state.inspectorSubscribedTopic = '';
+    updateInspectorSubStatus('Sin conectar', 'pill--neutral');
+  }
+
+  function connectInspectorBroker(brokerUrl) {
+    if (!state.vendorStatus.mqtt || !brokerUrl) return;
+    disconnectInspectorBroker();
+    updateInspectorSubStatus('Conectando...', 'pill--warn');
+
+    const client = window.mqtt.connect(brokerUrl, {
+      clientId: 'qawapmayu-inspector-' + Math.random().toString(16).slice(2, 8),
+      clean: true,
+      reconnectPeriod: 3000,
+      connectTimeout: 8000,
+    });
+    state.inspectorClient = client;
+
+    client.on('connect', () => {
+      if (state.inspectorClient !== client) return;
+      state.inspectorConnected = true;
+      const targetTopic = state.inspectorTopic || 'qawapmayu/v1/#';
+      client.subscribe(targetTopic, { qos: 1 }, (err) => {
+        if (state.inspectorClient !== client) return;
+        if (err) {
+          updateInspectorSubStatus('Error', 'pill--bad');
+          return;
+        }
+        state.inspectorSubscribedTopic = targetTopic;
+        updateInspectorSubStatus('Suscrito', 'pill--ok');
+      });
+    });
+
+    client.on('message', (topic, payloadBuffer, packet) => {
+      if (state.inspectorClient !== client) return;
+      if (state.inspectorPaused) return;
+      state.inspectorRows.unshift({
+        timeMs: Date.now(),
+        retained: Boolean(packet && packet.retain),
+        topic,
+        payload: payloadBuffer ? payloadBuffer.toString() : '',
+      });
+      if (state.inspectorRows.length > MAX_INSPECTOR_ROWS) {
+        state.inspectorRows.length = MAX_INSPECTOR_ROWS;
+      }
+      renderInspectorTable();
+    });
+
+    client.on('reconnect', () => {
+      if (state.inspectorClient !== client) return;
+      state.inspectorConnected = false;
+      updateInspectorSubStatus('Reconectando...', 'pill--warn');
+    });
+
+    client.on('close', () => {
+      if (state.inspectorClient !== client) return;
+      state.inspectorConnected = false;
+      updateInspectorSubStatus('Sin conectar', 'pill--neutral');
+    });
+
+    client.on('offline', () => {
+      if (state.inspectorClient !== client) return;
+      state.inspectorConnected = false;
+      updateInspectorSubStatus('Sin conectar', 'pill--neutral');
+    });
+
+    client.on('error', () => {
+      if (state.inspectorClient !== client) return;
+      state.inspectorConnected = false;
+      updateInspectorSubStatus('Error', 'pill--bad');
+    });
+  }
+
+  function subscribeInspectorTopic(rawTopic) {
+    const nextTopic = String(rawTopic || '').trim();
+    const validation = validateMqttTopicFilter(nextTopic);
+    const errorEl = getEl('inspector-sub-error');
+
+    if (!validation.valid) {
+      if (errorEl) {
+        errorEl.textContent = validation.error;
+        errorEl.hidden = false;
+      }
+      return;
+    }
+
+    if (errorEl) {
+      errorEl.textContent = '';
+      errorEl.hidden = true;
+    }
+
+    const inputEl = getEl('inspector-sub-input');
+    if (inputEl && inputEl.value !== nextTopic) {
+      inputEl.value = nextTopic;
+    }
+
+    state.inspectorTopic = nextTopic;
+
+    const chipButtons = document.querySelectorAll('.chip-btn[data-sub-topic]');
+    for (const btn of chipButtons) {
+      btn.setAttribute('aria-pressed', btn.dataset.subTopic === nextTopic ? 'true' : 'false');
+    }
+
+    state.inspectorRows = [];
+    renderInspectorTable();
+
+    if (state.inspectorClient && state.inspectorConnected) {
+      const prevTopic = state.inspectorSubscribedTopic;
+      const doSubscribe = () => {
+        if (!state.inspectorClient || !state.inspectorConnected) return;
+        state.inspectorClient.subscribe(nextTopic, { qos: 1 }, (err) => {
+          if (err) {
+            updateInspectorSubStatus('Error', 'pill--bad');
+            return;
+          }
+          state.inspectorSubscribedTopic = nextTopic;
+          updateInspectorSubStatus('Suscrito', 'pill--ok');
+        });
+      };
+
+      if (prevTopic) {
+        state.inspectorClient.unsubscribe(prevTopic, doSubscribe);
+      } else {
+        doSubscribe();
+      }
+    }
   }
 
   function connectMqtt(urlInput) {
@@ -921,6 +1091,8 @@
       if (state.client !== client) return;
       handleMessage(topic, payloadBuffer, packet);
     });
+
+    connectInspectorBroker(targetUrl);
   }
 
   function changeZoneFilter(nextZone) {
@@ -1025,6 +1197,49 @@
     if (settingsStatus) settingsStatus.textContent = settingsLabel;
 
     updateGatewayUI();
+    updateLwtBanner();
+  }
+
+  function updateLwtBanner() {
+    const banner = getEl('lwt-banner');
+    const titleEl = getEl('lwt-banner-title');
+    const textEl = getEl('lwt-banner-text');
+    if (!banner || !titleEl || !textEl) return;
+
+    if (!state.connected) {
+      banner.hidden = true;
+      return;
+    }
+
+    if (state.gwOnline === false) {
+      banner.className = 'alert-banner alert-banner--error';
+      titleEl.textContent = 'Alerta LWT (Gateway):';
+      textEl.textContent =
+        'Gateway ' +
+        state.gwId +
+        ' fuera de línea (' +
+        (state.gwLwtRetained ? 'mensaje retenido' : 'desconexión abrupta') +
+        ').';
+      banner.hidden = false;
+      return;
+    }
+
+    const offlineIds = [];
+    for (const node of state.nodes.values()) {
+      if (node.conexion === 'fuera_de_linea') {
+        offlineIds.push(node.nodo || node.key);
+      }
+    }
+
+    if (offlineIds.length > 0) {
+      banner.className = 'alert-banner alert-banner--warn';
+      titleEl.textContent = 'Aviso LWT (Estaciones):';
+      textEl.textContent = offlineIds.join(', ') + ' fuera de línea.';
+      banner.hidden = false;
+      return;
+    }
+
+    banner.hidden = true;
   }
 
   function updateGatewayUI() {
@@ -1089,6 +1304,7 @@
     renderEventsViews();
     renderInspectorTable();
     updateGatewayUI();
+    updateLwtBanner();
   }
 
   function buildInlineChannelChip(label, val, decimals, unit, valid, isAnom) {
@@ -2529,6 +2745,22 @@
 
     const inspectorFilter = getEl('inspector-filter');
     if (inspectorFilter) inspectorFilter.addEventListener('input', renderInspectorTable);
+
+    const inspectorSubForm = getEl('inspector-sub-form');
+    if (inspectorSubForm) {
+      inspectorSubForm.addEventListener('submit', (evt) => {
+        evt.preventDefault();
+        const inputEl = getEl('inspector-sub-input');
+        subscribeInspectorTopic(inputEl ? inputEl.value : '');
+      });
+    }
+
+    const inspectorChipButtons = document.querySelectorAll('.chip-btn[data-sub-topic]');
+    for (const btn of inspectorChipButtons) {
+      btn.addEventListener('click', () => {
+        subscribeInspectorTopic(btn.dataset.subTopic || '');
+      });
+    }
 
     const btnPauseInspector = getEl('btn-pause-inspector');
     if (btnPauseInspector) {
