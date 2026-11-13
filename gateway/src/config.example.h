@@ -5,12 +5,10 @@
 #define WIFI_SSID  "nombre_del_hotspot"
 #define WIFI_PASS  "clave_del_hotspot"
 
-// ThingsBoard Cloud: el host exacto aparece en el dispositivo ->
-// "Check connectivity" -> MQTT. Para la region de Norteamerica suele ser:
-#define TB_HOST    "mqtt.thingsboard.cloud"
-#define TB_PORT    1883
-#define TB_TOKEN   "ACCESS_TOKEN_DEL_DISPOSITIVO"
+// Broker MQTT local en la laptop del hotspot (ver ip -4 addr) o broker externo.
+#define MQTT_HOST  "192.168.x.x"
+#define MQTT_PORT  1883
 
-// Publicar 1 de cada N tramas en estado normal (ahorra puntos de datos
-// del plan Free). Las tramas con anomalia o estado != ARMADO se publican siempre.
+// Publicar 1 de cada N tramas en estado normal.
+// Las tramas con anomalia o estado != ARMADO se publican siempre.
 #define PUBLICAR_CADA 1
