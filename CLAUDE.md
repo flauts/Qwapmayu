@@ -81,7 +81,7 @@ El detalle de cada prueba (logs, horas, cifras, commits) está en `docs/contexto
 
 ## Limitaciones a declarar (resumen)
 - Los sensores no identifican ni cuantifican metales; la muestra no es válida por sí sola para análisis regulatorio.
-- pH ±1 pH, 2 puntos sin buffers, sin compensación térmica. TDS sin calibración absoluta y sin piso de validez (sonda desconectada = 58 ppm "válido"). Turbidez relativa, no NTU; el sedimento asentado no la activa; la posición del sensor cambia IT. Temperatura sin termómetro de referencia.
+- pH ±1 pH, 2 puntos sin buffers, sin compensación térmica. TDS sin calibración absoluta y sin piso de validez (sonda desconectada = 58 ppm "válido"). Turbidez relativa, no NTU; el sedimento asentado no la activa; la posición del sensor cambia IT. Temperatura sin termómetro de referencia; el DS18B20 a veces no responde hasta reiniciar el nodo (13 nov).
 - Referencias TDS0 y VT0 fijadas en la puesta en marcha con agua que se asume limpia.
 - Histéresis no implementada. El rearme no comprueba el frasco; tras un reinicio en bombeo el volumen es desconocido.
 - Bomba sumergible: la muestra toca la bomba; volumen por temporización y dependiente de la geometría; sifón si la boquilla queda bajo el nivel de la fuente.
