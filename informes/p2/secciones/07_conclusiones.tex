@@ -21,7 +21,7 @@ La conclusión central es que la captura de una muestra puede decidirse en el pr
 
 \begin{itemize}
     \item Los sensores no identifican ni cuantifican metales. Un disparo no equivale a incumplir el ECA, y la muestra no sirve por sí sola para un análisis regulatorio, porque el recipiente, la preservación y la cadena de custodia no están controlados.
-    \item El pH tiene un error de $\pm 1$ y no compensa la temperatura. El TDS no tiene piso de validez: con la sonda desconectada se publica 58~ppm como si fuera un dato válido. La turbidez no detecta el sedimento asentado y cambia con la posición del sensor. Las referencias $TDS_0$ y $V_{T,0}$ suponen que el agua está limpia al arrancar.
+    \item El pH tiene un error de $\pm 1$ y no compensa la temperatura. El TDS no tiene piso de validez: con la sonda desconectada se publica 58~ppm como si fuera un dato válido. La turbidez no detecta el sedimento asentado y cambia con la posición del sensor. Las referencias $TDS_0$ y $V_{T,0}$ suponen que el agua está limpia al arrancar. El DS18B20 a veces deja de responder y solo vuelve tras reiniciar el nodo, y en una sesión no se detectó ni así; la causa no se determinó.
     \item No hay histéresis por amplitud. El rearme se hace con un comando por el puerto serie, así que requiere una computadora conectada al nodo, y no comprueba que se haya cambiado el frasco. Si el nodo se reinicia durante un bombeo, el volumen capturado es desconocido.
     \item La muestra pasa por la bomba sumergible. El volumen depende del tiempo y de la geometría, y la manguera puede formar un sifón si su salida queda bajo el nivel de la fuente.
     \item El gateway no tiene \textit{watchdog}. La sordera del RAK tiene causa desconocida y puede costar hasta unos 60~s de tramas. La cola cubre unos 80~s sin red, y los mensajes de estado y evento no se encolan. Con un broker público, los datos son visibles para cualquiera.
@@ -32,7 +32,7 @@ La conclusión central es que la captura de una muestra puede decidirse en el pr
 \label{sec:recomendaciones}
 
 \begin{itemize}
-    \item \textbf{Medición:} calibrar el pH con buffers y compensación térmica, contrastar la temperatura con un termómetro de referencia y el TDS con un conductímetro, y agregar un piso de validez al TDS.
+    \item \textbf{Medición:} calibrar el pH con buffers y compensación térmica, contrastar la temperatura con un termómetro de referencia y el TDS con un conductímetro, y agregar un piso de validez al TDS. Para el DS18B20, revisar el cableado y la resistencia de pull-up, y hacer que el firmware vuelva a buscar el sensor en el bus cuando lo pierde, en lugar de inicializarlo solo al arrancar.
     \item \textbf{Lógica:} añadir una banda de histéresis por amplitud y verificar que el frasco se haya cambiado antes de permitir el rearme, por ejemplo con un sensor de nivel o de peso. Para operar en campo, sin computadora, incorporar un rearme físico en la caja o un rearme remoto desde el tablero, enviado por MQTT y LoRa.
     \item \textbf{Muestreo:} usar una bomba peristáltica para que la muestra no toque la bomba, medir el caudal con un sensor de flujo y pasar a varios frascos para registrar eventos consecutivos.
     \item \textbf{Comunicación:} agregar un \textit{watchdog} al gateway, investigar la causa de la sordera del RAK y caracterizar el alcance en campo con distintos SF, antenas y alturas, partiendo de distancias cortas. Para varias estaciones, evaluar LoRaWAN y un broker con autenticación.
