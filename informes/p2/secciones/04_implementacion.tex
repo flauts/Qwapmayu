@@ -142,26 +142,33 @@ Campo & Bytes & Contenido \\
 
 \textbf{\textit{Watchdog}.} El nodo usa el \textit{watchdog} de tareas del ESP32 (TWDT) con un plazo de 5000~ms y reinicio automático. Se arma después de configurar el RAK, cuyos comandos AT pueden tardar, y se alimenta una vez por vuelta del lazo. Al arrancar, el nodo imprime el motivo del reinicio. En la prueba de control sin fallas forzadas, la vuelta más larga del lazo (\texttt{loop\_max\_ms}) estuvo entre 169 y 180~ms, cerca del 3.6~\% del plazo (\texttt{nodo\_20261112\_150625\_wdt\_control.log}). Si el reinicio ocurre a mitad de un bombeo, el nodo arranca en \texttt{FALLO} (Sección~\ref{sec:reglas}).
 
-\subsection{Firmware del gateway GW01 y ThingsBoard}
+\subsection{Firmware del gateway GW01 y supervisión por MQTT}
 \label{sec:fw_gateway}
 
 El gateway deja su RAK3272S en recepción continua (\texttt{AT+PRECV=65534}) y procesa cada evento \texttt{+EVT:RXP2P} que trae el RSSI, la SNR y la trama (\texttt{gateway/src/main.cpp}). Para cada trama recibida el gateway hace lo siguiente:
 \begin{enumerate}
     \item Convierte la trama de hexadecimal a binario y descarta las que tienen una versión desconocida o un CRC incorrecto.
-    \item Descarta los duplicados por número de secuencia. Si cambia el \texttt{boot\_id}, reinicia las estadísticas y calcula el PDR acumulado del arranque actual.
-    \item Arma un JSON con hasta 13 claves (\texttt{ph}, \texttt{tds}, \texttt{it}, \texttt{temp}, \texttt{validez}, \texttt{anomalias}, \texttt{estado}, \texttt{evento}, \texttt{seq}, \texttt{boot}, \texttt{rssi}, \texttt{snr}, \texttt{pdr}). Omite las cuatro mediciones cuyo bit de validez es 0, para que el centinela no llegue al tablero como si fuera un dato.
+    \item Identifica el nodo por su \texttt{nodo\_id} y descarta los duplicados por número de secuencia. Si cambia el \texttt{boot\_id}, reinicia las estadísticas de ese nodo y calcula el PDR acumulado del arranque actual.
+    \item Arma la telemetría en JSON con las mediciones, la validez, las anomalías, el estado, el evento, la secuencia, el RSSI, la SNR y el PDR. Omite las cuatro mediciones cuyo bit de validez es 0, para que el centinela no llegue al tablero como si fuera un dato.
     \item Si la hora ya se sincronizó por NTP, añade la marca de tiempo absoluta en milisegundos.
-    \item Encola el mensaje en una cola circular de 16 posiciones y lo publica por MQTT en el tópico de telemetría de ThingsBoard~\cite{thingsboard}, con un \textit{keepalive} de 30~s.
+    \item Publica por MQTT en tópicos jerárquicos del tipo \ev{qawapmayu/v1/<zona>/<sitio>/<nodo>/<canal>}, con mensajes retenidos para que un cliente que se conecta reciba de inmediato el último valor. La telemetría pasa por una cola circular de 16 posiciones.
 \end{enumerate}
 
-El gateway también cubre dos fallas. La primera es la caída de la red: el Wi-Fi intenta reconectarse cada 10~s y la cola conserva los mensajes mientras tanto. A razón de una trama cada 5~s, 16 posiciones cubren unos 80~s sin red; después se descarta el mensaje más antiguo. La segunda es la ``sordera'' del RAK, cuando el módulo deja de entregar tramas sin causa conocida. Si pasan 60~s sin recibir una trama, el gateway vuelve a configurar el RAK en recepción. Tras tres intentos sin éxito, reinicia el ESP32. El gateway no tiene \textit{watchdog}.
+Además de \texttt{telemetria}, cada nodo tiene canales de \texttt{estado} (se publica solo cuando cambia), \texttt{evento} (cada captura nueva), \texttt{enlace} (RSSI, SNR y PDR), \texttt{meta} (nombre y coordenadas) y \texttt{conexion}. El gateway se conecta al broker con un mensaje de última voluntad (LWT). Si el gateway se cae, el propio broker publica \texttt{fuera\_de\_linea} en su tópico de conexión. Si un nodo pasa 30~s sin enviar tramas, el gateway lo marca fuera de línea.
 
-En ThingsBoard Cloud se creó el dispositivo QM01 con un tablero que muestra el estado del nodo, las anomalías, el último evento y la validez de cada canal. Además incluye gráficos de $I_T$, pH, temperatura, TDS, RSSI y SNR, una tabla con el historial y una alarma de anomalía persistente (Fig.~\ref{fig:dashboard}).
+El gateway también cubre dos fallas. La primera es la caída de la red: el Wi-Fi intenta reconectarse cada 10~s y la cola conserva la telemetría mientras tanto. A razón de una trama cada 5~s, 16 posiciones cubren unos 80~s sin red; después se descarta el mensaje más antiguo. Los canales de estado, evento y enlace no se encolan: al reconectar se republica el último valor. La segunda falla es la ``sordera'' del RAK, cuando el módulo deja de entregar tramas sin causa conocida. Si pasan 60~s sin recibir una trama, el gateway vuelve a configurar el RAK en recepción. Tras tres intentos sin éxito, reinicia el ESP32. Cada paso de esta recuperación se publica en el tópico de diagnóstico del gateway. El gateway no tiene \textit{watchdog}.
+
+\textbf{Broker y tablero.} Hasta el 12 de noviembre la telemetría se envió a ThingsBoard Cloud~\cite{thingsboard}, donde el dispositivo QM01 tenía tarjetas, gráficos, una tabla de historial y una alarma de anomalía persistente. El 13 de noviembre se reemplazó por una cadena propia, para no depender de la cuota de una plataforma externa y controlar por completo la presentación:
+\begin{itemize}
+    \item \textbf{Broker:} Mosquitto en la laptop, con MQTT en el puerto 1883 para el gateway y WebSockets en el 9001 para el navegador (\texttt{broker/}). Para una demostración por Internet puede usarse un broker público; en ese caso, cualquiera que conozca el tópico puede leer los datos.
+    \item \textbf{Tablero:} página web estática (\texttt{tablero/}) que se suscribe al broker por WebSockets. Tiene cuatro vistas: Monitoreo (gráficos por estación y mapa de cobertura), Eventos (estado de conexión, enlace y sordera), un inspector de mensajes MQTT y la configuración de conexión. Las librerías van incluidas en el repositorio, así que funciona sin Internet dentro de la red local.
+    \item \textbf{Herramientas:} un simulador de dos nodos adicionales permite probar el tablero con varias estaciones, y un registrador (\texttt{herramientas/registro\_mqtt.py}) guarda en CSV cada mensaje que pasa por el broker. Esos CSV son la evidencia de la Sección~\ref{sec:res_integral}.
+\end{itemize}
 
 \begin{figure}[htbp]
 \centering
-\fbox{\parbox{0.8\textwidth}{\centering\vspace{1.5cm}\pendiente{captura del tablero de ThingsBoard (dispositivo QM01)}\vspace{1.5cm}}}
-\caption{Tablero del dispositivo QM01 en ThingsBoard Cloud.}
+\includegraphics[width=\textwidth]{figuras/dashboard.png}
+\caption{Tablero web propio, vista Monitoreo, el 13 de noviembre de 2026 a las 18:32, poco después de la cuarta captura del ensayo integral. Muestra el broker y el gateway en línea, la estación QM01 en BLOQUEADO con RSSI de $-32$~dBm y PDR del 100~\%, el mapa de cobertura y las series de pH (sonda desconectada) y TDS. La etiqueta ``NTU'' que el tablero muestra junto a la turbidez corresponde en realidad al índice adimensional $I_T$. Elaboración propia.}
 \label{fig:dashboard}
 \end{figure}
 
@@ -207,7 +214,7 @@ El nodo se montó en una caja plástica con perforaciones laterales para los cab
 
 \begin{figure}[htbp]
 \centering
-\fbox{\parbox{0.8\textwidth}{\centering\vspace{1.5cm}\pendiente{fotografía del gateway GW01 (ESP32 + RAK3272S)}\vspace{1.5cm}}}
-\caption{Gateway GW01.}
+\includegraphics[width=0.55\textwidth]{figuras/fotos/gateway.jpg}
+\caption{Gateway GW01: ESP32 con el RAK3272S y su antena (fotografía del 13 de noviembre de 2026). Elaboración propia.}
 \label{fig:foto_gateway}
 \end{figure}
