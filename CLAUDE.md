@@ -12,7 +12,7 @@ El detalle de cada prueba (logs, horas, cifras, commits) está en `docs/contexto
 - Redactar en LaTeX el informe final a partir del perfil P1 ("Perfil de proyecto P1 – Semana 07", 23 sep 2026), actualizado a lo que realmente se construyó y probó. Después, la presentación final.
 - Ubicación del proyecto LaTeX y del PDF del perfil P1: preguntar al usuario (pueden no estar en este repo).
 - Code freeze: 13 nov 2026. No modificar firmware salvo pedido explícito del usuario.
-- Demo en vivo en la universidad: penúltima semana de noviembre 2026 (fecha exacta no definida).
+- Demo en vivo en la universidad: realizada el 13 nov 2026 (según el usuario).
 
 ## Cómo trabajar con el usuario
 - Responde en español. Explica paso a paso y por partes; haz una sola pregunta a la vez.
@@ -49,7 +49,7 @@ El detalle de cada prueba (logs, horas, cifras, commits) está en `docs/contexto
 | Watchdog | Mencionado en pseudocódigo | Implementado en el nodo (TWDT 5000 ms); no en el gateway |
 | Histéresis | "Se aplicará" | No implementada: antirrebote temporal (3 ciclos para disparar, 3 normales para rearmar) |
 | Reinicio en bombeo | El perfil se contradice | Arranca en FALLO (probado) |
-| Supervisión | ThingsBoard | ThingsBoard Cloud, dispositivo QM01, dashboard con tarjetas, gráficos, tabla y alarma |
+| Supervisión | ThingsBoard | ThingsBoard Cloud hasta el 12 nov; desde el 13 nov broker Mosquitto (o EMQX) y tablero web propio (`tablero/`, PR #1) |
 
 ## Parámetros del firmware (vigentes)
 - Ciclo de adquisición Ta = 5 s en el nodo; mediana de 31 lecturas por canal analógico (`analogReadMilliVolts`, 12 bits).
@@ -89,7 +89,7 @@ El detalle de cada prueba (logs, horas, cifras, commits) está en `docs/contexto
 - PDR medido en una sola posición interior a 1 m. Validación en condiciones controladas (sal, maicena, vinagre), no con efluente real.
 
 ## Pendientes (al 12 nov 2026, noche)
-- Ensayo integral grabado: 4 sensores, anomalía real, bomba con agua, LoRa, ThingsBoard, rearme y volumen con la geometría del día.
+- ~~Ensayo integral~~ hecho el 13 nov (ver bitácora): 3 sensores (pH devuelto), turbidez con maicena, bomba con agua (100 mL, medido por el equipo), LoRa, MQTT y tablero propio, rearme.
 - Confirmar que el gateway quedó con firmware sin `-DPRUEBA_SORDERA`.
 - Commit de los 4 archivos `pruebas/sensores_20261112_*_ph_min_180.*`. Push tras auditar secretos en el historial.
 - Decidir el pulsador de GPIO25 (reconectar y probar, o declarar rearme por teclado).
