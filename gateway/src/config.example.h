@@ -9,6 +9,10 @@
 #define MQTT_HOST  "192.168.x.x"
 #define MQTT_PORT  1883
 
+// Para demo en internet con broker publico (Opcion B):
+// #define MQTT_HOST  "broker.emqx.io"
+// #define MQTT_PORT  1883
+
 // Publicar 1 de cada N tramas en estado normal.
 // Las tramas con anomalia o estado != ARMADO se publican siempre.
 #define PUBLICAR_CADA 1

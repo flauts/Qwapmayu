@@ -14,6 +14,8 @@ SIN_REGISTRO=0
 INTERVALO="2.0"
 DEMO_ANOMALIA=""
 NO_INTERACTIVO=0
+BROKER_HOST="${BROKER_HOST:-127.0.0.1}"
+MODO_PUBLICO=0
 MQTT_PORT="1883"
 WS_PORT="9001"
 HTTP_PORT="8000"
@@ -45,6 +47,8 @@ Opciones:
       --demo-anomalia <SEG>
                            Dispara automáticamente una anomalía en qm02 tras <SEG> segundos
       --no-interactivo     Ejecuta simulador.py con --non-interactive
+      --publico            Usa el broker público broker.emqx.io:1883 (omite Mosquitto local)
+      --broker-host <HOST> Host del broker MQTT para simulador y grabador (por defecto: 127.0.0.1)
       --mqtt-port <PUERTO> Puerto TCP para MQTT (por defecto: 1883)
       --ws-port <PUERTO>   Puerto TCP para WebSockets (por defecto: 9001)
       --http-port <PUERTO> Puerto TCP para el servidor web del tablero (por defecto: 8000)
@@ -92,6 +96,10 @@ validate_number() {
     fi
 }
 
+is_local_broker() {
+    [[ "$BROKER_HOST" == "127.0.0.1" || "$BROKER_HOST" == "localhost" || "$BROKER_HOST" == "::1" ]]
+}
+
 parse_args() {
     while [[ $# -gt 0 ]]; do
         case "$1" in
@@ -134,6 +142,20 @@ parse_args() {
                 NO_INTERACTIVO=1
                 shift
                 ;;
+            --publico)
+                MODO_PUBLICO=1
+                BROKER_HOST="broker.emqx.io"
+                shift
+                ;;
+            --broker-host)
+                require_arg_value "$1" "$#"
+                BROKER_HOST="$2"
+                shift 2
+                ;;
+            --broker-host=*)
+                BROKER_HOST="${1#*=}"
+                shift
+                ;;
             --mqtt-port)
                 require_arg_value "$1" "$#"
                 MQTT_PORT="$2"
@@ -172,6 +194,10 @@ parse_args() {
         esac
     done
 
+    if [[ -z "$BROKER_HOST" ]]; then
+        echo "Error: --broker-host no puede estar vacío." >&2
+        exit 2
+    fi
     validate_port "--mqtt-port" "$MQTT_PORT"
     validate_port "--ws-port" "$WS_PORT"
     validate_port "--http-port" "$HTTP_PORT"
@@ -180,14 +206,16 @@ parse_args() {
         validate_number "--demo-anomalia" "$DEMO_ANOMALIA" 0
     fi
 
-    if [[ "$MQTT_PORT" == "$WS_PORT" || "$MQTT_PORT" == "$HTTP_PORT" || "$WS_PORT" == "$HTTP_PORT" ]]; then
-        echo "Error: --mqtt-port ($MQTT_PORT), --ws-port ($WS_PORT) y --http-port ($HTTP_PORT) deben ser distintos." >&2
-        exit 2
+    if is_local_broker; then
+        if [[ "$MQTT_PORT" == "$WS_PORT" || "$MQTT_PORT" == "$HTTP_PORT" || "$WS_PORT" == "$HTTP_PORT" ]]; then
+            echo "Error: --mqtt-port ($MQTT_PORT), --ws-port ($WS_PORT) y --http-port ($HTTP_PORT) deben ser distintos." >&2
+            exit 2
+        fi
     fi
 }
 
 check_dependencies() {
-    if ! command -v mosquitto >/dev/null 2>&1; then
+    if is_local_broker && ! command -v mosquitto >/dev/null 2>&1; then
         die "No se encontró el binario 'mosquitto' en PATH. Instálalo con: sudo apt install mosquitto mosquitto-clients"
     fi
     if ! command -v python3 >/dev/null 2>&1; then
@@ -201,7 +229,7 @@ check_dependencies() {
             die "Falta 'paho-mqtt' en '$VENV_PY'. Instálalo con: herramientas/.venv/bin/pip install -r herramientas/requirements.txt"
         fi
     fi
-    if [[ ! -f "$DEFAULT_MOSQUITTO_CONF" ]]; then
+    if is_local_broker && [[ ! -f "$DEFAULT_MOSQUITTO_CONF" ]]; then
         die "No se encontró la configuración del broker en '$DEFAULT_MOSQUITTO_CONF'."
     fi
     if [[ ! -f "$TABLERO_INDEX" ]]; then
@@ -330,8 +358,10 @@ handle_mqtt_port_conflict() {
 }
 
 check_all_ports() {
-    handle_mqtt_port_conflict "$MQTT_PORT" "MQTT"
-    handle_mqtt_port_conflict "$WS_PORT" "WebSockets"
+    if is_local_broker; then
+        handle_mqtt_port_conflict "$MQTT_PORT" "MQTT"
+        handle_mqtt_port_conflict "$WS_PORT" "WebSockets"
+    fi
 
     local rc=0
     probe_port "$HTTP_PORT" || rc=$?
@@ -483,7 +513,7 @@ PY
 
 wait_registro_ready() {
     local i
-    for ((i = 0; i < 50; i++)); do
+    for ((i = 0; i < 100; i++)); do
         if ! kill -0 "$REGISTRO_PID" 2>/dev/null; then
             echo "Error: registro_mqtt.py terminó inesperadamente al iniciar." >&2
             tail -n 30 "$LOG_DIR/registro.log" >&2 || true
@@ -559,7 +589,7 @@ start_http_server() {
 }
 
 start_registro_mqtt() {
-    local reg_args=(-u "$REGISTRO_SCRIPT" --host 127.0.0.1 --port "$MQTT_PORT")
+    local reg_args=(-u "$REGISTRO_SCRIPT" --host "$BROKER_HOST" --port "$MQTT_PORT")
     if [[ -n "$PRUEBA" ]]; then
         reg_args+=(--prueba "$PRUEBA")
     fi
@@ -584,15 +614,33 @@ print_banner() {
         fi
     fi
 
+    local remote_ws_url=""
+    if ! is_local_broker; then
+        if [[ "$BROKER_HOST" == "broker.emqx.io" ]]; then
+            remote_ws_url="wss://broker.emqx.io:8084/mqtt"
+        else
+            remote_ws_url="ws://$BROKER_HOST:$WS_PORT"
+        fi
+    fi
+
     echo "========================================================================"
     echo "  QawapMayu — Stack local activo"
     echo "========================================================================"
-    echo "  Broker MQTT    : activo en 0.0.0.0:$MQTT_PORT"
-    echo "  WebSockets     : activo en 0.0.0.0:$WS_PORT"
+    if is_local_broker; then
+        echo "  Broker MQTT    : activo en 0.0.0.0:$MQTT_PORT"
+        echo "  WebSockets     : activo en 0.0.0.0:$WS_PORT"
+    else
+        echo "  Broker MQTT    : remoto en $BROKER_HOST:$MQTT_PORT"
+        echo "  WebSockets     : $remote_ws_url"
+    fi
     echo "  Grabador CSV   : $csv_info"
     echo "  Servidor Web   : activo en 0.0.0.0:$HTTP_PORT"
     echo ""
-    echo "  Tablero local  : http://localhost:$HTTP_PORT"
+    if is_local_broker; then
+        echo "  Tablero local  : http://localhost:$HTTP_PORT"
+    else
+        echo "  Tablero local  : http://localhost:$HTTP_PORT/?broker=$remote_ws_url"
+    fi
 
     local lan_lines
     lan_lines="$(detect_lan_ips)"
@@ -600,13 +648,17 @@ print_banner() {
         local ip_addr iface
         while read -r ip_addr iface; do
             [[ -z "$ip_addr" ]] && continue
-            echo "  Tablero LAN/HS : http://$ip_addr:$HTTP_PORT ($iface)"
+            if is_local_broker; then
+                echo "  Tablero LAN/HS : http://$ip_addr:$HTTP_PORT ($iface)"
+            else
+                echo "  Tablero LAN/HS : http://$ip_addr:$HTTP_PORT/?broker=$remote_ws_url ($iface)"
+            fi
         done <<<"$lan_lines"
     else
         echo "  Tablero LAN/HS : (sin interfaz Wi-Fi/LAN activa detectada)"
     fi
 
-    if [[ "$WS_PORT" != "9001" ]]; then
+    if is_local_broker && [[ "$WS_PORT" != "9001" ]]; then
         echo "  Nota WS        : WebSockets en puerto $WS_PORT (ajusta ws://<IP>:$WS_PORT en el tablero)"
     fi
     echo "  Logs           : $LOG_DIR"
@@ -626,7 +678,9 @@ main() {
     trap 'cleanup' EXIT
     trap 'cleanup; exit 0' INT TERM
 
-    start_mosquitto
+    if is_local_broker; then
+        start_mosquitto
+    fi
     start_http_server
     if [[ "$SIN_REGISTRO" -eq 0 ]]; then
         start_registro_mqtt
@@ -644,7 +698,7 @@ main() {
         return 0
     fi
 
-    local sim_args=("$SIMULADOR_SCRIPT" --host 127.0.0.1 --port "$MQTT_PORT" --interval "$INTERVALO")
+    local sim_args=("$SIMULADOR_SCRIPT" --host "$BROKER_HOST" --port "$MQTT_PORT" --interval "$INTERVALO")
     if [[ -n "$DEMO_ANOMALIA" ]]; then
         sim_args+=(--demo-anomaly-after "$DEMO_ANOMALIA")
     fi

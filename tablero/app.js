@@ -11,6 +11,7 @@
 
   const GW_SUB_TOPIC = 'qawapmayu/v1/gw/+/+';
   const DEFAULT_MONITOREO_TOPIC = 'qawapmayu/v1/+/+/+/+';
+  const PUBLIC_BROKER_WSS_URL = 'wss://broker.emqx.io:8084/mqtt';
   const LWT_MSG_STORAGE_KEY = 'qawapmayu.lwtMessage';
   const DEFAULT_LWT_MESSAGE = 'Desconexión abrupta detectada (LWT)';
 
@@ -130,9 +131,43 @@
     hour12: false,
   });
 
-  function getDefaultBrokerUrl() {
+  function isLocalOrPrivateHost(hostname) {
+    const h = String(hostname || '').trim().toLowerCase();
+    if (!h || h === 'localhost' || h === '127.0.0.1' || h === '::1' || h === '[::1]') {
+      return true;
+    }
+    if (h.endsWith('.local') || h.endsWith('.lan')) return true;
+    if (/^10\.\d{1,3}\.\d{1,3}\.\d{1,3}$/.test(h)) return true;
+    if (/^192\.168\.\d{1,3}\.\d{1,3}$/.test(h)) return true;
+    const m172 = h.match(/^172\.(\d{1,3})\.\d{1,3}\.\d{1,3}$/);
+    if (m172) {
+      const second = Number.parseInt(m172[1], 10);
+      if (second >= 16 && second <= 31) return true;
+    }
+    return false;
+  }
+
+  function getLocalBrokerUrl() {
     const host = window.location.hostname || 'localhost';
-    return 'ws://' + host + ':9001';
+    const resolvedHost = isLocalOrPrivateHost(host) ? host : 'localhost';
+    return 'ws://' + resolvedHost + ':9001';
+  }
+
+  function getDefaultBrokerUrl() {
+    try {
+      const params = new URLSearchParams(window.location.search || '');
+      const fromQuery = (params.get('broker') || '').trim();
+      if (/^wss?:\/\/.+/i.test(fromQuery)) {
+        return fromQuery;
+      }
+    } catch (_err) {
+      // Ignore URLSearchParams errors.
+    }
+    const host = window.location.hostname || 'localhost';
+    if (window.location.protocol === 'https:' || !isLocalOrPrivateHost(host)) {
+      return PUBLIC_BROKER_WSS_URL;
+    }
+    return getLocalBrokerUrl();
   }
 
   function getEl(id) {
@@ -3858,7 +3893,7 @@
         const urlField = getEl('broker-url');
         if (urlField && presetUrl) {
           urlField.value = presetUrl;
-          urlField.focus();
+          connectMqtt(presetUrl);
         }
       });
     }
@@ -3866,6 +3901,8 @@
 
   function initPresets() {
     const defaultUrl = getDefaultBrokerUrl();
+    const localUrl = getLocalBrokerUrl();
+    state.brokerUrl = defaultUrl;
     const urlInput = getEl('broker-url');
     if (urlInput) {
       urlInput.value = defaultUrl;
@@ -3873,14 +3910,20 @@
     }
     const localPresetBtn = getEl('preset-local-broker');
     if (localPresetBtn) {
-      localPresetBtn.dataset.presetUrl = defaultUrl;
+      localPresetBtn.dataset.presetUrl = localUrl;
       const codeEl = localPresetBtn.querySelector('code');
-      if (codeEl) codeEl.textContent = defaultUrl;
+      if (codeEl) codeEl.textContent = localUrl;
+    }
+    const emqxPresetBtn = getEl('preset-emqx-broker');
+    if (emqxPresetBtn) {
+      emqxPresetBtn.dataset.presetUrl = PUBLIC_BROKER_WSS_URL;
+      const codeEl = emqxPresetBtn.querySelector('code');
+      if (codeEl) codeEl.textContent = PUBLIC_BROKER_WSS_URL;
     }
     const datalist = getEl('broker-url-presets');
     if (datalist) {
       datalist.innerHTML = '';
-      for (const preset of [defaultUrl, 'wss://broker.emqx.io:8084/mqtt']) {
+      for (const preset of [localUrl, PUBLIC_BROKER_WSS_URL]) {
         const opt = document.createElement('option');
         opt.value = preset;
         datalist.appendChild(opt);

@@ -211,7 +211,7 @@ def main() -> int:
     client.loop_start()
 
     try:
-        if not connected_event.wait(timeout=5.0):
+        if not connected_event.wait(timeout=10.0):
             print(
                 f"Error: tiempo agotado esperando CONNACK del broker en {args.host}:{args.port}.",
                 file=sys.stderr,

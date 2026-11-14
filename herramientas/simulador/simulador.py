@@ -149,7 +149,7 @@ class SimulatedStation:
 
         self.client = mqtt_mod.Client(
             callback_api_version=mqtt_mod.CallbackAPIVersion.VERSION2,
-            client_id=f"qawapmayu-sim-{spec.nodo}",
+            client_id=f"qawapmayu-sim-{spec.nodo}-{os.getpid():x}",
         )
         self.client.will_set(
             self.topic("conexion"),
@@ -509,7 +509,7 @@ def main() -> int:
                 started.shutdown()
             return 1
 
-    deadline_conn = time.monotonic() + 5.0
+    deadline_conn = time.monotonic() + 10.0
     for st in stations_list:
         remaining = max(0.0, deadline_conn - time.monotonic())
         if not st.connected_event.wait(timeout=remaining):
