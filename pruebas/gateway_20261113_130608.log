@@ -1,0 +1,238 @@
+
+=== QawapMayu gateway GW01 ===
+
+  RAK> AT
+  RAK< AT
+  RAK< OK
+  RAK> AT+NWM=0
+  RAK< AT+NWM=0
+  RAK< OK
+
+  RAK> AT+PRECV=0
+  RAK< AT+PRECV=0
+
+  RAK< OK
+
+  RAK> AT+P2P=923500000:7:125:0:10:14
+  RAK< AT+P2P=923500000:7:125:0:10:14
+  RAK< OK
+
+  RAK> AT+PRECV=65534
+
+  RAK< AT+PRECV=65534
+  RAK< OK
+RAK escuchando en P2P
+Conectando a MQTT... OK
+[estado] WiFi=ok MQTT=ok cola=0 recibidas=0 crc_err=0 dup=0 reintentos_rx=0
+[estado] WiFi=ok MQTT=ok cola=0 recibidas=0 crc_err=0 dup=0 reintentos_rx=0
+[SORDERA] sin tramas hace 60 s, rearmando RX (intento 1)
+[SORDERA] RX rearmado OK
+Nuevo boot nodo qm01 (id=1): 39
+RX [qm01] seq=7 estado=BLOQUEADO tds=135 rssi=-34 snr=13 PDR=100.0%
+RX [qm01] seq=8 estado=BLOQUEADO tds=133 rssi=-38 snr=13 PDR=100.0%
+RX [qm01] seq=9 estado=BLOQUEADO tds=145 rssi=-38 snr=12 PDR=100.0%
+RX [qm01] seq=10 estado=BLOQUEADO tds=116 rssi=-38 snr=12 PDR=100.0%
+RX [qm01] seq=11 estado=BLOQUEADO tds=143 rssi=-37 snr=13 PDR=100.0%
+[estado] WiFi=ok MQTT=ok cola=0 recibidas=5 crc_err=0 dup=0 reintentos_rx=0
+RX [qm01] seq=12 estado=BLOQUEADO tds=160 rssi=-37 snr=12 PDR=100.0%
+RX [qm01] seq=13 estado=BLOQUEADO tds=117 rssi=-37 snr=13 PDR=100.0%
+RX [qm01] seq=14 estado=BLOQUEADO tds=154 rssi=-37 snr=13 PDR=100.0%
+RX [qm01] seq=15 estado=BLOQUEADO tds=149 rssi=-36 snr=12 PDR=100.0%
+RX [qm01] seq=16 estado=BLOQUEADO tds=102 rssi=-37 snr=13 PDR=100.0%
+RX [qm01] seq=17 estado=BLOQUEADO tds=117 rssi=-37 snr=13 PDR=100.0%
+[estado] WiFi=ok MQTT=ok cola=0 recibidas=11 crc_err=0 dup=0 reintentos_rx=0
+RX [qm01] seq=18 estado=BLOQUEADO tds=106 rssi=-34 snr=13 PDR=100.0%
+RX [qm01] seq=19 estado=BLOQUEADO tds=122 rssi=-35 snr=12 PDR=100.0%
+RX [qm01] seq=20 estado=BLOQUEADO tds=136 rssi=-34 snr=13 PDR=100.0%
+RX [qm01] seq=21 estado=BLOQUEADO tds=142 rssi=-35 snr=12 PDR=100.0%
+RX [qm01] seq=22 estado=BLOQUEADO tds=143 rssi=-35 snr=13 PDR=100.0%
+RX [qm01] seq=23 estado=BLOQUEADO tds=116 rssi=-35 snr=12 PDR=100.0%
+[estado] WiFi=ok MQTT=ok cola=0 recibidas=17 crc_err=0 dup=0 reintentos_rx=0
+RX [qm01] seq=24 estado=BLOQUEADO tds=138 rssi=-35 snr=13 PDR=100.0%
+RX [qm01] seq=25 estado=BLOQUEADO tds=126 rssi=-35 snr=12 PDR=100.0%
+RX [qm01] seq=26 estado=BLOQUEADO tds=152 rssi=-35 snr=12 PDR=100.0%
+RX [qm01] seq=27 estado=BLOQUEADO tds=123 rssi=-35 snr=12 PDR=100.0%
+RX [qm01] seq=28 estado=BLOQUEADO tds=127 rssi=-35 snr=12 PDR=100.0%
+RX [qm01] seq=29 estado=BLOQUEADO tds=146 rssi=-34 snr=12 PDR=100.0%
+[estado] WiFi=ok MQTT=ok cola=0 recibidas=23 crc_err=0 dup=0 reintentos_rx=0
+RX [qm01] seq=30 estado=BLOQUEADO tds=119 rssi=-35 snr=13 PDR=100.0%
+RX [qm01] seq=31 estado=BLOQUEADO tds=132 rssi=-34 snr=13 PDR=100.0%
+RX [qm01] seq=32 estado=BLOQUEADO tds=113 rssi=-35 snr=13 PDR=100.0%
+RX [qm01] seq=33 estado=BLOQUEADO tds=113 rssi=-36 snr=12 PDR=100.0%
+RX [qm01] seq=34 estado=BLOQUEADO tds=113 rssi=-39 snr=12 PDR=100.0%
+RX [qm01] seq=35 estado=BLOQUEADO tds=108 rssi=-39 snr=12 PDR=100.0%
+[estado] WiFi=ok MQTT=ok cola=0 recibidas=29 crc_err=0 dup=0 reintentos_rx=0
+RX [qm01] seq=36 estado=BLOQUEADO tds=102 rssi=-38 snr=13 PDR=100.0%
+RX [qm01] seq=37 estado=BLOQUEADO tds=144 rssi=-37 snr=13 PDR=100.0%
+RX [qm01] seq=38 estado=BLOQUEADO tds=137 rssi=-37 snr=13 PDR=100.0%
+RX [qm01] seq=39 estado=BLOQUEADO tds=115 rssi=-37 snr=13 PDR=100.0%
+RX [qm01] seq=40 estado=BLOQUEADO tds=123 rssi=-35 snr=13 PDR=100.0%
+RX [qm01] seq=41 estado=BLOQUEADO tds=132 rssi=-35 snr=12 PDR=100.0%
+[estado] WiFi=ok MQTT=ok cola=0 recibidas=35 crc_err=0 dup=0 reintentos_rx=0
+RX [qm01] seq=42 estado=BLOQUEADO tds=170 rssi=-35 snr=13 PDR=100.0%
+RX [qm01] seq=43 estado=BLOQUEADO tds=111 rssi=-35 snr=13 PDR=100.0%
+RX [qm01] seq=44 estado=BLOQUEADO tds=115 rssi=-35 snr=13 PDR=100.0%
+RX [qm01] seq=45 estado=BLOQUEADO tds=113 rssi=-36 snr=13 PDR=100.0%
+RX [qm01] seq=46 estado=BLOQUEADO tds=122 rssi=-33 snr=13 PDR=100.0%
+RX [qm01] seq=47 estado=BLOQUEADO tds=93 rssi=-33 snr=12 PDR=100.0%
+[estado] WiFi=ok MQTT=ok cola=0 recibidas=41 crc_err=0 dup=0 reintentos_rx=0
+RX [qm01] seq=48 estado=BLOQUEADO tds=91 rssi=-33 snr=12 PDR=100.0%
+RX [qm01] seq=49 estado=BLOQUEADO tds=135 rssi=-34 snr=13 PDR=100.0%
+RX [qm01] seq=50 estado=BLOQUEADO tds=82 rssi=-34 snr=13 PDR=100.0%
+RX [qm01] seq=51 estado=BLOQUEADO tds=124 rssi=-34 snr=13 PDR=100.0%
+RX [qm01] seq=52 estado=BLOQUEADO tds=113 rssi=-36 snr=13 PDR=100.0%
+RX [qm01] seq=53 estado=BLOQUEADO tds=121 rssi=-38 snr=13 PDR=100.0%
+[estado] WiFi=ok MQTT=ok cola=0 recibidas=47 crc_err=0 dup=0 reintentos_rx=0
+RX [qm01] seq=54 estado=BLOQUEADO tds=116 rssi=-37 snr=13 PDR=100.0%
+RX [qm01] seq=55 estado=BLOQUEADO tds=121 rssi=-37 snr=13 PDR=100.0%
+RX [qm01] seq=56 estado=BLOQUEADO tds=89 rssi=-34 snr=13 PDR=100.0%
+RX [qm01] seq=57 estado=BLOQUEADO tds=127 rssi=-34 snr=13 PDR=100.0%
+RX [qm01] seq=58 estado=BLOQUEADO tds=119 rssi=-34 snr=13 PDR=100.0%
+RX [qm01] seq=59 estado=BLOQUEADO tds=103 rssi=-34 snr=13 PDR=100.0%
+[estado] WiFi=ok MQTT=ok cola=0 recibidas=53 crc_err=0 dup=0 reintentos_rx=0
+RX [qm01] seq=60 estado=BLOQUEADO tds=107 rssi=-34 snr=13 PDR=100.0%
+RX [qm01] seq=61 estado=BLOQUEADO tds=88 rssi=-34 snr=13 PDR=100.0%
+RX [qm01] seq=62 estado=BLOQUEADO tds=144 rssi=-34 snr=13 PDR=100.0%
+RX [qm01] seq=63 estado=BLOQUEADO tds=127 rssi=-34 snr=13 PDR=100.0%
+RX [qm01] seq=64 estado=BLOQUEADO tds=87 rssi=-34 snr=13 PDR=100.0%
+RX [qm01] seq=65 estado=BLOQUEADO tds=112 rssi=-35 snr=13 PDR=100.0%
+[estado] WiFi=ok MQTT=ok cola=0 recibidas=59 crc_err=0 dup=0 reintentos_rx=0
+RX [qm01] seq=66 estado=BLOQUEADO tds=95 rssi=-35 snr=12 PDR=100.0%
+RX [qm01] seq=67 estado=BLOQUEADO tds=131 rssi=-35 snr=13 PDR=100.0%
+RX [qm01] seq=68 estado=BLOQUEADO tds=122 rssi=-32 snr=13 PDR=100.0%
+RX [qm01] seq=69 estado=BLOQUEADO tds=136 rssi=-36 snr=13 PDR=100.0%
+RX [qm01] seq=70 estado=BLOQUEADO tds=95 rssi=-34 snr=12 PDR=100.0%
+RX [qm01] seq=71 estado=BLOQUEADO tds=98 rssi=-34 snr=12 PDR=100.0%
+[estado] WiFi=ok MQTT=ok cola=0 recibidas=65 crc_err=0 dup=0 reintentos_rx=0
+RX [qm01] seq=72 estado=BLOQUEADO tds=121 rssi=-34 snr=13 PDR=100.0%
+RX [qm01] seq=73 estado=BLOQUEADO tds=107 rssi=-33 snr=12 PDR=100.0%
+RX [qm01] seq=74 estado=BLOQUEADO tds=89 rssi=-33 snr=13 PDR=100.0%
+RX [qm01] seq=75 estado=BLOQUEADO tds=111 rssi=-34 snr=13 PDR=100.0%
+RX [qm01] seq=76 estado=BLOQUEADO tds=89 rssi=-33 snr=12 PDR=100.0%
+RX [qm01] seq=77 estado=BLOQUEADO tds=135 rssi=-34 snr=13 PDR=100.0%
+[estado] WiFi=ok MQTT=ok cola=0 recibidas=71 crc_err=0 dup=0 reintentos_rx=0
+RX [qm01] seq=78 estado=BLOQUEADO tds=142 rssi=-33 snr=13 PDR=100.0%
+RX [qm01] seq=79 estado=BLOQUEADO tds=107 rssi=-34 snr=12 PDR=100.0%
+RX [qm01] seq=80 estado=BLOQUEADO tds=81 rssi=-34 snr=12 PDR=100.0%
+RX [qm01] seq=81 estado=BLOQUEADO tds=130 rssi=-34 snr=13 PDR=100.0%
+RX [qm01] seq=82 estado=BLOQUEADO tds=93 rssi=-35 snr=12 PDR=100.0%
+RX [qm01] seq=83 estado=BLOQUEADO tds=113 rssi=-35 snr=13 PDR=100.0%
+[estado] WiFi=ok MQTT=ok cola=0 recibidas=77 crc_err=0 dup=0 reintentos_rx=0
+RX [qm01] seq=84 estado=BLOQUEADO tds=150 rssi=-35 snr=12 PDR=100.0%
+RX [qm01] seq=85 estado=BLOQUEADO tds=128 rssi=-35 snr=13 PDR=100.0%
+RX [qm01] seq=86 estado=BLOQUEADO tds=107 rssi=-35 snr=13 PDR=100.0%
+RX [qm01] seq=87 estado=BLOQUEADO tds=102 rssi=-35 snr=13 PDR=100.0%
+RX [qm01] seq=88 estado=BLOQUEADO tds=119 rssi=-34 snr=13 PDR=100.0%
+RX [qm01] seq=89 estado=BLOQUEADO tds=105 rssi=-34 snr=14 PDR=100.0%
+[estado] WiFi=ok MQTT=ok cola=0 recibidas=83 crc_err=0 dup=0 reintentos_rx=0
+RX [qm01] seq=90 estado=BLOQUEADO tds=131 rssi=-34 snr=12 PDR=100.0%
+RX [qm01] seq=91 estado=BLOQUEADO tds=82 rssi=-34 snr=13 PDR=100.0%
+RX [qm01] seq=92 estado=BLOQUEADO tds=127 rssi=-36 snr=13 PDR=100.0%
+RX [qm01] seq=93 estado=BLOQUEADO tds=126 rssi=-37 snr=13 PDR=100.0%
+RX [qm01] seq=94 estado=BLOQUEADO tds=98 rssi=-36 snr=12 PDR=100.0%
+RX [qm01] seq=95 estado=BLOQUEADO tds=93 rssi=-37 snr=13 PDR=100.0%
+[estado] WiFi=ok MQTT=ok cola=0 recibidas=89 crc_err=0 dup=0 reintentos_rx=0
+RX [qm01] seq=96 estado=BLOQUEADO tds=143 rssi=-37 snr=13 PDR=100.0%
+RX [qm01] seq=97 estado=BLOQUEADO tds=122 rssi=-38 snr=13 PDR=100.0%
+RX [qm01] seq=98 estado=BLOQUEADO tds=125 rssi=-33 snr=13 PDR=100.0%
+RX [qm01] seq=99 estado=BLOQUEADO tds=105 rssi=-33 snr=12 PDR=100.0%
+RX [qm01] seq=100 estado=BLOQUEADO tds=126 rssi=-33 snr=12 PDR=100.0%
+RX [qm01] seq=101 estado=BLOQUEADO tds=105 rssi=-33 snr=12 PDR=100.0%
+[estado] WiFi=ok MQTT=ok cola=0 recibidas=95 crc_err=0 dup=0 reintentos_rx=0
+RX [qm01] seq=102 estado=BLOQUEADO tds=113 rssi=-33 snr=12 PDR=100.0%
+RX [qm01] seq=103 estado=BLOQUEADO tds=147 rssi=-33 snr=12 PDR=100.0%
+RX [qm01] seq=104 estado=BLOQUEADO tds=110 rssi=-34 snr=13 PDR=100.0%
+RX [qm01] seq=105 estado=BLOQUEADO tds=121 rssi=-34 snr=13 PDR=100.0%
+RX [qm01] seq=106 estado=BLOQUEADO tds=131 rssi=-34 snr=13 PDR=100.0%
+RX [qm01] seq=107 estado=BLOQUEADO tds=110 rssi=-34 snr=13 PDR=100.0%
+[estado] WiFi=ok MQTT=ok cola=0 recibidas=101 crc_err=0 dup=0 reintentos_rx=0
+RX [qm01] seq=108 estado=BLOQUEADO tds=118 rssi=-34 snr=13 PDR=100.0%
+RX [qm01] seq=109 estado=BLOQUEADO tds=141 rssi=-34 snr=13 PDR=100.0%
+RX [qm01] seq=110 estado=BLOQUEADO tds=114 rssi=-34 snr=13 PDR=100.0%
+RX [qm01] seq=111 estado=BLOQUEADO tds=138 rssi=-35 snr=13 PDR=100.0%
+RX [qm01] seq=112 estado=BLOQUEADO tds=108 rssi=-34 snr=13 PDR=100.0%
+RX [qm01] seq=113 estado=BLOQUEADO tds=78 rssi=-34 snr=13 PDR=100.0%
+[estado] WiFi=ok MQTT=ok cola=0 recibidas=107 crc_err=0 dup=0 reintentos_rx=0
+RX [qm01] seq=114 estado=BLOQUEADO tds=144 rssi=-34 snr=13 PDR=100.0%
+RX [qm01] seq=115 estado=BLOQUEADO tds=103 rssi=-34 snr=13 PDR=100.0%
+RX [qm01] seq=116 estado=BLOQUEADO tds=82 rssi=-34 snr=13 PDR=100.0%
+RX [qm01] seq=117 estado=BLOQUEADO tds=138 rssi=-34 snr=13 PDR=100.0%
+RX [qm01] seq=118 estado=BLOQUEADO tds=110 rssi=-34 snr=13 PDR=100.0%
+RX [qm01] seq=119 estado=BLOQUEADO tds=116 rssi=-34 snr=13 PDR=100.0%
+[estado] WiFi=ok MQTT=ok cola=0 recibidas=113 crc_err=0 dup=0 reintentos_rx=0
+RX [qm01] seq=120 estado=BLOQUEADO tds=101 rssi=-35 snr=13 PDR=100.0%
+RX [qm01] seq=121 estado=BLOQUEADO tds=134 rssi=-34 snr=13 PDR=100.0%
+RX [qm01] seq=122 estado=BLOQUEADO tds=128 rssi=-34 snr=13 PDR=100.0%
+RX [qm01] seq=123 estado=BLOQUEADO tds=122 rssi=-34 snr=13 PDR=100.0%
+RX [qm01] seq=124 estado=BLOQUEADO tds=110 rssi=-34 snr=13 PDR=100.0%
+RX [qm01] seq=125 estado=BLOQUEADO tds=102 rssi=-34 snr=13 PDR=100.0%
+[estado] WiFi=ok MQTT=ok cola=0 recibidas=119 crc_err=0 dup=0 reintentos_rx=0
+RX [qm01] seq=126 estado=BLOQUEADO tds=123 rssi=-34 snr=13 PDR=100.0%
+RX [qm01] seq=127 estado=BLOQUEADO tds=113 rssi=-34 snr=13 PDR=100.0%
+RX [qm01] seq=128 estado=BLOQUEADO tds=127 rssi=-34 snr=12 PDR=100.0%
+RX [qm01] seq=129 estado=BLOQUEADO tds=104 rssi=-34 snr=13 PDR=100.0%
+RX [qm01] seq=130 estado=BLOQUEADO tds=135 rssi=-34 snr=14 PDR=100.0%
+RX [qm01] seq=131 estado=BLOQUEADO tds=113 rssi=-34 snr=13 PDR=100.0%
+[estado] WiFi=ok MQTT=ok cola=0 recibidas=125 crc_err=0 dup=0 reintentos_rx=0
+RX [qm01] seq=132 estado=BLOQUEADO tds=108 rssi=-36 snr=12 PDR=100.0%
+RX [qm01] seq=133 estado=BLOQUEADO tds=99 rssi=-36 snr=13 PDR=100.0%
+RX [qm01] seq=134 estado=BLOQUEADO tds=105 rssi=-35 snr=13 PDR=100.0%
+RX [qm01] seq=135 estado=BLOQUEADO tds=120 rssi=-34 snr=13 PDR=100.0%
+RX [qm01] seq=136 estado=BLOQUEADO tds=99 rssi=-34 snr=13 PDR=100.0%
+RX [qm01] seq=137 estado=BLOQUEADO tds=113 rssi=-34 snr=12 PDR=100.0%
+[estado] WiFi=ok MQTT=ok cola=0 recibidas=131 crc_err=0 dup=0 reintentos_rx=0
+RX [qm01] seq=138 estado=BLOQUEADO tds=90 rssi=-34 snr=12 PDR=100.0%
+RX [qm01] seq=139 estado=BLOQUEADO tds=126 rssi=-34 snr=13 PDR=100.0%
+RX [qm01] seq=140 estado=BLOQUEADO tds=108 rssi=-37 snr=13 PDR=100.0%
+RX [qm01] seq=141 estado=BLOQUEADO tds=90 rssi=-37 snr=13 PDR=100.0%
+RX [qm01] seq=142 estado=BLOQUEADO tds=111 rssi=-37 snr=12 PDR=100.0%
+RX [qm01] seq=143 estado=BLOQUEADO tds=99 rssi=-37 snr=12 PDR=100.0%
+[estado] WiFi=ok MQTT=ok cola=0 recibidas=137 crc_err=0 dup=0 reintentos_rx=0
+RX [qm01] seq=144 estado=BLOQUEADO tds=113 rssi=-37 snr=13 PDR=100.0%
+RX [qm01] seq=145 estado=BLOQUEADO tds=135 rssi=-37 snr=13 PDR=100.0%
+RX [qm01] seq=146 estado=BLOQUEADO tds=102 rssi=-38 snr=13 PDR=100.0%
+RX [qm01] seq=147 estado=BLOQUEADO tds=90 rssi=-36 snr=13 PDR=100.0%
+RX [qm01] seq=148 estado=BLOQUEADO tds=90 rssi=-37 snr=13 PDR=100.0%
+RX [qm01] seq=149 estado=BLOQUEADO tds=95 rssi=-36 snr=13 PDR=100.0%
+[estado] WiFi=ok MQTT=ok cola=0 recibidas=143 crc_err=0 dup=0 reintentos_rx=0
+RX [qm01] seq=150 estado=BLOQUEADO tds=110 rssi=-36 snr=13 PDR=100.0%
+RX [qm01] seq=151 estado=BLOQUEADO tds=110 rssi=-37 snr=13 PDR=100.0%
+RX [qm01] seq=152 estado=BLOQUEADO tds=124 rssi=-36 snr=12 PDR=100.0%
+RX [qm01] seq=153 estado=BLOQUEADO tds=119 rssi=-36 snr=13 PDR=100.0%
+RX [qm01] seq=154 estado=BLOQUEADO tds=84 rssi=-37 snr=13 PDR=100.0%
+RX [qm01] seq=155 estado=BLOQUEADO tds=134 rssi=-37 snr=13 PDR=100.0%
+[estado] WiFi=ok MQTT=ok cola=0 recibidas=149 crc_err=0 dup=0 reintentos_rx=0
+RX [qm01] seq=156 estado=BLOQUEADO tds=98 rssi=-37 snr=13 PDR=100.0%
+RX [qm01] seq=157 estado=BLOQUEADO tds=153 rssi=-37 snr=13 PDR=100.0%
+RX [qm01] seq=158 estado=BLOQUEADO tds=116 rssi=-37 snr=13 PDR=100.0%
+RX [qm01] seq=159 estado=BLOQUEADO tds=90 rssi=-37 snr=13 PDR=100.0%
+RX [qm01] seq=160 estado=BLOQUEADO tds=131 rssi=-35 snr=13 PDR=100.0%
+RX [qm01] seq=161 estado=BLOQUEADO tds=102 rssi=-38 snr=13 PDR=100.0%
+[estado] WiFi=ok MQTT=ok cola=0 recibidas=155 crc_err=0 dup=0 reintentos_rx=0
+RX [qm01] seq=162 estado=BLOQUEADO tds=131 rssi=-36 snr=12 PDR=100.0%
+RX [qm01] seq=163 estado=BLOQUEADO tds=113 rssi=-37 snr=13 PDR=100.0%
+RX [qm01] seq=164 estado=BLOQUEADO tds=150 rssi=-36 snr=12 PDR=100.0%
+RX [qm01] seq=165 estado=BLOQUEADO tds=122 rssi=-37 snr=13 PDR=100.0%
+RX [qm01] seq=166 estado=BLOQUEADO tds=139 rssi=-37 snr=13 PDR=100.0%
+RX [qm01] seq=167 estado=BLOQUEADO tds=98 rssi=-36 snr=12 PDR=100.0%
+[estado] WiFi=ok MQTT=ok cola=0 recibidas=161 crc_err=0 dup=0 reintentos_rx=0
+RX [qm01] seq=168 estado=BLOQUEADO tds=122 rssi=-35 snr=12 PDR=100.0%
+RX [qm01] seq=169 estado=BLOQUEADO tds=122 rssi=-36 snr=13 PDR=100.0%
+RX [qm01] seq=170 estado=BLOQUEADO tds=128 rssi=-36 snr=12 PDR=100.0%
+RX [qm01] seq=171 estado=BLOQUEADO tds=121 rssi=-36 snr=13 PDR=100.0%
+RX [qm01] seq=172 estado=BLOQUEADO tds=84 rssi=-35 snr=12 PDR=100.0%
+RX [qm01] seq=173 estado=BLOQUEADO tds=81 rssi=-35 snr=12 PDR=100.0%
+[estado] WiFi=ok MQTT=ok cola=0 recibidas=167 crc_err=0 dup=0 reintentos_rx=0
+RX [qm01] seq=174 estado=BLOQUEADO tds=88 rssi=-36 snr=13 PDR=100.0%
+RX [qm01] seq=175 estado=BLOQUEADO tds=117 rssi=-36 snr=12 PDR=100.0%
+RX [qm01] seq=176 estado=BLOQUEADO tds=97 rssi=-36 snr=13 PDR=100.0%
+RX [qm01] seq=177 estado=BLOQUEADO tds=95 rssi=-36 snr=12 PDR=100.0%
+RX [qm01] seq=178 estado=BLOQUEADO tds=113 rssi=-36 snr=12 PDR=100.0%
+RX [qm01] seq=179 estado=BLOQUEADO tds=90 rssi=-36 snr=12 PDR=100.0%
+[estado] WiFi=ok MQTT=ok cola=0 recibidas=173 crc_err=0 dup=0 reintentos_rx=0
+RX [qm01] seq=180 estado=BLOQUEADO tds=89 rssi=-35 snr=12 PDR=100.0%
+RX [qm01] seq=181 estado=BLOQUEADO tds=102 rssi=-36 snr=12 PDR=100.0%
+RX [qm01] seq=182 estado=BLOQUEADO tds=90 rssi=-37 snr=13 PDR=100.0%
+RX [qm01] seq=183 estado=BLOQUEADO tds=113 rssi=-38 snr=12 PDR=100.0%
+RX [qm01] seq=184 estado=BLOQUEADO tds=93 rssi=-39 snr=13 PDR=100.0%
+[estado] WiFi=ok MQTT=ok cola=0 recibidas=178 crc_err=0 dup=0 reintentos_rx=0

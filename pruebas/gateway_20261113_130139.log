@@ -1,0 +1,30 @@
+
+=== QawapMayu gateway GW01 ===
+  RAK> AT
+  RAK< AT
+
+  RAK< OK
+
+  RAK> AT+NWM=0
+  RAK< AT+NWM=0
+  RAK< P2P_RX_ON already, please disable P2P RX before setting.
+  RAK< AT_BUSY_ERROR
+  RAK> AT+PRECV=0
+  RAK< AT+PRECV=0
+  RAK< OK
+  RAK> AT+P2P=923500000:7:125:0:10:14
+  RAK< AT+P2P=923500000:7:125:0:10:14
+
+  RAK< OK
+  RAK> AT+PRECV=65534
+  RAK< AT+PRECV=65534
+
+  RAK< OK
+
+RAK escuchando en P2P
+
+Conectando a MQTT... OK
+[estado] WiFi=ok MQTT=ok cola=0 recibidas=0 crc_err=0 dup=0 reintentos_rx=0
+[estado] WiFi=ok MQTT=ok cola=0 recibidas=0 crc_err=0 dup=0 reintentos_rx=0
+[SORDERA] sin tramas hace 60 s, rearmando RX (intento 1)
+[SORDERA] RX rearmado OK

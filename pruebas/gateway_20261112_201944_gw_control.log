@@ -1,0 +1,26 @@
+20:19:49.412 > ets Jul 29 2019 12:21:46
+
+20:19:49.416 > 
+20:19:49.416 > rst:0x1 (POWERON_RESET),boot:0x13 (SPI_FAST_FLASH_BOOT)
+20:19:49.420 > configsip: 0, SPIWP:0xee
+20:19:49.422 > clk_drv:0x00,q_drv:0x00,d_drv:0x00,cs0_drv:0x00,hd_drv:0x00,wp_drv:0x00
+20:19:49.428 > mode:DIO, clock div:2
+20:19:49.430 > load:0x3fff0030,len:4640
+
+20:19:49.433 > load:0x40078000,len:15632
+20:19:49.435 > load:0x40080400,len:3164
+20:19:49.437 > entry 0x4008059c
+20:19:50.368 > 
+20:19:50.369 > === QawapMayu gateway GW01 ===
+20:19:50.469 >   RAK> AT
+
+20:19:51.969 >   RAK> AT+NWM=0
+20:19:56.470 >   RAK> AT+PRECV=0
+20:19:57.970 >   RAK> AT+P2P=923500000:7:125:0:10:14
+20:19:59.469 > !! Fallo configurando el RAK
+20:19:59.472 > Conectando a ThingsBoard... OK
+20:20:19.813 > [estado] WiFi=ok MQTT=ok cola=0 recibidas=0 crc_err=0 dup=0 reintentos_rx=0
+20:20:49.814 > [estado] WiFi=ok MQTT=ok cola=0 recibidas=0 crc_err=0 dup=0 reintentos_rx=0
+20:20:59.470 > [SORDERA] sin tramas hace 60 s, rearmando RX (intento 1)
+20:21:08.470 > [SORDERA] !! Fallo rearmando RX
+20:21:19.814 > [estado] WiFi=ok MQTT=ok cola=0 recibidas=0 crc_err=0 dup=0 reintentos_rx=1
