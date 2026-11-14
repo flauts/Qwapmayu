@@ -36,7 +36,7 @@ Dosificación & 10 captaciones; media $100 \pm 10$ mL & 10 disparos de 5000 ms: 
 Enclava\-miento & Tras captura y reinicio, bomba apagada y estado BLOQUEADO & Reinicio tras captura $\to$ BLOQUEADO; reinicio durante el bombeo $\to$ FALLO; rearme rechazado con anomalía & Cumplido & \ev{serial_20261108_133113.log}, L451--487, L523--569, L591--625; \ev{nodo_20261112_145419_wdt_B_bomba.log} \\
 Desconexión & El muestreo local continúa sin LoRa ni Internet & Con el radio en FALLO\_RADIO la captura se completó; corte de Wi-Fi con cola 3 $\to$ 9 $\to$ 0, sin bomba & Parcial & \ev{serial_20261108_133113.log}, L528--533; \ev{gateway_20261110_163055.log} \\
 Enlace LoRa & 100 tramas en varias posiciones; PDR $\geq 95$~\% & 147/147 (PDR 100~\%) en una posición interior a 1~m; latencia mediana 106~ms & Cumplido en 1 posición & \ev{nodo_20261110_005911_p7_1m_nodo.log}, \ev{gateway_20261110_005746_p7_1m_gw.log} \\
-Protección eléctrica & Sin reinicios del ESP32 por conmutar la bomba & Seis bombeos con la bomba conectada sin reinicio (2 el 7 nov y 4 en el ensayo integral); sin el diodo \textit{flyback} el USB se desconectaba (observación sin log) & Cumplido (en banco) & \ev{nodo_20261107_225307.log}; \ev{nodo_20261113_182101.log}; \ev{nodo_20261113_200907.log} \\
+Protección eléctrica & Sin reinicios del ESP32 por conmutar la bomba & Seis bombeos con la bomba conectada sin reinicio: 2 el 7 nov (con diodo en la bomba) y 4 en el ensayo integral (bobina alimentada desde el HW-131 y capacitor de 220~$\mu$F, sin diodo en la bomba); al inicio el USB se desconectaba al conmutar (observación sin log) & Cumplido (en banco) & \ev{nodo_20261107_225307.log}; \ev{nodo_20261113_182101.log}; \ev{nodo_20261113_200907.log} \\
 \bottomrule
 \end{longtable}
 }

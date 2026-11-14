@@ -8,9 +8,9 @@
 
 La Fig.~\ref{fig:interconexiones} muestra cómo se conectan los módulos al ESP32 del nodo. Los tres sensores analógicos usan canales del ADC1, que el ESP32 puede leer mientras el Wi-Fi está activo~\cite{esp32}. Las salidas del pH y de la turbidez se alimentan con 5~V y pueden superar los 3.3~V que admite un pin del ESP32. Por eso pasan por un divisor de 10~k$\Omega$ (arriba) y 20~k$\Omega$ (abajo), que entrega dos tercios de la tensión. El TDS se alimenta con 3.3~V y su salida, de 0 a 2.3~V, se conecta directamente. El DS18B20 comparte un bus 1-Wire con una resistencia de 4.7~k$\Omega$ a 3.3~V. El RAK3272S se alimenta del pin de 3.3~V del ESP32 y se comunica por el segundo puerto serie, con las líneas TX y RX cruzadas (\texttt{docs/pines.md}).
 
-En el lado de potencia hay dos dominios. El nodo se alimenta por USB desde el computador, que también recibe la salida serie usada como evidencia. La bomba toma energía de un módulo HW-131 conectado a una fuente de 8~V y 2~A, a través del contacto normalmente abierto del relé. El electrodo de pH también se alimenta desde el riel de 5~V del HW-131. El relé conmuta con nivel bajo en GPIO23. Por eso el firmware fija ese pin en alto antes y después de configurarlo como salida, para que la bomba no arranque durante el encendido. Se usa uno de los dos canales de un módulo de relé.
+En el lado de potencia hay dos dominios. El nodo se alimenta por USB desde el computador, que también recibe la salida serie usada como evidencia. El segundo dominio es un módulo HW-131 conectado a una fuente de 8~V y 2~A. De sus rieles de 5~V y 3.3~V se alimentan los sensores y la bobina del relé, y a través del contacto normalmente abierto del relé, la bomba. El ESP32 y el HW-131 comparten tierra, porque el ESP32 lee señales de sensores alimentados desde el HW-131. El relé conmuta con nivel bajo en GPIO23. Por eso el firmware fija ese pin en alto antes y después de configurarlo como salida, para que la bomba no arranque durante el encendido. Se usa uno de los dos canales de un módulo de relé.
 
-En la rama de la bomba que conmuta el contacto NO se instaló un diodo \textit{flyback} en paralelo con el motor. Se agregó porque, en las primeras pruebas sin el diodo, el ESP32 se desconectaba del puerto USB del computador cada vez que el relé conmutaba la bomba. Con el diodo instalado, la desconexión no volvió a observarse. Esta es una observación del equipo durante las pruebas y no tiene un log asociado (Sección~\ref{sec:resultados}).
+En las primeras pruebas, el ESP32 se desconectaba del puerto USB del computador cada vez que el relé conmutaba la bomba. Primero se probó un diodo 1N4007 en paralelo con el motor (7 de noviembre). En el montaje final ese diodo ya no está: el problema se resolvió separando la alimentación de la bobina del relé. Para eso se retiró el puente \texttt{JD-VCC}/\texttt{VCC} del módulo, de modo que la bobina se alimenta desde los 5~V del HW-131 y el ESP32 solo aporta \texttt{VCC} y la señal \texttt{IN2}. Además, se colocó un capacitor electrolítico de 220~$\mu$F entre \texttt{JD-VCC} y \texttt{GND}, junto al módulo, para absorber el pico de corriente al energizar la bobina. El módulo trae su propio diodo en paralelo con la bobina, que protege al transistor que la maneja, pero no hay diodo en paralelo con el motor de la bomba. Estas observaciones son del equipo y no tienen un log asociado (Sección~\ref{sec:resultados}).
 
 \begin{figure}[htbp]
 \centering
@@ -26,10 +26,10 @@ En la rama de la bomba que conmuta el contacto NO se instaló un diodo \textit{f
 \node[box, fill=navy, text=white, text width=36mm, minimum height=78mm, font=\small] (esp) at (0,0) {ESP32 DevKit V1\\(nodo QM01)};
 
 % Sensores (izquierda)
-\node[mod] (ph)   at (-7.6, 3.0)  {pH DFRobot SEN0169\\(5 V, riel HW-131)};
-\node[mod] (turb) at (-7.6, 1.0)  {Turbidez TS-300B\\(5 V)};
-\node[mod] (tds)  at (-7.6,-1.0)  {TDS KS0429 (3.3 V)\\salida 0--2.3 V directa};
-\node[mod] (temp) at (-7.6,-3.0)  {DS18B20\\(3.3 V, 1-Wire)};
+\node[mod] (ph)   at (-7.6, 3.0)  {pH DFRobot SEN0169\\(5 V del HW-131)};
+\node[mod] (turb) at (-7.6, 1.0)  {Turbidez TS-300B\\(5 V del HW-131)};
+\node[mod] (tds)  at (-7.6,-1.0)  {TDS KS0429 (3.3 V, HW-131)\\salida 0--2.3 V directa};
+\node[mod] (temp) at (-7.6,-3.0)  {DS18B20\\(3.3 V, HW-131; 1-Wire)};
 \node[div] (dph)  at (-3.7, 3.0)  {divisor\\10k/20k};
 \node[div] (dtu)  at (-3.7, 1.0)  {divisor\\10k/20k};
 \node[div] (pu)   at (-3.7,-3.0)  {pull-up\\4.7k a 3V3};
@@ -41,7 +41,7 @@ En la rama de la bomba que conmuta el contacto NO se instaló un diodo \textit{f
 
 % Radio, relé y E/S (derecha)
 \node[mod] (rak)  at (6.9, 3.0)  {RAK3272S\\(3.3 V desde el ESP32)};
-\node[mod] (rele) at (6.9, 0.6)  {Relé, 1 de 2 canales\\(activo en bajo, VIN 5 V)};
+\node[mod] (rele) at (6.9, 0.6)  {Relé, canal 2 de 2\\(bobina a 5 V del HW-131, 220 $\mu$F)};
 \node[mod] (btn)  at (6.9,-1.8)  {Pulsador de rearme\\(desconectado al 12 nov)};
 \node[mod] (led)  at (6.9,-3.4)  {LED testigo};
 
@@ -58,7 +58,7 @@ En la rama de la bomba que conmuta el contacto NO se instaló un diodo \textit{f
 \draw[energy] (usb) -- (esp.south);
 \draw[energy] (hw.east) -| node[lab, pos=0.75, right]{vía contacto NO} (bomba.north);
 \draw[energy] (rele) -- (bomba);
-\draw[energy] (hw.west) -| node[lab, pos=0.2, above]{riel 5 V} (ph.north);
+\draw[energy] (hw.west) -| node[lab, pos=0.2, above]{rieles 5 V y 3.3 V a sensores y bobina} (ph.north);
 \draw[arr, <->] (rak.north) -- ++(0,0.5) node[lab, above]{antena 923.5 MHz};
 \end{tikzpicture}%
 }

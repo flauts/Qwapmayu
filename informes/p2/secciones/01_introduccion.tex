@@ -94,4 +94,4 @@ El motor de la bomba es una carga inductiva. Al abrirse el relé, la corriente c
 \begin{equation}
     V_{\text{ind}} = -L\,\frac{di}{dt}
 \end{equation}
-que puede perturbar al microcontrolador. Un diodo \textit{flyback} en paralelo con el motor ofrece un camino a esa corriente y limita el pico de tensión.
+que puede perturbar al microcontrolador. Algo parecido ocurre al energizar la bobina del relé, que pide un pico de corriente a la fuente. Hay dos medidas habituales: dar a la corriente inductiva un camino por un diodo en paralelo con la carga, y separar la alimentación de las cargas inductivas de la del microcontrolador, con un capacitor de desacoplo cerca de la carga.

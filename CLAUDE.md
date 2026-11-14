@@ -42,7 +42,7 @@ El detalle de cada prueba (logs, horas, cifras, commits) está en `docs/contexto
 | TDS | KS0429 en GPIO34 | KS0429 en GPIO35 (directo, 0–2.3 V) |
 | Turbidez | SEN0189 en GPIO32 | TS-300B (sonda TSW-30), divisor 10k/20k, GPIO34; índice relativo IT |
 | Temperatura | DS18B20 en GPIO4 | DS18B20 en GPIO32, pull-up 4.7 kΩ a 3V3 |
-| Actuador | Bomba peristáltica 12 V | Minibomba sumergible 3–5 V (prestada) vía 1 canal de un módulo de relé de 2 canales **activo en bajo** (GPIO23) y diodo flyback en paralelo con la bomba (confirmado por el usuario el 12 nov) |
+| Actuador | Bomba peristáltica 12 V | Minibomba sumergible 3–5 V (prestada) vía 1 canal de un módulo de relé de 2 canales **activo en bajo** (GPIO23) ; sin diodo en la bomba: bobina alimentada desde el HW-131 (sin puente JD-VCC) con capacitor de 220 µF; el módulo trae diodo solo en la bobina (corregido por el usuario el 13 nov) |
 | Manguera | 3 mm DI, 1.0 m | 6.5 mm DI, 70 cm |
 | Energía | Batería 12 V 7 Ah + buck | Bomba desde módulo HW-131 con fuente 8 V 2 A; nodo por USB de la laptop |
 | Rearme | Pulsador GPIO25 | Pulsador GPIO25 desconectado al 12 nov; se rearma con la tecla `r` por serie |
@@ -77,7 +77,7 @@ El detalle de cada prueba (logs, horas, cifras, commits) está en `docs/contexto
 | Enclavamiento | Cumplido (casos 5 y 6; watchdog B) | `serial_20261108_133113.log`, `nodo_20261112_145419_wdt_B_bomba.log` |
 | Desconexión | Parcial: bomba completó con radio en FALLO_RADIO; corte de Internet sin bomba | `serial_20261108_133113.log` L528–533, `gateway_20261110_163055.log` |
 | Enlace LoRa | 147/147 a 1 m en interior, latencia ~106 ms | `nodo_20261110_005911_p7_1m_nodo.log`, `gateway_20261110_005746_p7_1m_gw.log` |
-| Protección eléctrica | Solo observación (sin caídas tras el flyback, 7 nov); pendiente en ensayo integral | sin log |
+| Protección eléctrica | 6 bombeos sin reinicio (7 nov con diodo; 13 nov con JD-VCC separado + 220 µF, sin diodo) | `nodo_20261107_225307.log`, `nodo_20261113_182101.log`, `nodo_20261113_200907.log` |
 
 ## Limitaciones a declarar (resumen)
 - Los sensores no identifican ni cuantifican metales; la muestra no es válida por sí sola para análisis regulatorio.
