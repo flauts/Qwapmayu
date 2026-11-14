@@ -173,7 +173,7 @@ El gateway también cubre dos fallas. La primera es la caída de la red: el Wi-F
 \subsection{Organización del software y trazabilidad de la evidencia}
 \label{sec:software}
 
-El software está en un repositorio Git y se compila con PlatformIO, con la plataforma fijada en \texttt{espressif32@8.0.0} (núcleo Arduino-ESP32 3.3.12) para que todas las compilaciones sean reproducibles. El código se organiza en cuatro partes:
+El software está en un repositorio Git público (\url{https://github.com/flauts/Qwapmayu}) y se compila con PlatformIO, con la plataforma fijada en \texttt{espressif32@8.0.0} (núcleo Arduino-ESP32 3.3.12) para que todas las compilaciones sean reproducibles. El código se organiza en cuatro partes:
 \begin{itemize}
     \item \texttt{comun/}: cabeceras compartidas por todos los firmwares. Contiene el formato de la trama y el CRC (\texttt{trama.h}), el detector de anomalías y la validez (\texttt{anomalia.h}), el manejo del RAK por comandos AT (\texttt{rak\_at.h}), los pines (\texttt{hardware.h}) y la recta de pH (\texttt{calibracion.h}). Al compartirlas, el nodo y el gateway no pueden discrepar en el formato de la trama.
     \item \texttt{nodo/} y \texttt{gateway/}: los dos firmwares finales. Las credenciales de Wi-Fi y de ThingsBoard están en un archivo que Git ignora, así que no forman parte del repositorio.
