@@ -44,7 +44,23 @@ Protección eléctrica & Sin reinicios del ESP32 por conmutar la bomba & Seis bo
 \subsection{Sensores}
 \label{sec:res_sensores}
 
-\textbf{pH.} Sin soluciones buffer, obtuvimos la recta con dos puntos. El primero fue el conector BNC en cortocircuito, que la documentación del fabricante trata como equivalente a pH 7 con un error de hasta 0.3~\cite{ph_sen0169}; dio 1345~mV. El segundo fue vinagre diluido, que la tira indicadora marcó como pH 3; dio 341~mV. Resulta $\mathrm{pH} = 0.003984\,\mathrm{mV} + 1.6410$, unos 251~mV por unidad de pH. Como verificación, el agua de caño dio pH 7.2 frente a 7 en la tira, y el 12 de noviembre dio 7.10. El agua hervida en reposo dio 8.46, mientras la tira marcó entre 7 y 8. La lectura tardó entre 3 y 15 minutos en estabilizarse. Con dos puntos cuyo valor de referencia viene de una tira, la pendiente real no queda acotada. Por eso declaramos un error de $\pm 1$ pH y no hay compensación por temperatura. La meta del P1, una calibración con buffers, no se cumplió.
+\textbf{pH.} Sin soluciones buffer, obtuvimos la recta con dos puntos. El primero fue el conector BNC en cortocircuito, que la documentación del fabricante trata como equivalente a pH 7 con un error de hasta 0.3~\cite{ph_sen0169}; dio 1345~mV. El segundo fue vinagre diluido, que la tira indicadora marcó como pH 3; dio 341~mV. Resulta $\mathrm{pH} = 0.003984\,\mathrm{mV} + 1.6410$, unos 251~mV por unidad de pH. Como verificación, el agua de caño dio pH 7.2 frente a 7 en la tira, y el 12 de noviembre dio 7.10. El agua hervida en reposo dio 8.46, mientras la tira marcó entre 7 y 8. La lectura tardó entre 3 y 15 minutos en estabilizarse. Con dos puntos cuyo valor de referencia viene de una tira, la pendiente real no queda acotada. Por eso declaramos un error de $\pm 1$ pH y no hay compensación por temperatura. La meta del P1, una calibración con buffers, no se cumplió. La Fig.~\ref{fig:tiras_ph} muestra las tiras usadas como referencia.
+
+\begin{figure}[htbp]
+\centering
+\begin{minipage}[b]{0.48\textwidth}
+\centering
+\includegraphics[width=\linewidth,height=7cm,keepaspectratio]{figuras/fotos/tira_ph_vinagre.jpg}\\
+\small (a) Vinagre diluido: las tiras coinciden con la columna de pH 3 (punto B de la recta).
+\end{minipage}\hfill
+\begin{minipage}[b]{0.48\textwidth}
+\centering
+\includegraphics[width=\linewidth,height=7cm,keepaspectratio]{figuras/fotos/tira_ph_agua_cano.jpg}\\
+\small (b) Agua de caño: la tira marca alrededor de pH 7; el sensor midió 7.2.
+\end{minipage}
+\caption{Tiras indicadoras de pH (ISOLAB, 0--14) comparadas con la escala del fabricante. La lectura de una tira es visual y tiene una resolución de una unidad de pH, por eso el error declarado del sensor es de $\pm 1$. Elaboración propia.}
+\label{fig:tiras_ph}
+\end{figure}
 
 \textbf{TDS.} En agua de caño la línea base fue 160~ppm de media, con desviación de 22~ppm y un rango de 105 a 236~ppm en 897 lecturas (Fig.~\ref{fig:r2}a). Esa dispersión llevó a fijar el umbral 100~ppm sobre $TDS_0$. Una solución madre diluida casi no movió la lectura (de 0 a 10~ppm más). Una cucharada de sal seca en 500~mL, en cambio, la llevó hasta 681~ppm y activó la solicitud de captura (Fig.~\ref{fig:r2}b). En ese registro, $TDS_0$ había quedado en 114~ppm porque la versión de entonces tomaba una sola lectura. Tras un reinicio, la misma versión fijó $TDS_0$ en 566~ppm con el agua ya salada, lo que subió el umbral a 666~ppm y ocultó la anomalía. Este defecto motivó el cambio a la mediana de 12 lecturas tomadas después de 60~s. No contrastamos el KS0429 con un patrón, así que sus valores absolutos no están calibrados. Además, con la sonda desconectada el canal lee 58~ppm y se marca como válido, porque el TDS no tiene piso de validez.
 
