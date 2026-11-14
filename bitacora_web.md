@@ -74,6 +74,14 @@ Convenciones: **[log]** cifra tomada del log · **[usuario]** observación del u
   - Sorderas sin provocar: 8 nov (RAK A), 9 nov (~24 min) y probablemente 12 nov. Causa no determinada.
   - `tds_mv_valido` no tiene piso: con la sonda de TDS desconectada se publica 58 ppm como válido [agente].
 
+## 13 nov — Tablero MQTT propio y capturas de extremo a extremo
+- Rama `mqtt-tablero` fusionada en `main` (PR #1, commit `5972777`): el gateway publica en tópicos `qawapmayu/v1/<zona>/<sitio>/<nodo>/<canal>` con retención, LWT y diagnóstico de sordera; broker Mosquitto local (1883 MQTT, 9001 WebSockets) u opción EMQX pública; tablero web propio en `tablero/`. ThingsBoard deja de usarse.
+- `nodo_20261113_182101.log` + `gateway_20261113_182107.log` + `mqtt_20261113_182150.csv` (SF7): ev=3 (18:26) y ev=4 (18:31), ambos por turbidez (ano 0x04; IT 0.357→0.418→0.416 y 0.261→0.370→0.406), relé 5003 ms, CAPTURA_ESTIMADA → BLOQUEADO, rearme entre capturas; validez 0x0E (pH inválido, TDS, turbidez y temperatura ~25.13 °C válidos); sin anomalía simulada [log]. El gateway recibió MUESTREANDO (seq 33, 92) y CAPTURA_ESTIMADA (seq 34, 93) con PDR 100 %, RSSI −29 a −33 dBm; el registrador MQTT guardó `estado` y `evento` 3 y 4 a las 18:26:16 y 18:31:16 [log/cálculo].
+- `nodo_20261113_200907.log` + `gateway_20261113_200914.log` (SF7): ev=5 (20:23) y ev=6 (20:27) por turbidez (IT 0.285–0.297 y 0.217–0.230), relé 5003 ms, validez 0x0E; gateway con MQTT OK, RSSI −42 a −44 dBm, PDR 100 %; eventos 5 y 6 en `mqtt_20261113_182150.csv` [log].
+- Medios del celular 18:23–18:34 (montaje con cubetas, maicena con el tablero en la laptop, acople de manguera, foto del gateway) en `medios/proyecto/` (fuera de git) [usuario].
+- Prueba de alcance con SF12 y BW 0 (`nodo_20261113_211917.log`, cambio de `comun/rak_at.h` no versionado y revertido): a ~5 km no llegó ninguna trama en 30 min [usuario]; no hay log del gateway de esa prueba.
+- **Ensayo integral** (confirmado por el usuario el 13 nov): bomba conectada y bombeando (se ve en video); volumen capturado 100 mL medido por el equipo [usuario, sin log]. El pH quedó inválido porque el sensor SEN0169 era prestado y se devolvió antes del ensayo; su calibración consta en los logs del 11–12 nov [usuario]. En ambos logs del nodo el motivo de reinicio aparece una sola vez, al arranque, antes de las capturas: 4 bombeos sin reinicio del ESP32 [log].
+
 ## Commits relevantes
 `99b039c` turbidez GPIO32 · `b6f0c46` nodo con FSM (código de los casos de seguridad) · `759bfd9` logs de seguridad · `ca82660` serie de dosificación G1 · `8673122` logs RAK 8 nov · `40281c9` turbidez a GPIO4 · `7ff2e60` logs p6 · `7faa89e` logs turbidez maicena · `46d3e23` reconexión Wi-Fi del gateway · `2f13004` logs p7 · `8b34cec`/`8fadaeb` pines y calibración de pH · `c3fd126` watchdog del nodo · `6c07101` logs del watchdog · `5a14dc9` gateway: sordera y centinelas · `19b4337` logs del gateway. Varios commits del 12 nov siguen sin push.
 
