@@ -7,7 +7,7 @@ El desarrollo siguió un ciclo incremental de banco de pruebas. Cada subsistema 
 \subsection{Planteamiento del sistema y diagrama de bloques}
 \label{sec:bloques}
 
-QawapMayu se compone de un nodo de campo (QM01), una pasarela (GW01) y un tablero en la nube (Fig.~\ref{fig:bloques}). El nodo mide cuatro variables del agua, decide localmente si hay una alteración persistente y, si la hay, acciona una bomba que llena un frasco. En paralelo, cada 5~s envía por LoRa una trama con las mediciones, su validez y el estado de la máquina de estados. La pasarela valida la trama, le asigna la hora absoluta y la publica por MQTT en ThingsBoard~\cite{thingsboard}.
+QawapMayu se compone de un nodo de campo (QM01), una pasarela (GW01) y un tablero en la nube (Fig.~\ref{fig:bloques}). El nodo mide cuatro variables del agua, decide localmente si hay una alteración persistente y, si la hay, acciona una bomba que llena un frasco. En paralelo, cada 5~s envía por LoRa una trama con las mediciones, su validez y el estado de la máquina de estados. La pasarela valida la trama, le asigna la hora absoluta y la publica por MQTT en un broker. Un tablero web propio se suscribe a ese broker y muestra los datos. Hasta el 12 de noviembre se usó ThingsBoard~\cite{thingsboard}; desde el 13 de noviembre la supervisión corre sobre el broker Mosquitto y el tablero propio (Sección~\ref{sec:fw_gateway}).
 
 La decisión de muestrear se toma en el nodo y no depende del radio ni de Internet. La nube solo cumple funciones de supervisión e historial. Así, una caída del enlace puede retrasar la alerta, pero no impide que se capture la muestra.
 
@@ -31,7 +31,7 @@ La decisión de muestrear se toma en el nodo y no depende del radio ni de Intern
 % Fila 3: telemetría
 \node[blk] (rakn) at (8.6,-5.0)  {RAK3272S (nodo)\\LoRa P2P 923.5 MHz};
 \node[blk] (gw)   at (13.0,-5.0) {Gateway GW01\\ESP32 + RAK3272S};
-\node[blk] (tb)   at (17.2,-5.0) {ThingsBoard\\tablero e historial};
+\node[blk] (tb)   at (17.2,-5.0) {Broker MQTT\\y tablero web};
 % Datos y control
 \draw[arr] (sens) -- (nodo);
 \draw[arr] (nodo) -- node[lab, above=1pt]{GPIO23} (rele);
@@ -100,7 +100,7 @@ Entre el perfil P1 y el prototipo construido cambiaron varios componentes y par�
 
 {\small
 \begin{longtable}{p{2.6cm}p{3.6cm}p{4.4cm}p{4.6cm}}
-\caption{Cambios entre el Perfil P1 y el prototipo implementado (estado al 12 de noviembre de 2026)}
+\caption{Cambios entre el Perfil P1 y el prototipo implementado (estado al 13 de noviembre de 2026)}
 \label{tab:cambios} \\
 \toprule
 Elemento & Perfil P1 & Prototipo P2 & Efecto en el diseño \\
@@ -111,7 +111,7 @@ Elemento & Perfil P1 & Prototipo P2 & Efecto en el diseño \\
 \midrule
 \endhead
 Radio & EBYTE E32 por UART con M0, M1 y AUX & 2 RAK3272S por comandos AT (GPIO16/17), LoRa P2P, 923.5 MHz, SF7, BW 125 kHz & Menos pines de control; RSSI y SNR por paquete en el gateway. \\
-pH & PH-4502C, calibración con 3 buffers & DFRobot SEN0169~\cite{ph_sen0169} con divisor 10k/20k en GPIO33; 2 puntos sin buffers & Recta $\mathrm{pH}=0.003984\,\mathrm{mV}+1.6410$; error declarado de $\pm 1$ pH. \\
+pH & PH-4502C, calibración con 3 buffers & DFRobot SEN0169~\cite{ph_sen0169} con divisor 10k/20k en GPIO33; 2 puntos sin buffers; sensor prestado, devuelto antes del ensayo integral & Recta $\mathrm{pH}=0.003984\,\mathrm{mV}+1.6410$; error declarado de $\pm 1$ pH. \\
 TDS & KS0429 en GPIO34 & KS0429~\cite{tds} directo en GPIO35 (salida 0--2.3 V) & Sin calibración absoluta; se usa el cambio respecto a TDS$_0$. \\
 Turbidez & SEN0189~\cite{turb} en GPIO32 & TS-300B~\cite{ts300b} (sonda TSW-30) con divisor 10k/20k en GPIO34 & Índice relativo $I_T$; no se reportan NTU. \\
 Temperatura & DS18B20 en GPIO4 & DS18B20~\cite{ds18} en GPIO32, pull-up 4.7 k$\Omega$ a 3V3 & Compensa el TDS; no dispara capturas. \\
@@ -122,7 +122,7 @@ Rearme & Pulsador en GPIO25 & Pulsador desconectado; rearme con la tecla \texttt
 Histéresis & ``Se aplicará'' & Reemplazada por un antirrebote por persistencia & 3 ciclos para disparar y 3 normales para rearmar; la banda por amplitud queda como mejora. \\
 Watchdog & Mencionado en el pseudocódigo & TWDT de 5000 ms en el nodo; no en el gateway & Un cuelgue reinicia el nodo; durante el bombeo arranca en FALLO. \\
 Reinicio durante bombeo & El perfil se contradice (BLOQUEADO o FALLO) & Arranca en FALLO & Volumen desconocido; requiere revisión manual. \\
-Supervisión & ThingsBoard & ThingsBoard Cloud, dispositivo QM01 con tarjetas, gráficos, tabla y alarma & Historial y alarma de anomalía persistente. \\
+Supervisión & ThingsBoard & ThingsBoard Cloud hasta el 12 nov; desde el 13 nov, broker Mosquitto y tablero web propio con tópicos por zona, sitio y nodo & Control total del tablero; estado de conexión (LWT) del gateway y de cada nodo. \\
 \bottomrule
 \end{longtable}
 }
@@ -188,37 +188,40 @@ Para que cada cifra sea trazable, la salida serie de cada prueba se guardó con 
 \subsection{Presupuesto y cronograma}
 \label{sec:presupuesto}
 
-La Tabla~\ref{tab:presupuesto} lista los componentes que forman parte del prototipo construido. La columna ``Ref.\ P1'' repite la cotización del perfil cuando el componente no cambió.
+La Tabla~\ref{tab:presupuesto} lista los componentes del prototipo construido. Los precios son de referencia: se consultaron el 13 de noviembre de 2026 en las páginas de producto de Sawers y Naylamp Mechatronics (Lima), incluyen IGV y pueden diferir de lo que se pagó en su momento. El sensor de pH y la bomba fueron prestados. Sin contar los RAK3272S, el costo de referencia es de S/~222.80, frente a los S/~576 proyectados en el perfil P1 con otra lista de componentes.
 
 {\footnotesize
 \renewcommand{\arraystretch}{1.1}
-\begin{longtable}{r p{4.4cm} p{4.2cm} c r r}
-\caption{Presupuesto del prototipo construido}
+\begin{longtable}{r p{4.4cm} p{3.0cm} c r r p{1.5cm}}
+\caption{Presupuesto del prototipo construido (precios de referencia en soles, tiendas de Lima, 13 nov 2026)}
 \label{tab:presupuesto} \\
 \toprule
-\# & Componente & Función & Cant. & Ref.\ P1 (S/) & Costo real (S/) \\
+\# & Componente & Función & Cant. & P.~unit. & Subtotal & Tienda \\
 \midrule
 \endfirsthead
 \toprule
-\# & Componente & Función & Cant. & Ref.\ P1 (S/) & Costo real (S/) \\
+\# & Componente & Función & Cant. & P.~unit. & Subtotal & Tienda \\
 \midrule
 \endhead
-1 & ESP32 DevKit V1~\cite{esp32} & Nodo y gateway & 2 & 64.00 & \pendiente{costo} \\
-2 & RAK3272S con antena & Enlace LoRa P2P & 2 & --- & \pendiente{costo} \\
-3 & DFRobot SEN0169 con electrodo & pH & 1 & --- & \pendiente{costo} \\
-4 & Keyestudio KS0429 & TDS & 1 & 37.00 & \pendiente{costo} \\
-5 & TS-300B (sonda TSW-30) & Turbidez relativa & 1 & --- & \pendiente{costo} \\
-6 & DS18B20 impermeable & Temperatura & 1 & 8.50 & \pendiente{costo} \\
-7 & Módulo de relé de 2 canales (se usa 1) & Conmutación de la bomba & 1 & --- & \pendiente{costo} \\
-8 & Minibomba sumergible 3--5 V & Captura de la muestra & 1 & --- & Prestada \\
-9 & Módulo HW-131 y fuente 8 V 2 A & Alimentación de la bomba & 1 & --- & \pendiente{costo} \\
-10 & Manguera 6.5 mm DI (70 cm) & Conducción de la muestra & 1 & --- & \pendiente{costo} \\
-11 & Resistencias 10k/20k y 4.7k, diodo flyback & Divisores, pull-up y protección & --- & --- & \pendiente{costo} \\
-12 & Caja hermética, protoboard y cables & Montaje del nodo & --- & --- & \pendiente{costo} \\
-13 & Frasco colector & Almacenar la muestra & 1 & --- & \pendiente{costo} \\
+1 & ESP32 DevKit V1, 30 pines~\cite{esp32} & Nodo y gateway & 2 & 35.00 & 70.00 & Naylamp \\
+2 & RAK3272S (RAK3172)~\cite{rak3172} & Enlace LoRa P2P & 2 & \multicolumn{2}{c}{\pendiente{sin precio}} & --- \\
+3 & DFRobot SEN0169 con electrodo & pH & 1 & \multicolumn{2}{c}{Prestado} & --- \\
+4 & Medidor TDS Keyestudio V1.0 (KS0429) & TDS & 1 & 37.00 & 37.00 & Sawers \\
+5 & Módulo de turbidez TS-300B con sonda TSW-30 & Turbidez relativa & 1 & 42.00 & 42.00 & Sawers \\
+6 & DS18B20 sumergible, 2 m & Temperatura & 1 & 10.00 & 10.00 & Sawers \\
+7 & Módulo de relé de 2 canales, 5 V (se usa 1) & Conmutación de la bomba & 1 & 12.00 & 12.00 & Sawers \\
+8 & Minibomba sumergible 3--5 V & Captura de la muestra & 1 & \multicolumn{2}{c}{Prestada} & --- \\
+9 & Fuente para protoboard MB102 (HW-131) & Alimentación de la bomba & 1 & 5.00 & 5.00 & Sawers \\
+10 & Adaptador 9 V, 2.67 A (equivalente a la fuente de 8 V, 2 A usada) & Alimentación de la bomba & 1 & 25.00 & 25.00 & Naylamp \\
+11 & Manguera PVC 6$\times$8 mm (por metro) & Conducción de la muestra & 1 & 1.50 & 1.50 & Sawers \\
+12 & Resistencias 1/4 W (10k $\times$2, 4.7k) y diodo 1N4007 (par)$^{*}$ & Divisores, pull-up y \textit{flyback} & --- & --- & 0.80 & Naylamp, Sawers \\
+13 & Caja de sobreponer 15$\times$15$\times$7 cm & Gabinete del nodo & 1 & 8.50 & 8.50 & Sawers \\
+14 & Protoboard de 830 puntos & Conexiones & 1 & 6.00 & 6.00 & Sawers \\
+15 & Cables Dupont, kit de 40 & Conexiones & 1 & 5.00 & 5.00 & Sawers \\
 \midrule
-\multicolumn{5}{r}{\textbf{Total}} & \pendiente{total} \\
+\multicolumn{5}{r}{\textbf{Total (S/), sin RAK3272S ni prestados}} & \textbf{222.80} & \\
 \bottomrule
+\multicolumn{7}{l}{\scriptsize $^{*}$No se encontró precio para la resistencia de 20k; no está incluida. El frasco colector no se presupuestó.}
 \end{longtable}
 }
 
@@ -244,8 +247,9 @@ Fecha (2026) & Actividad ejecutada & Evidencia \\
 10 nov. & Enlace LoRa a 1 m, ThingsBoard y corte de Internet & \texttt{gateway\_20261110\_005746\_p7\_1m\_gw.log} \\
 11 nov. & Calibración de pH, temperatura y TDS & \texttt{sensores\_20261111\_*} \\
 12 nov. & Firmware final del nodo, watchdog y recuperación del gateway & \texttt{nodo\_20261112\_150625\_wdt\_control.log} \\
-13 nov. & Congelamiento del código y entrega del informe P2 & Este documento \\
-Penúltima semana de nov. & Demostración en vivo & \pendiente{fecha de la demostración} \\
+13 nov. & Tablero MQTT propio (PR \#1), ensayo integral y congelamiento del código & \texttt{nodo\_20261113\_182101.log}, \texttt{mqtt\_20261113\_182150.csv} \\
+13 nov. & Entrega del informe P2 & Este documento \\
+13 nov. & Demostración en vivo en la universidad & Observación del equipo \\
 \bottomrule
 \end{longtable}
 }

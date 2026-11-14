@@ -261,9 +261,75 @@ def fig_ciclo() -> None:
             print(f"  t={t:9.3f} s  {o} -> {d}")
 
 
+# ---------------------------------------------------------------- R5
+def fig_integral() -> None:
+    """Ensayo integral del 13 nov: IT por ciclo en el nodo y llegada de eventos al broker MQTT."""
+    import datetime as dt
+    archivo = PRUEBAS / "nodo_20261113_182101.log"
+    lineas = open(archivo, errors="ignore").read().splitlines()
+    # Solo el último arranque (el log incluye la cola de una sesión anterior)
+    ini = max(i for i, l in enumerate(lineas) if "Motivo de reinicio" in l)
+    puntos, transiciones = [], []
+    for linea in lineas[ini:]:
+        m = re.search(r"AT\+PSEND=([0-9A-F]{54})", linea)
+        if m and "TX seq=" in linea:
+            c = TRAMA.unpack(bytes.fromhex(m[1]))
+            it = c[7] / 1000 if c[9] & 0x04 else math.nan
+            puntos.append((c[4] / 1000, it, c[3]))
+        m = re.match(r"\[\s*(\d+)\] (\w+) -> (\w+)", linea)
+        if m:
+            transiciones.append((int(m[1]) / 1000, m[2], m[3]))
+
+    # Eventos recibidos por el broker (registrador MQTT), alineados por la trama MUESTREANDO
+    eventos_mqtt = []
+    for r in leer_csv("mqtt_20261113_182150.csv"):
+        if r["canal"] == "evento" and '"MUESTREANDO"' in r["payload"]:
+            eventos_mqtt.append(dt.datetime.fromisoformat(r["ts_local_iso"]))
+
+    fig, ax = plt.subplots(figsize=(6.3, 2.9))
+    ax.plot([p[0] for p in puntos], [p[1] for p in puntos], color=AZUL, marker="o",
+            markersize=2.5, linewidth=0.8, label="$I_T$ por ciclo (nodo)")
+    ax.axhline(0.200, color=GRIS, linestyle="--", linewidth=1)
+    ax.text(0.01, 0.205, "umbral 0.200", transform=ax.get_yaxis_transform(),
+            ha="left", va="bottom", color=GRIS, fontsize=8)
+    inicio, capturas = None, []
+    for tt, o, d in transiciones:
+        if d == "MUESTREANDO":
+            inicio = tt
+        elif o == "MUESTREANDO" and inicio is not None:
+            ax.axvspan(inicio, tt, color=NARANJA, alpha=0.35, linewidth=0)
+            capturas.append(inicio)
+            inicio = None
+        elif d == "ARMADO":
+            ax.axvline(tt, color=GRIS, linewidth=0.8, linestyle=":")
+    ymax = max(p[1] for p in puntos if not math.isnan(p[1]))
+    # Eventos del broker de esta sesión (los que caen dentro de la duración del log),
+    # alineados en la primera captura; el resto se ubica con el reloj del registrador MQTT.
+    dur = puntos[-1][0] - puntos[0][0]
+    sesion = [e for e in eventos_mqtt if (e - eventos_mqtt[0]).total_seconds() <= dur]
+    t_mqtt = [capturas[0] + (e - sesion[0]).total_seconds() for e in sesion]
+    ax.plot(t_mqtt, [ymax * 1.06] * len(t_mqtt), marker="v", color=TINTA, markersize=5, linestyle="none")
+    ax.plot([], [], color=NARANJA, alpha=0.35, linewidth=6, label="relé activo, bomba conectada")
+    ax.plot([], [], marker="v", color=TINTA, linestyle="none", label="evento recibido en MQTT")
+    ax.set_xlabel("Tiempo desde el encendido del nodo (s)")
+    ax.set_ylabel("Índice de turbidez $I_T$")
+    ax.set_ylim(-0.02, ymax * 1.15)
+    ax.legend(loc="upper center", bbox_to_anchor=(0.5, -0.2), ncol=3, fontsize=7.5)
+    fig.savefig(SALIDA / "r5_ensayo_integral.pdf")
+    plt.close(fig)
+
+    print("R5 ensayo integral (nodo_20261113_182101.log, último arranque)")
+    print(f"  tramas: {len(puntos)}, seq {puntos[0][2]}-{puntos[-1][2]}")
+    for tt, o, d in transiciones:
+        print(f"  t={tt:8.3f} s  {o} -> {d}")
+    print("  eventos MUESTREANDO en MQTT (sesión):", [e.strftime('%H:%M:%S.%f')[:-3] for e in sesion])
+    print("  intervalo entre capturas: nodo %.3f s, broker %.3f s" % (capturas[1] - capturas[0], t_mqtt[1] - t_mqtt[0]))
+
+
 if __name__ == "__main__":
     SALIDA.mkdir(parents=True, exist_ok=True)
     fig_turbidez()
     fig_tds()
     fig_lora()
     fig_ciclo()
+    fig_integral()
