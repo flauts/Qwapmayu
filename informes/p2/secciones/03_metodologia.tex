@@ -188,40 +188,43 @@ Para que cada cifra sea trazable, la salida serie de cada prueba se guardó con 
 \subsection{Presupuesto y cronograma}
 \label{sec:presupuesto}
 
-La Tabla~\ref{tab:presupuesto} lista los componentes del prototipo construido. Los precios son de referencia: se consultaron el 13 de noviembre de 2026 en las páginas de producto de Sawers y Naylamp Mechatronics (Lima), incluyen IGV y pueden diferir de lo que se pagó en su momento. El sensor de pH y la bomba fueron prestados. Sin contar los RAK3272S, el costo de referencia es de S/~222.80, frente a los S/~576 proyectados en el perfil P1 con otra lista de componentes.
+La Tabla~\ref{tab:presupuesto} valoriza todos los componentes del prototipo, incluidos los prestados. Los precios de la manguera y de la conexión rápida son los que pagó el equipo. Los demás son precios de referencia consultados el 13 de noviembre de 2026 en las páginas de producto de Sawers y Naylamp Mechatronics (Lima), con IGV. Los componentes que no se venden en el Perú se valorizaron con el precio de la tienda oficial del fabricante en dólares, al tipo de cambio de venta publicado por SUNAT para esa fecha (S/~3.407 por dólar). El prototipo completo vale unos S/~541.88, pero el gasto del equipo fue de S/~99.30, porque la mayor parte del hardware fue prestada. En el perfil P1 se habían proyectado S/~576 con otra lista de componentes.
 
 {\footnotesize
 \renewcommand{\arraystretch}{1.1}
-\begin{longtable}{r p{4.4cm} p{3.0cm} c r r p{1.5cm}}
-\caption{Presupuesto del prototipo construido (precios de referencia en soles, tiendas de Lima, 13 nov 2026)}
+\begin{longtable}{r >{\raggedright\arraybackslash}p{5.6cm} c r r l >{\raggedright\arraybackslash}p{2.6cm}}
+\caption{Presupuesto del prototipo construido (precios en soles, 13 nov 2026)}
 \label{tab:presupuesto} \\
 \toprule
-\# & Componente & Función & Cant. & P.~unit. & Subtotal & Tienda \\
+\# & Componente & Cant. & P.~unit. & Subtotal & Origen & Fuente del precio \\
 \midrule
 \endfirsthead
 \toprule
-\# & Componente & Función & Cant. & P.~unit. & Subtotal & Tienda \\
+\# & Componente & Cant. & P.~unit. & Subtotal & Origen & Fuente del precio \\
 \midrule
 \endhead
-1 & ESP32 DevKit V1, 30 pines~\cite{esp32} & Nodo y gateway & 2 & 35.00 & 70.00 & Naylamp \\
-2 & RAK3272S (RAK3172)~\cite{rak3172} & Enlace LoRa P2P & 2 & \multicolumn{2}{c}{\pendiente{sin precio}} & --- \\
-3 & DFRobot SEN0169 con electrodo & pH & 1 & \multicolumn{2}{c}{Prestado} & --- \\
-4 & Medidor TDS Keyestudio V1.0 (KS0429) & TDS & 1 & 37.00 & 37.00 & Sawers \\
-5 & Módulo de turbidez TS-300B con sonda TSW-30 & Turbidez relativa & 1 & 42.00 & 42.00 & Sawers \\
-6 & DS18B20 sumergible, 2 m & Temperatura & 1 & 10.00 & 10.00 & Sawers \\
-7 & Módulo de relé de 2 canales, 5 V (se usa 1) & Conmutación de la bomba & 1 & 12.00 & 12.00 & Sawers \\
-8 & Minibomba sumergible 3--5 V & Captura de la muestra & 1 & \multicolumn{2}{c}{Prestada} & --- \\
-9 & Fuente para protoboard MB102 (HW-131) & Alimentación de la bomba & 1 & 5.00 & 5.00 & Sawers \\
-10 & Adaptador 9 V, 2.67 A (equivalente a la fuente de 8 V, 2 A usada) & Alimentación de la bomba & 1 & 25.00 & 25.00 & Naylamp \\
-11 & Manguera PVC 6$\times$8 mm (por metro) & Conducción de la muestra & 1 & 1.50 & 1.50 & Sawers \\
-12 & Resistencias 1/4 W (10k $\times$2, 4.7k) y diodo 1N4007 (par)$^{*}$ & Divisores, pull-up y \textit{flyback} & --- & --- & 0.80 & Naylamp, Sawers \\
-13 & Caja de sobreponer 15$\times$15$\times$7 cm & Gabinete del nodo & 1 & 8.50 & 8.50 & Sawers \\
-14 & Protoboard de 830 puntos & Conexiones & 1 & 6.00 & 6.00 & Sawers \\
-15 & Cables Dupont, kit de 40 & Conexiones & 1 & 5.00 & 5.00 & Sawers \\
+1 & ESP32 DevKit V1, 30 pines~\cite{esp32} & 2 & 35.00 & 70.00 & Prestado & Naylamp \\
+2 & RAK3272S (RAK3172) con antena~\cite{rak3172} & 2 & 51.11 & 102.22 & Prestado & RAK, USD 15.00$^{a,b}$ \\
+3 & DFRobot SEN0169, kit de pH~\cite{ph_sen0169} & 1 & 193.86 & 193.86 & Prestado & DFRobot, USD 56.90$^{a}$ \\
+4 & Medidor TDS Keyestudio V1.0 (KS0429)~\cite{tds} & 1 & 37.00 & 37.00 & Prestado & Sawers \\
+5 & DS18B20 sumergible, 2 m~\cite{ds18} & 1 & 10.00 & 10.00 & Prestado & Sawers \\
+6 & Módulo de relé de 2 canales, 5 V (se usa 1) & 1 & 12.00 & 12.00 & Prestado & Sawers \\
+7 & Minibomba sumergible 5 V (2.5--6 V) & 1 & 6.50 & 6.50 & Prestado & Sawers \\
+8 & Protoboard de 830 puntos & 1 & 6.00 & 6.00 & Prestado & Sawers \\
+9 & Cables Dupont, kit de 40 & 1 & 5.00 & 5.00 & Prestado & Sawers \\
+10 & Módulo de turbidez TS-300B con sonda TSW-30~\cite{ts300b} & 1 & 42.00 & 42.00 & Comprado & Sawers \\
+11 & Fuente para protoboard MB102 (HW-131) & 1 & 5.00 & 5.00 & Comprado & Sawers \\
+12 & Adaptador 9 V, 2.67 A (equivalente a la fuente de 8 V, 2 A usada) & 1 & 25.00 & 25.00 & Comprado & Naylamp \\
+13 & Manguera de 1 m & 1 & 8.00 & 8.00 & Comprado & Precio pagado \\
+14 & Conexión rápida para manguera & 1 & 10.00 & 10.00 & Comprado & Precio pagado \\
+15 & Resistencias 1/4 W (10k $\times$2, 4.7k) y diodo 1N4007 (par)$^{c}$ & --- & --- & 0.80 & Comprado & Naylamp, Sawers \\
+16 & Caja de sobreponer 15$\times$15$\times$7 cm & 1 & 8.50 & 8.50 & Comprado & Sawers \\
 \midrule
-\multicolumn{5}{r}{\textbf{Total (S/), sin RAK3272S ni prestados}} & \textbf{222.80} & \\
+\multicolumn{4}{r}{Componentes prestados} & 442.58 & & \\
+\multicolumn{4}{r}{Componentes comprados (gasto del equipo)} & 99.30 & & \\
+\multicolumn{4}{r}{\textbf{Valor total del prototipo}} & \textbf{541.88} & & \\
 \bottomrule
-\multicolumn{7}{l}{\scriptsize $^{*}$No se encontró precio para la resistencia de 20k; no está incluida. El frasco colector no se presupuestó.}
+\multicolumn{7}{p{0.97\textwidth}}{\scriptsize $^{a}$Convertido a S/~3.407 por dólar (SUNAT, venta, 13/11/2026); no incluye envío ni impuestos de importación. $^{b}$Precio de lista de la tienda oficial de RAKwireless tomado del buscador; la página no permitió el acceso automático para verificarlo. $^{c}$No se encontró precio para la resistencia de 20k, que no está incluida. El frasco colector no se presupuestó.}
 \end{longtable}
 }
 
