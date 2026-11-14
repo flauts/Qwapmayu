@@ -43,7 +43,7 @@ El detalle de cada prueba (logs, horas, cifras, commits) está en `docs/contexto
 | Turbidez | SEN0189 en GPIO32 | TS-300B (sonda TSW-30), divisor 10k/20k, GPIO34; índice relativo IT |
 | Temperatura | DS18B20 en GPIO4 | DS18B20 en GPIO32, pull-up 4.7 kΩ a 3V3 |
 | Actuador | Bomba peristáltica 12 V | Minibomba sumergible 3–5 V (prestada) vía 1 canal de un módulo de relé de 2 canales **activo en bajo** (GPIO23) ; sin diodo en la bomba: bobina alimentada desde el HW-131 (sin puente JD-VCC) con capacitor de 220 µF; el módulo trae diodo solo en la bobina (corregido por el usuario el 13 nov) |
-| Manguera | 3 mm DI, 1.0 m | 6.5 mm DI, 70 cm |
+| Manguera | 3 mm DI, 1.0 m | 6.5 mm DI, 70 cm; en el ensayo integral (13 nov) la bomba va fuera del agua, alimentada por gravedad desde una salida en la pared del recipiente con acople rápido |
 | Energía | Batería 12 V 7 Ah + buck | Bomba desde módulo HW-131 con fuente 8 V 2 A; nodo por USB de la laptop |
 | Rearme | Pulsador GPIO25 | Pulsador GPIO25 desconectado al 12 nov; se rearma con la tecla `r` por serie |
 | Watchdog | Mencionado en pseudocódigo | Implementado en el nodo (TWDT 5000 ms); no en el gateway |
