@@ -12,7 +12,7 @@ El detalle de cada prueba (logs, horas, cifras, commits) está en `docs/contexto
 - Redactar en LaTeX el informe final a partir del perfil P1 ("Perfil de proyecto P1 – Semana 07", 23 sep 2026), actualizado a lo que realmente se construyó y probó. Después, la presentación final.
 - Ubicación del proyecto LaTeX y del PDF del perfil P1: preguntar al usuario (pueden no estar en este repo).
 - Code freeze: 13 nov 2026. No modificar firmware salvo pedido explícito del usuario.
-- Demo en vivo en la universidad: realizada el 13 nov 2026 (según el usuario).
+- Demo en vivo en la universidad: pendiente, fecha por definir. El 13 nov solo hubo un ensayo integral en casa del usuario (corregido por el usuario).
 
 ## Cómo trabajar con el usuario
 - Responde en español. Explica paso a paso y por partes; haz una sola pregunta a la vez.
