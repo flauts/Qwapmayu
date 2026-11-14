@@ -125,7 +125,7 @@ Con los módulos a 1~m en interior, en la ventana común de secuencias 143 a 289
 \subsection{Ensayo integral}
 \label{sec:res_integral}
 
-El 13 de noviembre se hizo el ensayo integral con el firmware final, el radio en SF7 y la nueva cadena MQTT con el tablero propio (Fig.~\ref{fig:foto_integral}). El sensor de pH era prestado y ya se había devuelto, así que participaron tres sensores: TDS, turbidez y temperatura (validez 0x0E; 25.1 a 25.3~$^{\circ}$C). La bomba estuvo conectada y llevó agua al frasco, y el equipo midió 100~mL en el frasco; este volumen no consta en un log. La anomalía se provocó agitando maicena en el recipiente del sensor de turbidez. No se usó ninguna anomalía simulada.
+El 13 de noviembre se hizo el ensayo integral con el firmware final, el radio en SF7 y la nueva cadena MQTT con el tablero propio (Fig.~\ref{fig:foto_integral}). El sensor de pH era prestado y ya se había devuelto, así que participaron tres sensores: TDS, turbidez y temperatura (validez 0x0E; 25.1 a 25.3~$^{\circ}$C). La bomba estuvo conectada y fuera del agua: el recipiente de prueba tiene una salida en su pared, cerca del fondo, y desde ahí un acople rápido alimenta por gravedad la entrada de la bomba, que impulsa el agua por la manguera hasta un balde colector (Figs.~\ref{fig:acople} y~\ref{fig:foto_integral}). El equipo midió 100~mL capturados; este volumen no consta en un log. La anomalía se provocó agitando maicena en el recipiente del sensor de turbidez. No se usó ninguna anomalía simulada.
 
 Hubo dos sesiones, con dos capturas cada una. La Fig.~\ref{fig:r5} muestra la primera:
 \begin{itemize}
@@ -147,6 +147,6 @@ La información de las cuatro capturas recorrió toda la cadena. El gateway reci
 \begin{figure}[htbp]
 \centering
 \includegraphics[width=0.7\textwidth]{figuras/fotos/ensayo_integral_montaje.jpg}
-\caption{Montaje del ensayo integral: caja del nodo, recipiente con el sensor de turbidez y maicena, bomba con manguera y frascos (13 de noviembre de 2026). Elaboración propia.}
+\caption{Montaje del ensayo integral: caja del nodo, recipiente de prueba con el sensor de turbidez y maicena, bomba fuera del agua unida al recipiente por un acople rápido, manguera y balde colector (13 de noviembre de 2026). Elaboración propia.}
 \label{fig:foto_integral}
 \end{figure}
