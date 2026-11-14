@@ -22,13 +22,13 @@ Diseñar, construir y validar en laboratorio un prototipo IoT modular y de bajo 
     \item Programar en el nodo un detector de anomalías persistentes y una máquina de estados que gobierne el muestreo de forma segura.
     \item Implementar la captura automática de una muestra de unos 100~mL con una bomba temporizada, un arranque seguro y un enclavamiento que sobreviva a los reinicios.
     \item Establecer un enlace LoRa punto a punto con módulos RAK3272S que transporte las mediciones, el estado y los eventos, y medir su tasa de entrega y su latencia.
-    \item Configurar una plataforma de supervisión que muestre las variables, el estado del nodo, las anomalías y los eventos de muestreo, y que conserve su historial. El perfil P1 proponía ThingsBoard; al final se construyó un tablero propio sobre MQTT.
+    \item Configurar una plataforma de supervisión que muestre las variables, el estado del nodo, las anomalías y los eventos de muestreo, y que conserve su historial. El perfil P1 proponía ThingsBoard; al final construimos un tablero propio sobre MQTT.
     \item Validar el conjunto en recipientes de laboratorio con alteraciones seguras, comprobando la detección, el accionamiento de la bomba, la captura y la transmisión.
 \end{enumerate}
 
 \subsection{Alcances}
 
-El prototipo comprende un nodo de monitoreo, una pasarela LoRa, cuatro variables, un frasco por evento y un tablero de supervisión. Su propósito es reconocer cambios persistentes y conservar una muestra asociada a ellos; no identifica ni cuantifica contaminantes específicos. La validación se limitó a recipientes de laboratorio con sal, maicena, vinagre y desconexión de sondas, con el nodo alimentado por USB y la pasarela a 1~m. No se evaluó la operación prolongada en campo, la autonomía energética ni el alcance real del enlace. El resultado es un prototipo funcional, no un instrumento certificado de monitoreo ambiental.
+El prototipo comprende un nodo de monitoreo, una pasarela LoRa, cuatro variables, un frasco por evento y un tablero de supervisión. Su propósito es reconocer cambios persistentes y conservar una muestra asociada a ellos; no identifica ni cuantifica contaminantes específicos. Limitamos la validación a recipientes de laboratorio con sal, maicena, vinagre y desconexión de sondas, con el nodo alimentado por USB y la pasarela a 1~m. No evaluamos la operación prolongada en campo, la autonomía energética ni el alcance real del enlace. El resultado es un prototipo funcional, no un instrumento certificado de monitoreo ambiental.
 
 \section{Problemática}
 \label{sec:problematica}

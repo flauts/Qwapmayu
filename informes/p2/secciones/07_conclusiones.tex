@@ -4,14 +4,14 @@
 
 \subsection{Conclusiones}
 
-Se construyó y validó en banco un prototipo que detecta en el nodo una alteración persistente del agua, captura una muestra física y reporta el evento por LoRa hasta un tablero web propio. En el ensayo integral del 13 de noviembre, cuatro alteraciones reales de turbidez produjeron cuatro capturas con la bomba conectada, y sus eventos llegaron al broker MQTT. Frente a los objetivos específicos:
+Construimos y validamos en banco un prototipo que detecta en el nodo una alteración persistente del agua, captura una muestra física y reporta el evento por LoRa hasta un tablero web propio. En el ensayo integral del 13 de noviembre, cuatro alteraciones reales de turbidez produjeron cuatro capturas con la bomba conectada, y sus eventos llegaron al broker MQTT. Frente a los objetivos específicos:
 
 \begin{enumerate}
-    \item \textbf{Sensores (parcial).} Los cuatro sensores se integraron con acondicionamiento, mediana de 31 lecturas y validez por canal. El pH quedó calibrado con dos puntos sin buffers y un error declarado de $\pm 1$. El TDS y la turbidez funcionan como indicadores relativos: el TDS no tiene calibración absoluta y la turbidez se expresa como índice, no en NTU. La temperatura funciona, pero no se contrastó con un termómetro de referencia, así que su meta de error quedó sin evaluar.
+    \item \textbf{Sensores (parcial).} Integramos los cuatro sensores con acondicionamiento, mediana de 31 lecturas y validez por canal. El pH quedó calibrado con dos puntos sin buffers y un error declarado de $\pm 1$. El TDS y la turbidez funcionan como indicadores relativos: el TDS no tiene calibración absoluta y la turbidez se expresa como índice, no en NTU. La temperatura funciona, pero no la contrastamos con un termómetro de referencia, así que su meta de error quedó sin evaluar.
     \item \textbf{Detección y máquina de estados (cumplido).} El filtro de tres ciclos ignoró un pico aislado y disparó ante anomalías sostenidas. Los siete casos de seguridad y las pruebas del \textit{watchdog} confirmaron que el nodo no bombea con un fallo de NVS, se detiene ante un corte y, tras un reinicio, arranca en BLOQUEADO o en FALLO según corresponda.
-    \item \textbf{Muestreo automático (cumplido en banco).} Los diez disparos de 5~s entregaron $100 \pm 2.5$~mL en la geometría G1, dentro de la meta de $100 \pm 10$~mL. En el ensayo integral el equipo midió 100~mL. El volumen depende de la geometría y debe recalibrarse en cada montaje.
-    \item \textbf{Enlace LoRa (cumplido en una posición).} Se recibieron 147 de 147 tramas a 1~m, con una latencia mediana de 106~ms, y el PDR fue del 100~\% en el ensayo integral. El alcance real no quedó demostrado: con SF12, a unos 5~km, no llegó ninguna trama en 30 minutos.
-    \item \textbf{Supervisión (cumplido).} La telemetría se visualizó primero en ThingsBoard y luego en un tablero propio sobre MQTT, que muestra el estado de conexión del gateway y de cada nodo y conserva cada mensaje en un registro CSV.
+    \item \textbf{Muestreo automático (cumplido en banco).} Los diez disparos de 5~s entregaron $100 \pm 2.5$~mL en la geometría G1, dentro de la meta de $100 \pm 10$~mL. En el ensayo integral medimos 100~mL. El volumen depende de la geometría y debe recalibrarse en cada montaje.
+    \item \textbf{Enlace LoRa (cumplido en una posición).} Recibimos 147 de 147 tramas a 1~m, con una latencia mediana de 106~ms, y el PDR fue del 100~\% en el ensayo integral. El alcance real no quedó demostrado: con SF12, a unos 5~km, no llegó ninguna trama en 30 minutos.
+    \item \textbf{Supervisión (cumplido).} Visualizamos la telemetría primero en ThingsBoard y luego en un tablero propio sobre MQTT, que muestra el estado de conexión del gateway y de cada nodo y conserva cada mensaje en un registro CSV.
     \item \textbf{Validación integrada (cumplido con tres sensores).} El ensayo integral recorrió toda la cadena: detección, bombeo, enclavamiento, rearme, LoRa, MQTT y tablero. El pH no participó porque el sensor prestado ya se había devuelto.
 \end{enumerate}
 
@@ -21,11 +21,11 @@ La conclusión central es que la captura de una muestra puede decidirse en el pr
 
 \begin{itemize}
     \item Los sensores no identifican ni cuantifican metales. Un disparo no equivale a incumplir el ECA, y la muestra no sirve por sí sola para un análisis regulatorio, porque el recipiente, la preservación y la cadena de custodia no están controlados.
-    \item El pH tiene un error de $\pm 1$ y no compensa la temperatura. El TDS no tiene piso de validez: con la sonda desconectada se publica 58~ppm como si fuera un dato válido. La turbidez no detecta el sedimento asentado y cambia con la posición del sensor. Las referencias $TDS_0$ y $V_{T,0}$ suponen que el agua está limpia al arrancar. El DS18B20 a veces deja de responder y solo vuelve tras reiniciar el nodo, y en una sesión no se detectó ni así; la causa no se determinó.
+    \item El pH tiene un error de $\pm 1$ y no compensa la temperatura. El TDS no tiene piso de validez: con la sonda desconectada se publica 58~ppm como si fuera un dato válido. La turbidez no detecta el sedimento asentado y cambia con la posición del sensor. Las referencias $TDS_0$ y $V_{T,0}$ suponen que el agua está limpia al arrancar. El DS18B20 a veces deja de responder y solo vuelve tras reiniciar el nodo, y en una sesión no se detectó ni así; no determinamos la causa.
     \item No hay histéresis por amplitud. El rearme se hace con un comando por el puerto serie, así que requiere una computadora conectada al nodo, y no comprueba que se haya cambiado el frasco. Si el nodo se reinicia durante un bombeo, el volumen capturado es desconocido.
     \item La muestra pasa por la bomba sumergible. El volumen depende del tiempo y de la geometría, y la manguera puede formar un sifón si su salida queda bajo el nivel de la fuente.
     \item El gateway no tiene \textit{watchdog}. La sordera del RAK tiene causa desconocida y puede costar hasta unos 60~s de tramas. La cola cubre unos 80~s sin red, y los mensajes de estado y evento no se encolan. Con un broker público, los datos son visibles para cualquiera.
-    \item El enlace se midió en una sola posición interior a 1~m, y la única prueba a distancia (unos 5~km con SF12) no recibió tramas. Toda la validación se hizo con alteraciones controladas (sal, maicena, vinagre), no con efluente real, y con el nodo alimentado por USB.
+    \item Medimos el enlace en una sola posición interior a 1~m, y la única prueba a distancia (unos 5~km con SF12) no recibió tramas. Hicimos toda la validación con alteraciones controladas (sal, maicena, vinagre), no con efluente real, y con el nodo alimentado por USB.
 \end{itemize}
 
 \subsection{Recomendaciones y trabajo futuro}
