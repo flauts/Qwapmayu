@@ -2,12 +2,12 @@
 % Fuentes: firmware (nodo/src/main.cpp, comun/*.h), CLAUDE.md, bitacora_web.md, docs/pines.md.
 \section{Metodología y Desarrollo}
 
-El desarrollo siguió un ciclo incremental de banco de pruebas. Cada subsistema (sensores, actuador, máquina de estados, radio, gateway y nube) se probó primero por separado con un firmware de prueba propio y luego se integró en el firmware del nodo. Cada prueba quedó registrada en un archivo de evidencia con fecha y hora en la carpeta \texttt{pruebas/} del repositorio. Las cifras de la Sección~\ref{sec:resultados} provienen de esos archivos.
+El desarrollo siguió un ciclo incremental de banco de pruebas. Probamos primero por separado cada subsistema (sensores, actuador, máquina de estados, radio, gateway y nube), con un firmware de prueba propio, y luego lo integramos en el firmware del nodo. Cada prueba quedó registrada en un archivo de evidencia con fecha y hora en la carpeta \texttt{pruebas/} del repositorio. Las cifras de la Sección~\ref{sec:resultados} provienen de esos archivos.
 
 \subsection{Planteamiento del sistema y diagrama de bloques}
 \label{sec:bloques}
 
-QawapMayu se compone de un nodo de campo (QM01), una pasarela (GW01) y un tablero en la nube (Fig.~\ref{fig:bloques}). El nodo mide cuatro variables del agua, decide localmente si hay una alteración persistente y, si la hay, acciona una bomba que llena un frasco. En paralelo, cada 5~s envía por LoRa una trama con las mediciones, su validez y el estado de la máquina de estados. La pasarela valida la trama, le asigna la hora absoluta y la publica por MQTT en un broker. Un tablero web propio se suscribe a ese broker y muestra los datos. Hasta el 12 de noviembre se usó ThingsBoard~\cite{thingsboard}; desde el 13 de noviembre la supervisión corre sobre el broker Mosquitto y el tablero propio (Sección~\ref{sec:fw_gateway}).
+QawapMayu se compone de un nodo de campo (QM01), una pasarela (GW01) y un tablero en la nube (Fig.~\ref{fig:bloques}). El nodo mide cuatro variables del agua, decide localmente si hay una alteración persistente y, si la hay, acciona una bomba que llena un frasco. En paralelo, cada 5~s envía por LoRa una trama con las mediciones, su validez y el estado de la máquina de estados. La pasarela valida la trama, le asigna la hora absoluta y la publica por MQTT en un broker. Un tablero web propio se suscribe a ese broker y muestra los datos. Hasta el 12 de noviembre usamos ThingsBoard~\cite{thingsboard}; desde el 13 de noviembre la supervisión corre sobre el broker Mosquitto y el tablero propio (Sección~\ref{sec:fw_gateway}).
 
 La decisión de muestrear se toma en el nodo y no depende del radio ni de Internet. La nube solo cumple funciones de supervisión e historial. Así, una caída del enlace puede retrasar la alerta, pero no impide que se capture la muestra.
 
@@ -96,7 +96,7 @@ La Fig.~\ref{fig:eda} resume cómo los hallazgos de la Sección~\ref{sec:eda} se
 \subsection{Cambios respecto al Perfil P1}
 \label{sec:cambios}
 
-Entre el perfil P1 y el prototipo construido cambiaron varios componentes y parámetros. La Tabla~\ref{tab:cambios} los resume y anota su efecto en el diseño. El cambio de radio fue el de mayor impacto. Los módulos RAK3272S~\cite{rak3172} se controlan con comandos AT por un solo puerto serie (RX en GPIO16, TX en GPIO17), lo que elimina las líneas M0, M1 y AUX que requería el E32~\cite{ebyteE32}. Además, el módulo entrega el RSSI y la SNR de cada paquete recibido. El enlace se configuró en LoRa punto a punto con \texttt{AT+P2P=923500000:\allowbreak 7:125:0:10:14}: 923.5~MHz, SF7, ancho de banda de 125~kHz, tasa de codificación 4/5, preámbulo de 10 símbolos y 14~dBm (\texttt{comun/rak\_at.h}).
+Entre el perfil P1 y el prototipo construido cambiaron varios componentes y parámetros. La Tabla~\ref{tab:cambios} los resume y anota su efecto en el diseño. El cambio de radio fue el de mayor impacto. Los módulos RAK3272S~\cite{rak3172} se controlan con comandos AT por un solo puerto serie (RX en GPIO16, TX en GPIO17), lo que elimina las líneas M0, M1 y AUX que requería el E32~\cite{ebyteE32}. Además, el módulo entrega el RSSI y la SNR de cada paquete recibido. Configuramos el enlace en LoRa punto a punto con \texttt{AT+P2P=923500000:\allowbreak 7:125:0:10:14}: 923.5~MHz, SF7, ancho de banda de 125~kHz, tasa de codificación 4/5, preámbulo de 10 símbolos y 14~dBm (\texttt{comun/rak\_at.h}).
 
 {\small
 \begin{longtable}{p{2.6cm}p{3.6cm}p{4.4cm}p{4.6cm}}
@@ -130,7 +130,7 @@ Supervisión & ThingsBoard & ThingsBoard Cloud hasta el 12 nov; desde el 13 nov,
 \subsection{Reglas de detección y máquina de estados}
 \label{sec:reglas}
 
-\textbf{Adquisición.} Cada $T_a = 5$~s el nodo toma 31 lecturas de cada canal analógico con \texttt{analogRead\-MilliVolts} (12 bits) y usa su mediana. El DS18B20 se lee de forma asíncrona. Cada canal tiene un rango de validez en el pin; fuera de él, el canal se marca inválido y no participa en la detección. Los rangos son 180--3100~mV para pH, hasta 2500~mV para TDS y 300--3250~mV para turbidez (\texttt{comun/anomalia.h}). El piso de 180~mV del pH se fijó porque un canal sin señal lee alrededor de 142~mV.
+\textbf{Adquisición.} Cada $T_a = 5$~s el nodo toma 31 lecturas de cada canal analógico con \texttt{analogRead\-MilliVolts} (12 bits) y usa su mediana. El DS18B20 se lee de forma asíncrona. Cada canal tiene un rango de validez en el pin; fuera de él, el canal se marca inválido y no participa en la detección. Los rangos son 180--3100~mV para pH, hasta 2500~mV para TDS y 300--3250~mV para turbidez (\texttt{comun/anomalia.h}). Fijamos el piso de 180~mV del pH porque un canal sin señal lee alrededor de 142~mV.
 
 \textbf{Criterios de anomalía.} El nodo considera anómalo un ciclo cuando se cumple alguna de estas condiciones:
 \begin{align}
@@ -141,7 +141,7 @@ Supervisión & ThingsBoard & ThingsBoard Cloud hasta el 12 nov; desde el 13 nov,
 
 $TDS_0$ se fija automáticamente como la mediana de 12 lecturas tomadas después de los primeros 60~s de funcionamiento y se guarda solo en RAM. El detector ignora valores de TDS menores de 100~ppm, que corresponden a la sonda fuera del agua. $V_{T,0}$ es la tensión del sensor de turbidez en agua que se asume limpia. Se captura con la tecla \texttt{t} y se guarda en NVS; el valor vigente es 2115~mV y se volverá a capturar el día de la demostración.
 
-\textbf{Relación con el ECA para Agua.} Los umbrales se fijaron para la validación en laboratorio. La ventana de pH coincide con el rango de 6.5 a 8.5 del ECA para Agua~\cite{eca2017} en las subcategorías A1 (aguas que pueden potabilizarse con desinfección) y D1 (riego de vegetales). Aun así, un disparo no equivale a verificar el ECA. El pH tiene un error declarado de $\pm 1$. El ECA fija para los sólidos disueltos totales un valor absoluto (1000~mg/L en A1), mientras que el nodo usa un incremento relativo con un sensor sin calibración absoluta. La turbiedad del ECA se expresa en UNT (5~UNT en A1), unidad que el TS-300B no entrega. El cumplimiento del ECA se determina con análisis de laboratorio; la función del nodo es dar la alerta y conservar la muestra que ese análisis necesita.
+\textbf{Relación con el ECA para Agua.} Fijamos los umbrales para la validación en laboratorio. La ventana de pH coincide con el rango de 6.5 a 8.5 del ECA para Agua~\cite{eca2017} en las subcategorías A1 (aguas que pueden potabilizarse con desinfección) y D1 (riego de vegetales). Aun así, un disparo no equivale a verificar el ECA. El pH tiene un error declarado de $\pm 1$. El ECA fija para los sólidos disueltos totales un valor absoluto (1000~mg/L en A1), mientras que el nodo usa un incremento relativo con un sensor sin calibración absoluta. La turbiedad del ECA se expresa en UNT (5~UNT en A1), unidad que el TS-300B no entrega. El cumplimiento del ECA se determina con análisis de laboratorio; la función del nodo es dar la alerta y conservar la muestra que ese análisis necesita.
 
 \textbf{Antirrebote por persistencia.} Para que una lectura que oscila alrededor del umbral no dispare ni rearme el sistema, el nodo exige tres ciclos válidos consecutivos fuera de umbral para solicitar una captura (10 a 15~s) y tres ciclos normales consecutivos para permitir el rearme. Este filtro temporal cumple la función que el perfil P1 asignaba a la histéresis: en el ensayo de pico aislado, una alteración de un solo ciclo no activó la bomba (Sección~\ref{sec:res_deteccion}). La banda de histéresis por amplitud queda como mejora futura (Sección~\ref{sec:recomendaciones}).
 
@@ -181,14 +181,14 @@ $TDS_0$ se fija automáticamente como la mediana de 12 lecturas tomadas después
 \subsection{Plan de validación}
 \label{sec:plan}
 
-La validación se hizo en recipientes de laboratorio con alteraciones seguras y reproducibles: sal de mesa para el TDS, maicena para la turbidez, vinagre diluido para el pH y desconexión de sondas para los datos inválidos. Estas alteraciones no reproducen la química de un efluente minero; sirven para comprobar que la cadena de detección, captura y transmisión responde como se diseñó. Se conservaron los doce ensayos y las metas del perfil P1 (PDR $\geq 95$~\%, $100 \pm 10$~mL y error de temperatura $\leq 1\,^{\circ}$C). La Tabla~\ref{tab:matriz} de la Sección~\ref{sec:resultados} contrasta cada meta con lo medido.
+Hicimos la validación en recipientes de laboratorio con alteraciones seguras y reproducibles: sal de mesa para el TDS, maicena para la turbidez, vinagre diluido para el pH y desconexión de sondas para los datos inválidos. Estas alteraciones no reproducen la química de un efluente minero; sirven para comprobar que la cadena de detección, captura y transmisión responde como se diseñó. Conservamos los doce ensayos y las metas del perfil P1 (PDR $\geq 95$~\%, $100 \pm 10$~mL y error de temperatura $\leq 1\,^{\circ}$C). La Tabla~\ref{tab:matriz} de la Sección~\ref{sec:resultados} contrasta cada meta con lo medido.
 
-Para que cada cifra sea trazable, la salida serie de cada prueba se guardó con el script \texttt{herramientas/monitor/filter\_evidencia.py}. El script genera un \texttt{.log} y, cuando corresponde, un \texttt{.csv}, ambos con la fecha, la hora y el nombre de la prueba. El código de cada prueba quedó en un commit de Git.
+Para que cada cifra sea trazable, guardamos la salida serie de cada prueba con el script \texttt{herramientas/monitor/filter\_evidencia.py}. El script genera un \texttt{.log} y, cuando corresponde, un \texttt{.csv}, ambos con la fecha, la hora y el nombre de la prueba. El código de cada prueba quedó en un commit de Git.
 
 \subsection{Presupuesto y cronograma}
 \label{sec:presupuesto}
 
-La Tabla~\ref{tab:presupuesto} valoriza todos los componentes del prototipo, incluidos los prestados. Los precios de la manguera y de la conexión rápida son los que pagó el equipo. Los demás son precios de referencia consultados el 13 de noviembre de 2026 en las páginas de producto de Sawers y Naylamp Mechatronics (Lima), con IGV. Los componentes que no se venden en el Perú se valorizaron con el precio de la tienda oficial del fabricante en dólares, al tipo de cambio de venta publicado por SUNAT para esa fecha (S/~3.407 por dólar). El prototipo completo vale unos S/~541.38, pero el gasto del equipo fue de S/~68.80, porque la mayor parte del hardware fue prestada. En el perfil P1 se habían proyectado S/~576 con otra lista de componentes.
+La Tabla~\ref{tab:presupuesto} valoriza todos los componentes del prototipo, incluidos los prestados. Los precios de la manguera y de la conexión rápida son los que pagamos. Los demás son precios de referencia consultados el 13 de noviembre de 2026 en las páginas de producto de Sawers y Naylamp Mechatronics (Lima), con IGV. Los componentes que no se venden en el Perú los valorizamos con el precio de la tienda oficial del fabricante en dólares, al tipo de cambio de venta publicado por SUNAT para esa fecha (S/~3.407 por dólar). El prototipo completo vale unos S/~541.38, pero nuestro gasto fue de S/~68.80, porque la mayor parte del hardware fue prestada. En el perfil P1 se habían proyectado S/~576 con otra lista de componentes.
 
 {\footnotesize
 \renewcommand{\arraystretch}{1.1}
@@ -221,10 +221,10 @@ La Tabla~\ref{tab:presupuesto} valoriza todos los componentes del prototipo, inc
 16 & Caja de sobreponer 15$\times$15$\times$7 cm & 1 & 8.50 & 8.50 & Comprado & Sawers \\
 \midrule
 \multicolumn{4}{r}{Componentes prestados} & 472.58 & & \\
-\multicolumn{4}{r}{Componentes comprados (gasto del equipo)} & 68.80 & & \\
+\multicolumn{4}{r}{Componentes comprados (gasto real)} & 68.80 & & \\
 \multicolumn{4}{r}{\textbf{Valor total del prototipo}} & \textbf{541.38} & & \\
 \bottomrule
-\multicolumn{7}{p{0.97\textwidth}}{\scriptsize $^{a}$Convertido a S/~3.407 por dólar (SUNAT, venta, 13/11/2026); no incluye envío ni impuestos de importación. $^{b}$Precio de lista de la tienda oficial de RAKwireless tomado del buscador; la página no permitió el acceso automático para verificarlo. $^{c}$No se encontró precio para la resistencia de 20k ni para el capacitor de 220~$\mu$F, que no están incluidos. El frasco colector no se presupuestó. $^{d}$Precio de referencia de una fuente de 9 V y 2.67 A, la más cercana disponible a la usada.}
+\multicolumn{7}{p{0.97\textwidth}}{\scriptsize $^{a}$Convertido a S/~3.407 por dólar (SUNAT, venta, 13/11/2026); no incluye envío ni impuestos de importación. $^{b}$Precio de lista de la tienda oficial de RAKwireless tomado del buscador; la página no permitió el acceso automático para verificarlo. $^{c}$No encontramos precio para la resistencia de 20k ni para el capacitor de 220~$\mu$F, que no están incluidos. No presupuestamos el frasco colector. $^{d}$Precio de referencia de una fuente de 9 V y 2.67 A, la más cercana disponible a la usada.}
 \end{longtable}
 }
 

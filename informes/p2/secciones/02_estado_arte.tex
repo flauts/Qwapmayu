@@ -5,7 +5,7 @@
 \section{Estado del Arte}
 \label{sec:eda}
 
-Se revisaron trece trabajos publicados entre 2020 y 2025 sobre cuatro temas: monitoreo de calidad de agua con LoRa, confiabilidad de sensores de bajo costo, muestreadores automáticos y monitoreo en minería. La Tabla~\ref{tab:eda} los resume. El análisis se organiza en torno a cuatro preguntas: qué tecnologías se usan, qué limitaciones dejan, qué se puede transferir a QawapMayu y en qué se diferencia la propuesta.
+Revisamos trece trabajos publicados entre 2020 y 2025 sobre cuatro temas: monitoreo de calidad de agua con LoRa, confiabilidad de sensores de bajo costo, muestreadores automáticos y monitoreo en minería. La Tabla~\ref{tab:eda} los resume. Organizamos el análisis en torno a cuatro preguntas: qué tecnologías se usan, qué limitaciones dejan, qué se puede transferir a QawapMayu y en qué se diferencia la propuesta.
 
 {\small
 \renewcommand{\arraystretch}{1.12}
@@ -52,7 +52,7 @@ Hay tres limitaciones recurrentes:
 
 \subsection{¿Qué aportes se transfieren a QawapMayu?}
 
-De los trabajos con LoRa se adoptó la idea de medir el enlace en lugar de suponerlo: cada trama lleva un número de secuencia y un CRC, y el PDR y la latencia se midieron (Sección~\ref{sec:res_lora}). De las revisiones sobre sensores de bajo costo se tomó la decisión de no usar valores absolutos para disparar. QawapMayu compara cada sensor con su propia referencia ($TDS_0$, $V_{T,0}$), marca la validez de cada canal y exige persistencia antes de actuar. De Wang et al.~\cite{wang} viene usar un índice de turbidez relativo en lugar de NTU sin calibración. De los muestreadores se tomó el accionamiento de una bomba por un microcontrolador y la necesidad de calibrar el volumen en la geometría real (Sección~\ref{sec:res_dosif}). La Fig.~\ref{fig:eda} de la Sección~\ref{sec:decisiones_eda} resume cómo cada hallazgo se tradujo en una regla del diseño.
+De los trabajos con LoRa adoptamos la idea de medir el enlace en lugar de suponerlo: cada trama lleva un número de secuencia y un CRC, y medimos el PDR y la latencia (Sección~\ref{sec:res_lora}). De las revisiones sobre sensores de bajo costo tomamos la decisión de no usar valores absolutos para disparar. QawapMayu compara cada sensor con su propia referencia ($TDS_0$, $V_{T,0}$), marca la validez de cada canal y exige persistencia antes de actuar. De Wang et al.~\cite{wang} viene usar un índice de turbidez relativo en lugar de NTU sin calibración. De los muestreadores tomamos el accionamiento de una bomba por un microcontrolador y la necesidad de calibrar el volumen en la geometría real (Sección~\ref{sec:res_dosif}). La Fig.~\ref{fig:eda} de la Sección~\ref{sec:decisiones_eda} resume cómo cada hallazgo se tradujo en una regla del diseño.
 
 \subsection{¿En qué se diferencia QawapMayu?}
 
