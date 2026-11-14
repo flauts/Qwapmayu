@@ -1,0 +1,59 @@
+% Sección obligatoria 3: Estado del Arte (solo trabajos de 2019 en adelante).
+% SUPUESTO: la rúbrica pide "responder las 4 preguntas" sin enumerarlas; no se encontraron en el
+% material del curso. Se usan como supuesto: (1) tecnologías empleadas, (2) brechas y limitaciones,
+% (3) aportes transferibles y (4) diferenciación de la propuesta (decisión del equipo, 12 nov 2026).
+\section{Estado del Arte}
+\label{sec:eda}
+
+Se revisaron trece trabajos publicados entre 2020 y 2025 sobre cuatro temas: monitoreo de calidad de agua con LoRa, confiabilidad de sensores de bajo costo, muestreadores automáticos y monitoreo en minería. La Tabla~\ref{tab:eda} los resume. El análisis se organiza en torno a cuatro preguntas: qué tecnologías se usan, qué limitaciones dejan, qué se puede transferir a QawapMayu y en qué se diferencia la propuesta.
+
+{\small
+\renewcommand{\arraystretch}{1.12}
+\begin{longtable}{p{2.6cm} p{3.1cm} p{4.9cm} p{4.6cm}}
+\caption{Trabajos revisados (2020--2025)}
+\label{tab:eda} \\
+\toprule
+Trabajo & Tema & Aporte & Límite frente a QawapMayu \\
+\midrule
+\endfirsthead
+\toprule
+Trabajo & Tema & Aporte & Límite frente a QawapMayu \\
+\midrule
+\endhead
+Basford et al., 2020~\cite{basford} & Evaluación prolongada de LoRaWAN & La entrega real de paquetes varía con el sitio y el tiempo & Despliegue urbano; no trata calidad de agua \\
+Georgantas et al., 2025~\cite{georgantas} & Monitoreo de agua con LoRa & Sistema integrado de bajo costo para varios parámetros & Sin muestreo físico; no es un entorno minero \\
+Jabbar et al., 2024~\cite{jabbar} & Estación rural LoRaWAN & Monitoreo remoto de calidad de agua en zonas rurales & Arquitectura LoRaWAN, no punto a punto; sin actuación \\
+Ramos Villalta et al., 2024~\cite{ramos} & ESP32 y LoRaWAN en Arequipa & Antecedente peruano de telemetría de agua de riego & Uso agrícola; sin detección de eventos ni muestreo \\
+López-Ramírez y Aragón-Zavala, 2023~\cite{lopez2023} & Revisión de redes de sensores & Panorama de arquitecturas, sensores y enlaces para calidad de agua & Revisión; no propone un sistema \\
+de Camargo et al., 2023~\cite{camargo} & Revisión de sensores de bajo costo & Necesidad de calibrar y contrastar antes de confiar en las lecturas & Revisión; no propone un sistema \\
+Naloufi et al., 2024~\cite{naloufi} & Estabilidad a largo plazo & Documenta deriva en sensores económicos en ríos urbanos & Solo medición \\
+Wang et al., 2024~\cite{wang} & Sensor de turbidez de bajo costo & Caracterización y efecto del ensuciamiento en un sensor óptico & Solo turbidez \\
+Khamis et al., 2023~\cite{khamis2023} & Autosampler portátil & 14 muestras de 50~mL con bomba peristáltica; disparo con interruptor de flotador o manual & No dispara por calidad del agua; sin telemetría \\
+Neumann et al., 2023~\cite{neumann2023} & Muestreador programable & Muestra integrada en una jeringa durante minutos a días, unos USD~300 & Promedia en el tiempo; no captura un evento \\
+Deleon et al., 2025~\cite{deleon2025} & Muestreador automático IoT & Muestreo con telemetría casi en tiempo real para escorrentía agrícola & Orientado a nutrientes y sedimentos de campo agrícola \\
+Bo et al., 2022~\cite{bo2022} & Agua de mina en línea & Monitoreo inalámbrico de cantidad y calidad del agua de mina & Sin muestreo físico \\
+Yasutaka et al., 2024~\cite{yasutaka2024} & Agua de mina en Japón & LoRa privada de 920~MHz, pH, CE y caudal con energía solar en cuatro minas, a 1--15~km & Sin muestreo físico ni detección local de eventos \\
+\bottomrule
+\end{longtable}
+}
+
+\subsection{¿Qué tecnologías se han empleado?}
+
+En el monitoreo continuo de calidad de agua predominan los nodos con microcontroladores de bajo costo, sensores electroquímicos y ópticos y enlaces LPWAN. Georgantas et al.~\cite{georgantas} y Jabbar et al.~\cite{jabbar} integran varios parámetros con LoRa o LoRaWAN, y Ramos Villalta et al.~\cite{ramos} lo hacen en Arequipa con un ESP32. La revisión de López-Ramírez y Aragón-Zavala~\cite{lopez2023} confirma que las redes de sensores inalámbricas son hoy la arquitectura habitual para este fin. En minería, Yasutaka et al.~\cite{yasutaka2024} transmiten pH, conductividad y caudal con LoRa privada en la banda de 920~MHz, cercana a la usada por QawapMayu. Sus equipos funcionan con paneles solares y enlazan cuatro minas a puntos ubicados entre 1 y 15~km, incluso con 1.5 a 2.5~m de nieve. Bo et al.~\cite{bo2022} proponen un sistema en línea para la cantidad y la calidad del agua de mina. Los muestreadores siguen otra línea: bombas peristálticas o jeringas controladas por Arduino, programadas por tiempo o accionadas por un interruptor~\cite{khamis2023,neumann2023}. Deleon et al.~\cite{deleon2025} ya les agregan telemetría IoT.
+
+\subsection{¿Qué limitaciones y brechas dejan?}
+
+Hay tres limitaciones recurrentes:
+\begin{itemize}
+    \item \textbf{El enlace no es tan bueno como promete.} Basford et al.~\cite{basford} mostraron, tras una evaluación prolongada, que la tasa real de entrega de LoRaWAN depende del sitio y varía en el tiempo. Un sistema que supone una entrega perfecta puede perder justo la trama del evento.
+    \item \textbf{Los sensores económicos no son instrumentos.} La revisión de de Camargo et al.~\cite{camargo} insiste en calibrar y contrastar antes de interpretar las lecturas. Naloufi et al.~\cite{naloufi} documentaron deriva en meses de operación, y Wang et al.~\cite{wang} mostraron que el ensuciamiento altera la respuesta de un sensor óptico de turbidez.
+    \item \textbf{Medir y muestrear siguen separados.} Los sistemas de monitoreo, incluidos los mineros~\cite{bo2022,yasutaka2024}, avisan de un cambio, pero no conservan agua del momento. Los muestreadores conservan agua, pero deciden cuándo tomarla según un reloj, una persona o un nivel~\cite{khamis2023,neumann2023}, no según la calidad del agua medida. Khamis et al. reportan, por ejemplo, que en su caso de estudio los muestreadores se activaron a mano al inicio de la tormenta.
+\end{itemize}
+
+\subsection{¿Qué aportes se transfieren a QawapMayu?}
+
+De los trabajos con LoRa se adoptó la idea de medir el enlace en lugar de suponerlo: cada trama lleva un número de secuencia y un CRC, y el PDR y la latencia se midieron (Sección~\ref{sec:res_lora}). De las revisiones sobre sensores de bajo costo se tomó la decisión de no usar valores absolutos para disparar. QawapMayu compara cada sensor con su propia referencia ($TDS_0$, $V_{T,0}$), marca la validez de cada canal y exige persistencia antes de actuar. De Wang et al.~\cite{wang} viene usar un índice de turbidez relativo en lugar de NTU sin calibración. De los muestreadores se tomó el accionamiento de una bomba por un microcontrolador y la necesidad de calibrar el volumen en la geometría real (Sección~\ref{sec:res_dosif}). La Fig.~\ref{fig:eda} de la Sección~\ref{sec:decisiones_eda} resume cómo cada hallazgo se tradujo en una regla del diseño.
+
+\subsection{¿En qué se diferencia QawapMayu?}
+
+QawapMayu une las dos líneas que la literatura revisada mantiene separadas: el monitoreo continuo multiparamétrico con LoRa y el muestreo físico automático. El disparo de la bomba lo decide la propia calidad del agua medida en el nodo, sin intervención humana y sin depender del radio ni de Internet. Además, un enclavamiento en memoria no volátil impide que el frasco se sobrescriba tras una captura o un reinicio. No se presenta como una técnica inédita ni como un reemplazo de los muestreadores comerciales o del análisis de laboratorio. Su aporte es mostrar que esa integración cabe en un prototipo de bajo costo y validarla en banco con evidencia trazable. Frente a los antecedentes mineros~\cite{bo2022,yasutaka2024}, a QawapMayu le faltan el alcance probado en campo y la autonomía energética, que quedan como trabajo futuro.

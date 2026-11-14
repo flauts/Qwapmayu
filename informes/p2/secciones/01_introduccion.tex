@@ -1,0 +1,97 @@
+% Sección obligatoria 2: Introducción, Problemática y Marco Teórico
+% Consolidado del P1 (L196-306 y L1454-1484) con redacción nueva y actualizado al prototipo real.
+\section{Introducción}
+\label{sec:introduccion}
+
+En el Perú, varias cuencas con actividad minera presentan cambios en la calidad del agua superficial. Entre los mecanismos están el drenaje ácido, la liberación de metales desde minerales y relaves y el arrastre de sedimentos. Estudios recientes en cuencas andinas y en la cuenca del Ocoña han reportado concentraciones variables de Fe, Cu, Zn, Mn, Pb y As en ríos y quebradas~\cite{moreno2024,ocona2024}. Estas alteraciones afectan la vida acuática, limitan el uso del agua para riego y pueden llegar a fuentes de consumo humano~\cite{faoWaterQuality,whoDrinkingWater2026}.
+
+QawapMayu es un prototipo IoT de bajo costo que vigila cuatro variables del agua: pH, sólidos disueltos totales (TDS), turbidez y temperatura. Ninguna de ellas identifica un metal, pero un cambio brusco en cualquiera de ellas indica que algo alteró el agua y que conviene analizarla. El prototipo no se limita a avisar. Cuando el nodo detecta una alteración que persiste, enciende una bomba y llena un frasco, de modo que el laboratorio recibe agua del mismo momento en que ocurrió el evento. A esta función se le llama Sistema de Muestreo Automatizado de Emergencia.
+
+La decisión de muestrear se toma en el propio nodo, un ESP32~\cite{esp32}, sin esperar a la red. Las mediciones viajan por LoRa punto a punto hasta una pasarela, que las publica en ThingsBoard para su seguimiento. Este informe presenta el prototipo construido, los cambios respecto al perfil P1 y los resultados de su validación en banco con alteraciones controladas. El prototipo es una herramienta de alerta y apoyo al muestreo. No reemplaza a un análisis de laboratorio acreditado.
+
+\subsection{Objetivos}
+
+\subsubsection{Objetivo general}
+
+Diseñar, construir y validar en laboratorio un prototipo IoT modular y de bajo costo que detecte alteraciones fisicoquímicas persistentes en el agua y que, al detectarlas, capture automáticamente una muestra física y reporte el evento por LoRa a una plataforma de supervisión.
+
+\subsubsection{Objetivos específicos}
+
+\begin{enumerate}
+    \item Conectar al ESP32 sensores de pH, TDS, turbidez y temperatura, y documentar su acondicionamiento, calibración, filtrado y criterio de validez.
+    \item Programar en el nodo un detector de anomalías persistentes y una máquina de estados que gobierne el muestreo de forma segura.
+    \item Implementar la captura automática de una muestra de unos 100~mL con una bomba temporizada, un arranque seguro y un enclavamiento que sobreviva a los reinicios.
+    \item Establecer un enlace LoRa punto a punto con módulos RAK3272S que transporte las mediciones, el estado y los eventos, y medir su tasa de entrega y su latencia.
+    \item Configurar en ThingsBoard un tablero con las variables, el estado del nodo, las anomalías y los eventos de muestreo, y conservar su historial.
+    \item Validar el conjunto en recipientes de laboratorio con alteraciones seguras, comprobando la detección, el accionamiento de la bomba, la captura y la transmisión.
+\end{enumerate}
+
+\subsection{Alcances}
+
+El prototipo comprende un nodo de monitoreo, una pasarela LoRa, cuatro variables, un frasco por evento y un tablero de supervisión. Su propósito es reconocer cambios persistentes y conservar una muestra asociada a ellos; no identifica ni cuantifica contaminantes específicos. La validación se limitó a recipientes de laboratorio con sal, maicena, vinagre y desconexión de sondas, con el nodo alimentado por USB y la pasarela a 1~m. No se evaluó la operación prolongada en campo, la autonomía energética ni el alcance real del enlace. El resultado es un prototipo funcional, no un instrumento certificado de monitoreo ambiental.
+
+\section{Problemática}
+\label{sec:problematica}
+
+La vigilancia de la calidad del agua suele basarse en campañas periódicas: se toma una muestra, se analiza y se repite semanas o meses después. Ese esquema describe bien las condiciones promedio, pero no ve lo que pasa entre una campaña y otra. Un vertido, una lluvia que arrastra relaves o la falla de una poza pueden alterar el agua durante horas y desaparecer antes de la siguiente visita. Cuando eso ocurre, no queda una muestra del evento con la cual determinar qué pasó ni de dónde vino.
+
+En las cuencas bajo influencia minera el problema pesa más, porque la concentración de metales y las condiciones fisicoquímicas cambian en el tiempo y entre puntos cercanos~\cite{moreno2024,ocona2024}.
+
+La brecha que atiende QawapMayu es el intervalo entre el momento en que el agua cambia y el momento en que alguien obtiene una muestra de ese cambio. El prototipo la reduce vigilando de forma continua y llenando un frasco en cuanto la alteración se sostiene, sin depender de que haya una persona ni conexión a Internet en ese momento.
+
+\section{Marco Teórico}
+\label{sec:marco}
+
+\subsection{Enlace LoRa punto a punto}
+
+LoRa es una modulación de espectro ensanchado por \textit{chirps}, señales cuya frecuencia barre linealmente un ancho de banda $BW$. LoRaWAN es el protocolo de red que se construye sobre ella~\cite{lora}; QawapMayu no lo usa y enlaza directamente dos radios (modo P2P). La duración de un símbolo depende del factor de ensanchamiento $SF$:
+\begin{equation}
+    T_s = \frac{2^{SF}}{BW}
+\end{equation}
+Cada unidad que aumenta el $SF$ duplica $T_s$. Eso mejora la sensibilidad del receptor, pero alarga el tiempo en el aire y reduce la tasa de datos. Con la configuración usada, $SF = 7$ y $BW = 125$~kHz, $T_s \approx 1.02$~ms: es la opción más rápida y la de menor alcance. Resulta adecuada para un ensayo de banco con una trama corta cada 5~s. Para el campo habría que evaluar un $SF$ mayor según la distancia y el relieve.
+
+\subsection{Potenciometría de pH}
+
+El pH mide la actividad de los iones hidrógeno. Un electrodo de vidrio genera, frente a un electrodo de referencia, una tensión que idealmente sigue la ecuación de Nernst:
+\begin{equation}
+    E = E^0 - \frac{2.303\,R\,T}{F}\,\mathrm{pH}
+\end{equation}
+donde $R$ es la constante de los gases, $T$ la temperatura absoluta y $F$ la constante de Faraday. A 25~$^{\circ}$C la pendiente teórica es de 59.16~mV por unidad de pH y varía con la temperatura. El módulo del SEN0169~\cite{ph_sen0169} amplifica y desplaza esa tensión para llevarla al rango del ADC, de modo que la recta en el pin del ESP32 (pendiente y ordenada) solo puede obtenerse calibrando con referencias conocidas. En aguas con drenaje ácido el pH puede bajar mucho y favorecer la disolución de metales~\cite{usgsMineDrainage}, pero por sí solo no indica qué metal está presente.
+
+\subsection{Conductividad y sólidos disueltos totales}
+
+La conductividad eléctrica ($CE$) mide cuánta corriente puede conducir el agua gracias a sus iones disueltos. En una celda con constante $K_{\text{celda}}$ y resistencia medida $R_x$:
+\begin{equation}
+    CE = \frac{K_{\text{celda}}}{R_x}
+\end{equation}
+Los TDS se estiman a partir de ella con un factor empírico, $TDS \approx k_e \cdot CE$, que depende de qué iones haya en el agua. Como la conductividad aumenta con la temperatura, el firmware divide la tensión medida por $1 + 0.02\,(T - 25)$ antes de convertirla, usando la temperatura del DS18B20~\cite{ds18} o 25~$^{\circ}$C si no está disponible. El KS0429~\cite{tds} tiene un rango nominal de 0 a 1000~ppm. En este proyecto el TDS se usa para detectar un cambio en la carga iónica respecto a una referencia, no como una medida certificada.
+
+\subsection{Turbidez óptica relativa}
+
+Las partículas en suspensión dispersan y absorben la luz. Un sensor óptico como el TS-300B~\cite{ts300b} emite luz a través del agua y entrega una tensión que baja cuando aumenta la turbidez. Sin un patrón de formazina esa tensión no puede convertirse en unidades nefelométricas (NTU), así que se compara con la del agua limpia del mismo montaje mediante el índice $I_T$ de la Sección~\ref{sec:reglas}. Un índice alto indica sedimentos o material particulado, pero no su composición.
+
+\subsection{Volumen por temporización con bomba sumergible}
+
+La minibomba sumergible es centrífuga: impulsa el agua mientras está energizada y, a diferencia de una bomba peristáltica, el líquido atraviesa la bomba. El volumen entregado se aproxima como
+\begin{equation}
+    V \approx Q_{\text{cal}}\,\Delta t
+\end{equation}
+donde $Q_{\text{cal}}$ es el caudal medido para una geometría dada y $\Delta t$ el tiempo con el relé activo. En una bomba centrífuga el caudal disminuye cuanto más alto debe subir el agua, así que $Q_{\text{cal}}$ vale solo para la longitud de manguera, el desnivel y la tensión con que se midió. Si la salida de la manguera queda por debajo del nivel de la fuente, el agua sigue fluyendo por gravedad con la bomba apagada (sifón), y el volumen ya no lo controla el tiempo. La manguera además retiene un volumen
+\begin{equation}
+    V_l = \frac{\pi\,d_i^2\,L}{4}
+\end{equation}
+que para $d_i = 6.5$~mm y $L = 70$~cm es de unos 23~mL.
+
+\subsection{Acondicionamiento de señales y cargas inductivas}
+
+El ADC del ESP32 admite como máximo 3.3~V y tiene ruido y no linealidades~\cite{esp32}. Para señales que pueden superar ese límite se usa un divisor resistivo:
+\begin{equation}
+    V_{\text{pin}} = V_{\text{sensor}} \frac{R_2}{R_1 + R_2}
+\end{equation}
+que con $R_1 = 10$~k$\Omega$ y $R_2 = 20$~k$\Omega$ reduce la tensión a dos tercios. Para atenuar el ruido, cada medición es la mediana de varias lecturas rápidas, que descarta valores aislados sin promediar durante varios ciclos.
+
+El motor de la bomba es una carga inductiva. Al abrirse el relé, la corriente cae bruscamente y la inductancia produce una sobretensión
+\begin{equation}
+    V_{\text{ind}} = -L\,\frac{di}{dt}
+\end{equation}
+que puede perturbar al microcontrolador. Un diodo \textit{flyback} en paralelo con el motor ofrece un camino a esa corriente y limita el pico de tensión.
