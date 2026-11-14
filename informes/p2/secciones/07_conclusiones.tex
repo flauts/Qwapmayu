@@ -36,6 +36,7 @@ La conclusión central es que la captura de una muestra puede decidirse en el pr
     \item \textbf{Lógica:} añadir una banda de histéresis por amplitud y verificar que el frasco se haya cambiado antes de permitir el rearme, por ejemplo con un sensor de nivel o de peso.
     \item \textbf{Muestreo:} usar una bomba peristáltica para que la muestra no toque la bomba, medir el caudal con un sensor de flujo y pasar a varios frascos para registrar eventos consecutivos.
     \item \textbf{Comunicación:} agregar un \textit{watchdog} al gateway, investigar la causa de la sordera del RAK y caracterizar el alcance en campo con distintos SF, antenas y alturas, partiendo de distancias cortas. Para varias estaciones, evaluar LoRaWAN y un broker con autenticación.
+    \item \textbf{Protección eléctrica:} volver a colocar un diodo en paralelo con el motor de la bomba. El diodo integrado del módulo solo protege la bobina del relé, y hoy la protección depende de la separación de alimentaciones y del capacitor de desacoplo.
     \item \textbf{Energía y montaje:} alimentar el nodo con batería y panel solar, medir el consumo para estimar la autonomía y diseñar una PCB y un gabinete adecuados para el campo.
     \item \textbf{Otras aplicaciones:} el mismo esquema puede vigilar escorrentía agrícola, descargas industriales, estanques de acuicultura, fuentes de agua potable y humedales urbanos, ajustando los sensores y los umbrales a cada caso.
 \end{itemize}

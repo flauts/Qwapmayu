@@ -10,7 +10,7 @@ Convenciones: **[log]** cifra tomada del log · **[usuario]** observación del u
 ## 7 nov — Bomba y primer ciclo del nodo
 - Caudal con `herramientas` `bomba_manual`, manguera 30 cm: ~100 mL en 3.75–4.0 s [usuario]. El relé es activo en bajo.
 - Con la boca de la manguera sumergida en el frasco, al apagar la bomba se forma un sifón que devuelve agua a la fuente [usuario].
-- Sin diodo flyback el puerto USB del ESP32 se desconectaba al conmutar el relé; con el diodo dejó de pasar [usuario], sin log.
+- Sin diodo flyback el puerto USB del ESP32 se desconectaba al conmutar el relé; con el diodo dejó de pasar [usuario], sin log. **Actualización 13 nov [usuario]:** el diodo en la bomba se retiró; en el montaje final (incluido el ensayo integral) la solución es retirar el puente JD-VCC/VCC del módulo de relé, alimentar la bobina desde los 5 V del HW-131 con un capacitor de 220 µF junto a JD-VCC/GND, y llevar VCC e IN2 desde el ESP32 con GND común. El módulo trae diodo integrado solo en la bobina; no hay diodo en el motor. Los sensores se alimentan desde el HW-131.
 - Manguera 70 cm con 30 cm de subida: 6 s → 120 mL, 8 s → 160 mL (~20 mL/s) [usuario]. El caudal depende de la geometría.
 - `nodo_20261107_225307.log` (código `b6f0c46`, T_CAPTURA_MS 5000): VT0 2334 y luego 2344 mV; ev=1 y ev=2 con ciclo completo (3 ciclos anómalos → MUESTREANDO 5003 ms → CAPTURA_ESTIMADA → BLOQUEADO) y rearme con botón tras 3 ciclos normales; sin reinicios del ESP32. En ev=2 la bomba se frenó con tierra gruesa y el relé igual completó 5003 ms [log].
 

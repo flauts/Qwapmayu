@@ -115,7 +115,7 @@ pH & PH-4502C, calibración con 3 buffers & DFRobot SEN0169~\cite{ph_sen0169} co
 TDS & KS0429 en GPIO34 & KS0429~\cite{tds} directo en GPIO35 (salida 0--2.3 V) & Sin calibración absoluta; se usa el cambio respecto a TDS$_0$. \\
 Turbidez & SEN0189~\cite{turb} en GPIO32 & TS-300B~\cite{ts300b} (sonda TSW-30) con divisor 10k/20k en GPIO34 & Índice relativo $I_T$; no se reportan NTU. \\
 Temperatura & DS18B20 en GPIO4 & DS18B20~\cite{ds18} en GPIO32, pull-up 4.7 k$\Omega$ a 3V3 & Compensa el TDS; no dispara capturas. \\
-Actuador & Bomba peristáltica 12 V & Minibomba sumergible de 3--5 V (prestada) conmutada por un canal de un módulo de relé de 2 canales, activo en bajo (GPIO23), con diodo flyback & El agua toca la bomba; el volumen depende del tiempo y de la geometría. \\
+Actuador & Bomba peristáltica 12 V & Minibomba sumergible de 3--5 V (prestada) conmutada por un canal de un módulo de relé de 2 canales, activo en bajo (GPIO23), con la bobina alimentada desde el HW-131 y un capacitor de 220~$\mu$F & El agua toca la bomba; el volumen depende del tiempo y de la geometría. \\
 Manguera & 3 mm DI, 1.0 m & 6.5 mm DI, 70 cm & Volumen interno $\approx 23$ mL (Sección~\ref{sec:res_dosif}). \\
 Energía & Batería 12 V 7 Ah y convertidor buck & Bomba desde un módulo HW-131 con fuente de 8 V 2 A; nodo por USB del computador & Validación solo en banco; la autonomía no se evaluó. \\
 Rearme & Pulsador en GPIO25 & Pulsador desconectado; rearme con la tecla \texttt{r} por puerto serie & Exige 3 ciclos normales; no comprueba el frasco. \\
@@ -188,7 +188,7 @@ Para que cada cifra sea trazable, la salida serie de cada prueba se guardó con 
 \subsection{Presupuesto y cronograma}
 \label{sec:presupuesto}
 
-La Tabla~\ref{tab:presupuesto} valoriza todos los componentes del prototipo, incluidos los prestados. Los precios de la manguera y de la conexión rápida son los que pagó el equipo. Los demás son precios de referencia consultados el 13 de noviembre de 2026 en las páginas de producto de Sawers y Naylamp Mechatronics (Lima), con IGV. Los componentes que no se venden en el Perú se valorizaron con el precio de la tienda oficial del fabricante en dólares, al tipo de cambio de venta publicado por SUNAT para esa fecha (S/~3.407 por dólar). El prototipo completo vale unos S/~541.88, pero el gasto del equipo fue de S/~99.30, porque la mayor parte del hardware fue prestada. En el perfil P1 se habían proyectado S/~576 con otra lista de componentes.
+La Tabla~\ref{tab:presupuesto} valoriza todos los componentes del prototipo, incluidos los prestados. Los precios de la manguera y de la conexión rápida son los que pagó el equipo. Los demás son precios de referencia consultados el 13 de noviembre de 2026 en las páginas de producto de Sawers y Naylamp Mechatronics (Lima), con IGV. Los componentes que no se venden en el Perú se valorizaron con el precio de la tienda oficial del fabricante en dólares, al tipo de cambio de venta publicado por SUNAT para esa fecha (S/~3.407 por dólar). El prototipo completo vale unos S/~541.38, pero el gasto del equipo fue de S/~98.80, porque la mayor parte del hardware fue prestada. En el perfil P1 se habían proyectado S/~576 con otra lista de componentes.
 
 {\footnotesize
 \renewcommand{\arraystretch}{1.1}
@@ -217,14 +217,14 @@ La Tabla~\ref{tab:presupuesto} valoriza todos los componentes del prototipo, inc
 12 & Adaptador 9 V, 2.67 A (equivalente a la fuente de 8 V, 2 A usada) & 1 & 25.00 & 25.00 & Comprado & Naylamp \\
 13 & Manguera de 1 m & 1 & 8.00 & 8.00 & Comprado & Precio pagado \\
 14 & Conexión rápida para manguera & 1 & 10.00 & 10.00 & Comprado & Precio pagado \\
-15 & Resistencias 1/4 W (10k $\times$2, 4.7k) y diodo 1N4007 (par)$^{c}$ & --- & --- & 0.80 & Comprado & Naylamp, Sawers \\
+15 & Resistencias 1/4 W (10k $\times$2, 4.7k)$^{c}$ & --- & --- & 0.30 & Comprado & Naylamp \\
 16 & Caja de sobreponer 15$\times$15$\times$7 cm & 1 & 8.50 & 8.50 & Comprado & Sawers \\
 \midrule
 \multicolumn{4}{r}{Componentes prestados} & 442.58 & & \\
-\multicolumn{4}{r}{Componentes comprados (gasto del equipo)} & 99.30 & & \\
-\multicolumn{4}{r}{\textbf{Valor total del prototipo}} & \textbf{541.88} & & \\
+\multicolumn{4}{r}{Componentes comprados (gasto del equipo)} & 98.80 & & \\
+\multicolumn{4}{r}{\textbf{Valor total del prototipo}} & \textbf{541.38} & & \\
 \bottomrule
-\multicolumn{7}{p{0.97\textwidth}}{\scriptsize $^{a}$Convertido a S/~3.407 por dólar (SUNAT, venta, 13/11/2026); no incluye envío ni impuestos de importación. $^{b}$Precio de lista de la tienda oficial de RAKwireless tomado del buscador; la página no permitió el acceso automático para verificarlo. $^{c}$No se encontró precio para la resistencia de 20k, que no está incluida. El frasco colector no se presupuestó.}
+\multicolumn{7}{p{0.97\textwidth}}{\scriptsize $^{a}$Convertido a S/~3.407 por dólar (SUNAT, venta, 13/11/2026); no incluye envío ni impuestos de importación. $^{b}$Precio de lista de la tienda oficial de RAKwireless tomado del buscador; la página no permitió el acceso automático para verificarlo. $^{c}$No se encontró precio para la resistencia de 20k ni para el capacitor de 220~$\mu$F, que no están incluidos. El frasco colector no se presupuestó.}
 \end{longtable}
 }
 
