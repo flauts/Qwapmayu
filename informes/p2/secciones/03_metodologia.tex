@@ -1,0 +1,251 @@
+% Sección obligatoria 4: Metodología y Desarrollo
+% Fuentes: firmware (nodo/src/main.cpp, comun/*.h), CLAUDE.md, bitacora_web.md, docs/pines.md.
+\section{Metodología y Desarrollo}
+
+El desarrollo siguió un ciclo incremental de banco de pruebas. Cada subsistema (sensores, actuador, máquina de estados, radio, gateway y nube) se probó primero por separado con un firmware de prueba propio y luego se integró en el firmware del nodo. Cada prueba quedó registrada en un archivo de evidencia con fecha y hora en la carpeta \texttt{pruebas/} del repositorio. Las cifras de la Sección~\ref{sec:resultados} provienen de esos archivos.
+
+\subsection{Planteamiento del sistema y diagrama de bloques}
+\label{sec:bloques}
+
+QawapMayu se compone de un nodo de campo (QM01), una pasarela (GW01) y un tablero en la nube (Fig.~\ref{fig:bloques}). El nodo mide cuatro variables del agua, decide localmente si hay una alteración persistente y, si la hay, acciona una bomba que llena un frasco. En paralelo, cada 5~s envía por LoRa una trama con las mediciones, su validez y el estado de la máquina de estados. La pasarela valida la trama, le asigna la hora absoluta y la publica por MQTT en ThingsBoard~\cite{thingsboard}.
+
+La decisión de muestrear se toma en el nodo y no depende del radio ni de Internet. La nube solo cumple funciones de supervisión e historial. Así, una caída del enlace puede retrasar la alerta, pero no impide que se capture la muestra.
+
+\begin{figure}[htbp]
+\centering
+\resizebox{\textwidth}{!}{%
+\begin{tikzpicture}[
+    blk/.style={box, text width=27mm, minimum height=12mm},
+    hub/.style={box, text width=32mm, minimum height=15mm, fill=navy, text=white},
+    lab/.style={font=\scriptsize, inner sep=1pt, fill=white}
+]
+% Fila 1: medición, decisión y actuación
+\node[blk] (agua)  at (0,0)    {Agua observada\\(recipiente de ensayo)};
+\node[blk] (sens)  at (4.2,0)  {pH, TDS, turbidez\\y temperatura};
+\node[hub] (nodo)  at (8.6,0)  {Nodo QM01 (ESP32)\\mediana, validez,\\detector y estados};
+\node[blk] (rele)  at (13.0,0) {Relé (1 de 2 canales)\\activo en bajo};
+\node[blk] (bomba) at (17.2,0) {Minibomba\\sumergible};
+% Fila 2: memoria y muestra
+\node[blk] (nvs)    at (4.2,-2.6)  {Memoria NVS\\\texttt{bloqueado},\\\texttt{bombeando}};
+\node[blk] (frasco) at (17.2,-2.6) {Frasco colector\\(muestra física)};
+% Fila 3: telemetría
+\node[blk] (rakn) at (8.6,-5.0)  {RAK3272S (nodo)\\LoRa P2P 923.5 MHz};
+\node[blk] (gw)   at (13.0,-5.0) {Gateway GW01\\ESP32 + RAK3272S};
+\node[blk] (tb)   at (17.2,-5.0) {ThingsBoard\\tablero e historial};
+% Datos y control
+\draw[arr] (sens) -- (nodo);
+\draw[arr] (nodo) -- node[lab, above=1pt]{GPIO23} (rele);
+\draw[energy] (rele) -- node[lab, below=2pt]{HW-131} (bomba);
+\draw[arr] (nodo) -- node[lab, right=1pt]{trama de 27 bytes cada 5 s} (rakn);
+\draw[arr, <->] (nodo.south west) -- (nvs.north east);
+\draw[arr] (rakn) -- node[lab, above=1pt]{LoRa} (gw);
+\draw[arr] (gw) -- node[lab, above=1pt]{MQTT} (tb);
+% Recorrido del agua
+\draw[fluid] (agua) -- node[lab, below=2pt]{contacto} (sens);
+\draw[fluid] (agua.north) -- ++(0,8mm) -| node[lab, pos=0.25, above=1pt]{la bomba está sumergida en la misma fuente} (bomba.north);
+\draw[fluid] (bomba) -- node[lab, right=1pt]{manguera 70 cm} (frasco);
+\end{tikzpicture}%
+}
+\caption{Diagrama de bloques de QawapMayu. Azul: datos y control; naranja discontinuo: alimentación conmutada de la bomba; verde azulado grueso: recorrido del agua. La detección, el enclavamiento y la captura ocurren en el nodo. Elaboración propia.}
+\label{fig:bloques}
+\end{figure}
+
+\subsection{Decisiones de diseño derivadas del Estado del Arte}
+\label{sec:decisiones_eda}
+
+La Fig.~\ref{fig:eda} resume cómo los hallazgos de la Sección~\ref{sec:eda} se tradujeron en reglas concretas del prototipo. La idea común es que ni el enlace inalámbrico ni los sensores de bajo costo pueden tratarse como ideales. Por eso el diseño mide el enlace en lugar de suponerlo, compara cada sensor contra su propia referencia en lugar de usar su valor absoluto y exige persistencia antes de actuar.
+
+\begin{figure}[htbp]
+\centering
+\resizebox{\textwidth}{!}{%
+\begin{tikzpicture}[
+    col/.style={rectangle, draw=navy, fill=pale, text width=50mm, minimum height=15mm, align=left, font=\footnotesize, inner sep=2mm},
+    dec/.style={rectangle, draw=teal, fill=white, text width=58mm, minimum height=15mm, align=left, font=\footnotesize, inner sep=2mm},
+    head/.style={font=\small\bfseries, text=navy}
+]
+\node[head] at (0,1.3) {Hallazgo en la literatura};
+\node[head] at (6.4,1.3) {Riesgo para el prototipo};
+\node[head] at (13.2,1.3) {Decisión en QawapMayu};
+
+\node[col] (h1) at (0,0) {La entrega real de paquetes LoRa difiere de la nominal y depende del sitio~\cite{basford,georgantas,jabbar,ramos}.};
+\node[col] (r1) at (6.4,0) {Pérdida silenciosa de tramas y de alertas.};
+\node[dec] (d1) at (13.2,0) {Número de secuencia y CRC-16 en cada trama; PDR y latencia medidos (Sección~\ref{sec:res_lora}); captura independiente del radio.};
+
+\node[col] (h2) at (0,-2.0) {Los sensores de bajo costo derivan y requieren calibración y contraste~\cite{camargo,naloufi}.};
+\node[col] (r2) at (6.4,-2.0) {Falsos disparos por lecturas erróneas o por deriva.};
+\node[dec] (d2) at (13.2,-2.0) {Referencias propias (TDS$_0$, $V_{T,0}$); bits de validez por canal; tres ciclos consecutivos antes de capturar.};
+
+\node[col] (h3) at (0,-4.0) {La turbidez óptica de bajo costo depende del montaje y del ensuciamiento~\cite{wang}.};
+\node[col] (r3) at (6.4,-4.0) {Valores absolutos no comparables entre montajes.};
+\node[dec] (d3) at (13.2,-4.0) {Índice relativo $I_T$ respecto al agua limpia del día; no se reportan NTU.};
+
+\node[col] (h4) at (0,-6.0) {La calidad del agua en cuencas mineras varía en el tiempo~\cite{moreno2024,ocona2024}, y los muestreadores no se disparan por calidad~\cite{khamis2023,neumann2023}.};
+\node[col] (r4) at (6.4,-6.0) {El evento ocurre entre campañas de muestreo.};
+\node[dec] (d4) at (13.2,-6.0) {Muestreo automático local con enclavamiento en NVS y rearme manual.};
+
+\foreach \i in {1,2,3,4} {
+  \draw[arr] (h\i) -- (r\i);
+  \draw[arr] (r\i) -- (d\i);
+}
+\end{tikzpicture}%
+}
+\caption{Relación entre los hallazgos del Estado del Arte, el riesgo que implican y la decisión adoptada en el prototipo. Elaboración propia.}
+\label{fig:eda}
+\end{figure}
+
+\subsection{Cambios respecto al Perfil P1}
+\label{sec:cambios}
+
+Entre el perfil P1 y el prototipo construido cambiaron varios componentes y parámetros. La Tabla~\ref{tab:cambios} los resume y anota su efecto en el diseño. El cambio de radio fue el de mayor impacto. Los módulos RAK3272S~\cite{rak3172} se controlan con comandos AT por un solo puerto serie (RX en GPIO16, TX en GPIO17), lo que elimina las líneas M0, M1 y AUX que requería el E32~\cite{ebyteE32}. Además, el módulo entrega el RSSI y la SNR de cada paquete recibido. El enlace se configuró en LoRa punto a punto con \texttt{AT+P2P=923500000:\allowbreak 7:125:0:10:14}: 923.5~MHz, SF7, ancho de banda de 125~kHz, tasa de codificación 4/5, preámbulo de 10 símbolos y 14~dBm (\texttt{comun/rak\_at.h}).
+
+{\small
+\begin{longtable}{p{2.6cm}p{3.6cm}p{4.4cm}p{4.6cm}}
+\caption{Cambios entre el Perfil P1 y el prototipo implementado (estado al 12 de noviembre de 2026)}
+\label{tab:cambios} \\
+\toprule
+Elemento & Perfil P1 & Prototipo P2 & Efecto en el diseño \\
+\midrule
+\endfirsthead
+\toprule
+Elemento & Perfil P1 & Prototipo P2 & Efecto en el diseño \\
+\midrule
+\endhead
+Radio & EBYTE E32 por UART con M0, M1 y AUX & 2 RAK3272S por comandos AT (GPIO16/17), LoRa P2P, 923.5 MHz, SF7, BW 125 kHz & Menos pines de control; RSSI y SNR por paquete en el gateway. \\
+pH & PH-4502C, calibración con 3 buffers & DFRobot SEN0169~\cite{ph_sen0169} con divisor 10k/20k en GPIO33; 2 puntos sin buffers & Recta $\mathrm{pH}=0.003984\,\mathrm{mV}+1.6410$; error declarado de $\pm 1$ pH. \\
+TDS & KS0429 en GPIO34 & KS0429~\cite{tds} directo en GPIO35 (salida 0--2.3 V) & Sin calibración absoluta; se usa el cambio respecto a TDS$_0$. \\
+Turbidez & SEN0189~\cite{turb} en GPIO32 & TS-300B~\cite{ts300b} (sonda TSW-30) con divisor 10k/20k en GPIO34 & Índice relativo $I_T$; no se reportan NTU. \\
+Temperatura & DS18B20 en GPIO4 & DS18B20~\cite{ds18} en GPIO32, pull-up 4.7 k$\Omega$ a 3V3 & Compensa el TDS; no dispara capturas. \\
+Actuador & Bomba peristáltica 12 V & Minibomba sumergible de 3--5 V (prestada) conmutada por un canal de un módulo de relé de 2 canales, activo en bajo (GPIO23), con diodo flyback & El agua toca la bomba; el volumen depende del tiempo y de la geometría. \\
+Manguera & 3 mm DI, 1.0 m & 6.5 mm DI, 70 cm & Volumen interno $\approx 23$ mL (Sección~\ref{sec:res_dosif}). \\
+Energía & Batería 12 V 7 Ah y convertidor buck & Bomba desde un módulo HW-131 con fuente de 8 V 2 A; nodo por USB del computador & Validación solo en banco; la autonomía no se evaluó. \\
+Rearme & Pulsador en GPIO25 & Pulsador desconectado; rearme con la tecla \texttt{r} por puerto serie & Exige 3 ciclos normales; no comprueba el frasco. \\
+Histéresis & ``Se aplicará'' & Reemplazada por un antirrebote por persistencia & 3 ciclos para disparar y 3 normales para rearmar; la banda por amplitud queda como mejora. \\
+Watchdog & Mencionado en el pseudocódigo & TWDT de 5000 ms en el nodo; no en el gateway & Un cuelgue reinicia el nodo; durante el bombeo arranca en FALLO. \\
+Reinicio durante bombeo & El perfil se contradice (BLOQUEADO o FALLO) & Arranca en FALLO & Volumen desconocido; requiere revisión manual. \\
+Supervisión & ThingsBoard & ThingsBoard Cloud, dispositivo QM01 con tarjetas, gráficos, tabla y alarma & Historial y alarma de anomalía persistente. \\
+\bottomrule
+\end{longtable}
+}
+
+\subsection{Reglas de detección y máquina de estados}
+\label{sec:reglas}
+
+\textbf{Adquisición.} Cada $T_a = 5$~s el nodo toma 31 lecturas de cada canal analógico con \texttt{analogRead\-MilliVolts} (12 bits) y usa su mediana. El DS18B20 se lee de forma asíncrona. Cada canal tiene un rango de validez en el pin; fuera de él, el canal se marca inválido y no participa en la detección. Los rangos son 180--3100~mV para pH, hasta 2500~mV para TDS y 300--3250~mV para turbidez (\texttt{comun/anomalia.h}). El piso de 180~mV del pH se fijó porque un canal sin señal lee alrededor de 142~mV.
+
+\textbf{Criterios de anomalía.} El nodo considera anómalo un ciclo cuando se cumple alguna de estas condiciones:
+\begin{align}
+\text{pH:}\quad & \mathrm{pH} < 6.5 \ \lor\ \mathrm{pH} > 8.5 \\
+\text{TDS:}\quad & TDS > TDS_0 + 100~\text{ppm} \\
+\text{Turbidez:}\quad & I_T = \frac{V_{T,0} - V_T}{V_{T,0}} > 0.200
+\end{align}
+
+$TDS_0$ se fija automáticamente como la mediana de 12 lecturas tomadas después de los primeros 60~s de funcionamiento y se guarda solo en RAM. El detector ignora valores de TDS menores de 100~ppm, que corresponden a la sonda fuera del agua. $V_{T,0}$ es la tensión del sensor de turbidez en agua que se asume limpia. Se captura con la tecla \texttt{t} y se guarda en NVS; el valor vigente es 2115~mV y se volverá a capturar el día de la demostración.
+
+\textbf{Relación con el ECA para Agua.} Los umbrales se fijaron para la validación en laboratorio. La ventana de pH coincide con el rango de 6.5 a 8.5 del ECA para Agua~\cite{eca2017} en las subcategorías A1 (aguas que pueden potabilizarse con desinfección) y D1 (riego de vegetales). Aun así, un disparo no equivale a verificar el ECA. El pH tiene un error declarado de $\pm 1$. El ECA fija para los sólidos disueltos totales un valor absoluto (1000~mg/L en A1), mientras que el nodo usa un incremento relativo con un sensor sin calibración absoluta. La turbiedad del ECA se expresa en UNT (5~UNT en A1), unidad que el TS-300B no entrega. El cumplimiento del ECA se determina con análisis de laboratorio; la función del nodo es dar la alerta y conservar la muestra que ese análisis necesita.
+
+\textbf{Antirrebote por persistencia.} Para que una lectura que oscila alrededor del umbral no dispare ni rearme el sistema, el nodo exige tres ciclos válidos consecutivos fuera de umbral para solicitar una captura (10 a 15~s) y tres ciclos normales consecutivos para permitir el rearme. Este filtro temporal cumple la función que el perfil P1 asignaba a la histéresis: en el ensayo de pico aislado, una alteración de un solo ciclo no activó la bomba (Sección~\ref{sec:res_deteccion}). La banda de histéresis por amplitud queda como mejora futura (Sección~\ref{sec:recomendaciones}).
+
+\textbf{Máquina de estados.} El nodo opera con cinco estados (Fig.~\ref{fig:fsm}): \texttt{ARMADO} (vigilando), \texttt{MUESTREANDO} (relé activo), \texttt{CAPTURA\_ESTIMADA} (bombeo terminado por tiempo), \texttt{BLOQUEADO} (frasco usado, bomba inhibida) y \texttt{FALLO} (condición de seguridad). Para iniciar una captura el orden es estricto. Primero se guardan en NVS los indicadores \texttt{bloqueado} y \texttt{bombeando}. Luego se envía la trama de \texttt{MUESTREANDO} y recién después se enciende el relé. Si la escritura en NVS falla, el nodo pasa a \texttt{FALLO} sin bombear. La bomba se apaga a los $T_{\text{captura}} = 5000$~ms. Como respaldo, un corte a los 10000~ms lleva a \texttt{FALLO}. Al arrancar, el nodo lee la NVS: si encuentra \texttt{bombeando} activo (reinicio a mitad de una captura), entra en \texttt{FALLO}; si encuentra \texttt{bloqueado}, entra en \texttt{BLOQUEADO}.
+
+\begin{figure}[htbp]
+\centering
+\resizebox{\textwidth}{!}{%
+\begin{tikzpicture}[
+    st/.style={rectangle, rounded corners=3mm, draw=navy, fill=pale, minimum width=34mm, minimum height=10mm, font=\small\ttfamily},
+    tr/.style={arr},
+    sec/.style={arr, draw=power},
+    lab/.style={font=\scriptsize, align=center, fill=white, inner sep=1.5pt}
+]
+\node[st] (arm) at (0,0)     {ARMADO};
+\node[st] (mue) at (6,0)     {MUESTREANDO};
+\node[st, fill=white, draw=power] (fal) at (12,0) {FALLO};
+\node[st] (blo) at (0,-3.4)  {BLOQUEADO};
+\node[st] (cap) at (6,-3.4)  {CAPTURA\_ESTIMADA};
+\node[font=\scriptsize, align=center] (ini) at (-3.6,0) {arranque\\(NVS limpia)};
+
+\draw[tr] (ini) -- (arm);
+\draw[tr] (arm) -- node[lab, below=1pt]{3 ciclos anómalos,\\NVS guardada,\\trama enviada} (mue);
+\draw[tr] (mue) -- node[lab, right=1pt]{$t \geq 5000$ ms\\relé OFF} (cap);
+\draw[tr] (cap) -- node[lab, below=1pt]{trama enviada} (blo);
+\draw[tr] (blo) -- node[lab, left=1pt]{3 ciclos normales\\+ rearme (\texttt{r})} (arm);
+\draw[sec] (mue) -- node[lab, below=1pt]{corte (\texttt{x}) o\\$t \geq 10000$ ms} (fal);
+\draw[sec] ($(arm.north)+(0.6,0)$) to[bend left=18] node[lab]{fallo de escritura en NVS (no bombea)} ($(fal.north)+(-0.6,0)$);
+\draw[sec] ($(fal.north)+(0.4,0)$) to[bend right=32] node[lab]{3 ciclos normales + rearme (\texttt{r})} ($(arm.north)+(-0.4,0)$);
+\node[font=\scriptsize, align=left, draw=power, dashed, inner sep=2mm] at (12,-3.4) {Al arrancar:\\\texttt{bombeando}=1 $\Rightarrow$ \texttt{FALLO}\\\texttt{bloqueado}=1 $\Rightarrow$ \texttt{BLOQUEADO}};
+\end{tikzpicture}%
+}
+\caption{Máquina de estados del nodo QM01, según \texttt{nodo/src/main.cpp}. En naranja, las transiciones de seguridad. Elaboración propia.}
+\label{fig:fsm}
+\end{figure}
+
+\subsection{Plan de validación}
+\label{sec:plan}
+
+La validación se hizo en recipientes de laboratorio con alteraciones seguras y reproducibles: sal de mesa para el TDS, maicena para la turbidez, vinagre diluido para el pH y desconexión de sondas para los datos inválidos. Estas alteraciones no reproducen la química de un efluente minero; sirven para comprobar que la cadena de detección, captura y transmisión responde como se diseñó. Se conservaron los doce ensayos y las metas del perfil P1 (PDR $\geq 95$~\%, $100 \pm 10$~mL y error de temperatura $\leq 1\,^{\circ}$C). La Tabla~\ref{tab:matriz} de la Sección~\ref{sec:resultados} contrasta cada meta con lo medido.
+
+Para que cada cifra sea trazable, la salida serie de cada prueba se guardó con el script \texttt{herramientas/monitor/filter\_evidencia.py}. El script genera un \texttt{.log} y, cuando corresponde, un \texttt{.csv}, ambos con la fecha, la hora y el nombre de la prueba. El código de cada prueba quedó en un commit de Git.
+
+\subsection{Presupuesto y cronograma}
+\label{sec:presupuesto}
+
+La Tabla~\ref{tab:presupuesto} lista los componentes que forman parte del prototipo construido. La columna ``Ref.\ P1'' repite la cotización del perfil cuando el componente no cambió.
+
+{\footnotesize
+\renewcommand{\arraystretch}{1.1}
+\begin{longtable}{r p{4.4cm} p{4.2cm} c r r}
+\caption{Presupuesto del prototipo construido}
+\label{tab:presupuesto} \\
+\toprule
+\# & Componente & Función & Cant. & Ref.\ P1 (S/) & Costo real (S/) \\
+\midrule
+\endfirsthead
+\toprule
+\# & Componente & Función & Cant. & Ref.\ P1 (S/) & Costo real (S/) \\
+\midrule
+\endhead
+1 & ESP32 DevKit V1~\cite{esp32} & Nodo y gateway & 2 & 64.00 & \pendiente{costo} \\
+2 & RAK3272S con antena & Enlace LoRa P2P & 2 & --- & \pendiente{costo} \\
+3 & DFRobot SEN0169 con electrodo & pH & 1 & --- & \pendiente{costo} \\
+4 & Keyestudio KS0429 & TDS & 1 & 37.00 & \pendiente{costo} \\
+5 & TS-300B (sonda TSW-30) & Turbidez relativa & 1 & --- & \pendiente{costo} \\
+6 & DS18B20 impermeable & Temperatura & 1 & 8.50 & \pendiente{costo} \\
+7 & Módulo de relé de 2 canales (se usa 1) & Conmutación de la bomba & 1 & --- & \pendiente{costo} \\
+8 & Minibomba sumergible 3--5 V & Captura de la muestra & 1 & --- & Prestada \\
+9 & Módulo HW-131 y fuente 8 V 2 A & Alimentación de la bomba & 1 & --- & \pendiente{costo} \\
+10 & Manguera 6.5 mm DI (70 cm) & Conducción de la muestra & 1 & --- & \pendiente{costo} \\
+11 & Resistencias 10k/20k y 4.7k, diodo flyback & Divisores, pull-up y protección & --- & --- & \pendiente{costo} \\
+12 & Caja hermética, protoboard y cables & Montaje del nodo & --- & --- & \pendiente{costo} \\
+13 & Frasco colector & Almacenar la muestra & 1 & --- & \pendiente{costo} \\
+\midrule
+\multicolumn{5}{r}{\textbf{Total}} & \pendiente{total} \\
+\bottomrule
+\end{longtable}
+}
+
+La Tabla~\ref{tab:cronograma} compara la secuencia planificada en el perfil P1 con la ejecutada, según las fechas de los commits y de la evidencia en \texttt{pruebas/}.
+
+{\small
+\begin{longtable}{p{2.4cm} p{6.4cm} >{\footnotesize}p{6.8cm}}
+\caption{Cronograma planificado (P1) y ejecutado}
+\label{tab:cronograma} \\
+\toprule
+Fecha (2026) & Actividad ejecutada & Evidencia \\
+\midrule
+\endfirsthead
+\toprule
+Fecha (2026) & Actividad ejecutada & Evidencia \\
+\midrule
+\endhead
+23 set. & Perfil P1 (semana 07) & Documento P1 \\
+27 oct.--4 nov. & Estructura del repositorio, detector de anomalías y filtro de evidencia & Commits \texttt{605259a}, \texttt{d467fd4} \\
+6--7 nov. & Turbidez, firmware del nodo con la máquina de estados, bomba y primer ciclo completo & \texttt{nodo\_20261107\_225307.log} \\
+8 nov. & Siete casos de seguridad, serie de dosificación y primer enlace RAK & \texttt{serial\_20261108\_133113.log} \\
+9 nov. & Nodo transmitiendo por LoRa; turbidez con maicena & \texttt{nodo\_20261109\_113653\_p6\_nodo\_tx.log} \\
+10 nov. & Enlace LoRa a 1 m, ThingsBoard y corte de Internet & \texttt{gateway\_20261110\_005746\_p7\_1m\_gw.log} \\
+11 nov. & Calibración de pH, temperatura y TDS & \texttt{sensores\_20261111\_*} \\
+12 nov. & Firmware final del nodo, watchdog y recuperación del gateway & \texttt{nodo\_20261112\_150625\_wdt\_control.log} \\
+13 nov. & Congelamiento del código y entrega del informe P2 & Este documento \\
+Penúltima semana de nov. & Demostración en vivo & \pendiente{fecha de la demostración} \\
+\bottomrule
+\end{longtable}
+}

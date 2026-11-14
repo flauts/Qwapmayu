@@ -1,0 +1,298 @@
+% =============================================================
+% QawapMayu - Referencias del Informe final P2 (estilo IEEEtran)
+% [FICHA] = ficha técnica o documentación de fabricante (fuera de la regla de 7 años)
+% [NORMA] = especificación o documento normativo/técnico (fuera de la regla de 7 años)
+% [EdA]   = trabajo del Estado del Arte (debe ser de 2019 en adelante)
+% =============================================================
+
+% ---------- LoRa, procesamiento e instrumentación ----------
+
+% [NORMA] 2017: se usa solo en el Marco Teórico
+@misc{lora,
+  author       = {{LoRa Alliance}},
+  title        = {{LoRaWAN} Specification v1.1},
+  year         = {2017},
+  howpublished = {Especificación técnica},
+  url          = {https://resources.lora-alliance.org/getting-started-with-lorawan/lorawan-specification-v1-1}
+}
+
+% [FICHA] Radio usada en el prototipo (sustituye a semtech SX1278 del P1)
+@misc{rak3172,
+  author       = {{RAKwireless Technology Limited}},
+  title        = {{RAK3172} {WisDuo} {LPWAN} Module: Datasheet and {AT} Command Manual},
+  howpublished = {Documentación técnica},
+  url          = {https://docs.rakwireless.com/product-categories/wisduo/rak3172-module/overview/}
+}
+
+% [FICHA] Radio propuesta en el P1 (solo para justificar el cambio)
+@misc{ebyteE32,
+  author       = {{Chengdu Ebyte Electronic Technology Co., Ltd.}},
+  title        = {{E32-433T20D} {LoRa} {UART} Wireless Module},
+  howpublished = {Ficha técnica},
+  url          = {https://www.cdebyte.com/products/E32-433T20D}
+}
+
+% [FICHA]
+@misc{esp32,
+  author       = {{Espressif Systems}},
+  title        = {{ESP32-WROOM-32} Datasheet, v3.8},
+  howpublished = {Ficha técnica},
+  url          = {https://documentation.espressif.com/esp32-wroom-32_datasheet_en.html}
+}
+
+% [FICHA]
+@misc{ds18,
+  author       = {{Analog Devices}},
+  title        = {{DS18B20}: Programmable Resolution 1-Wire Digital Thermometer},
+  howpublished = {Ficha técnica},
+  url          = {https://www.analog.com/en/products/ds18b20.html}
+}
+
+% [FICHA]
+@misc{tds,
+  author       = {{Keyestudio}},
+  title        = {{KS0429} Keyestudio {TDS} Meter V1.0},
+  howpublished = {Documentación técnica},
+  url          = {https://docs.keyestudio.com/projects/KS0429/en/latest/}
+}
+
+% [FICHA] Sensor de pH realmente usado. URL por verificar antes de la entrega.
+@misc{ph_sen0169,
+  author       = {{DFRobot}},
+  title        = {Analog {pH} Meter Pro ({SEN0169})},
+  howpublished = {Documentación técnica},
+  url          = {https://wiki.dfrobot.com/Analog_pH_Meter_Pro_SKU_SEN0169}
+}
+
+% [FICHA] Sensor de turbidez propuesto en el P1 (solo para justificar el cambio)
+@misc{turb,
+  author       = {{DFRobot}},
+  title        = {Gravity: Analog Turbidity Sensor for Arduino ({SEN0189})},
+  howpublished = {Documentación técnica},
+  url          = {https://wiki.dfrobot.com/sen0189}
+}
+
+% [FICHA] Sensor de turbidez realmente usado. Fabricante y URL POR CONFIRMAR.
+@misc{ts300b,
+  author       = {{Fabricante por confirmar}},
+  title        = {{TS-300B} Turbidity Sensor Module},
+  howpublished = {Ficha técnica}
+}
+
+% [FICHA] Plataforma de supervisión
+@misc{thingsboard,
+  author       = {{ThingsBoard, Inc.}},
+  title        = {{ThingsBoard} Documentation: {MQTT} Device {API}},
+  howpublished = {Documentación técnica},
+  url          = {https://thingsboard.io/docs/reference/mqtt-api/}
+}
+
+% ---------- Sensores IoT y monitoreo de agua [EdA] ----------
+
+@article{camargo,
+  author  = {de Camargo, E. T. and others},
+  title   = {Low-Cost Water Quality Sensors for {IoT}: A Systematic Review},
+  journal = {Sensors},
+  volume  = {23},
+  number  = {9},
+  pages   = {4424},
+  year    = {2023},
+  doi     = {10.3390/s23094424}
+}
+
+@article{georgantas,
+  author  = {Georgantas, I. and Mitropoulos, S. and Katsoulis, S. and Chronis, I. and Christakis, I.},
+  title   = {Integrated Low-Cost Water Quality Monitoring System Based on {LoRa} Network},
+  journal = {Electronics},
+  volume  = {14},
+  number  = {5},
+  pages   = {857},
+  year    = {2025},
+  doi     = {10.3390/electronics14050857}
+}
+
+@article{naloufi,
+  author  = {Naloufi, M. and others},
+  title   = {Long-Term Stability of Low-Cost {IoT} System for Monitoring Water Quality in Urban Rivers},
+  journal = {Water},
+  volume  = {16},
+  number  = {12},
+  pages   = {1708},
+  year    = {2024},
+  doi     = {10.3390/w16121708}
+}
+
+@article{jabbar,
+  author  = {Jabbar, W. A. and others},
+  title   = {Development of {LoRaWAN}-based {IoT} System for Water Quality Monitoring in Rural Areas},
+  journal = {Expert Systems with Applications},
+  volume  = {242},
+  pages   = {122862},
+  year    = {2024},
+  doi     = {10.1016/j.eswa.2023.122862}
+}
+
+@article{wang,
+  author  = {Wang, M. and others},
+  title   = {A Compact, Low-Cost, and Low-Power Turbidity Sensor for Continuous In Situ Stormwater Monitoring},
+  journal = {Sensors},
+  volume  = {24},
+  number  = {12},
+  pages   = {3926},
+  year    = {2024},
+  doi     = {10.3390/s24123926}
+}
+
+@article{basford,
+  author  = {Basford, P. J. and Bulot, F. M. J. and Apetroaie-Cristea, M. and Cox, S. J. and Ossont, S. J.},
+  title   = {{LoRaWAN} for Smart City {IoT} Deployments: A Long Term Evaluation},
+  journal = {Sensors},
+  volume  = {20},
+  number  = {3},
+  pages   = {648},
+  year    = {2020},
+  doi     = {10.3390/s20030648}
+}
+
+@article{ramos,
+  author  = {Ramos Villalta, M. K. and Condori Chirinos, M. and Sulla Torres, R. R.},
+  title   = {Development of an {IoT} System Based on {LoRaWAN} to Monitor the Distribution and Quality of Irrigation Water in Rural Areas of {Arequipa, Peru}},
+  journal = {International Journal of Electrical and Electronics Engineering},
+  volume  = {11},
+  number  = {10},
+  pages   = {223--230},
+  year    = {2024},
+  doi     = {10.14445/23488379/IJEEE-V11I10P123}
+}
+
+% ---------- Minería y calidad de agua ----------
+
+@article{moreno2024,
+  author  = {Moreno-Aguirre, S. B. and V{\'e}rtiz-Osores, J. J. and Paredes-Espinal, C. E. and Meseth, E. and V{\'i}lchez-Ochoa, G. L. and Espino-Ciudad, J. A. and Flores del Pino, L.},
+  title   = {Ecological risk of metals in {Andean} water resources: A framework for early environmental assessment of mining projects in {Peru}},
+  journal = {Heliyon},
+  volume  = {10},
+  number  = {9},
+  pages   = {e30739},
+  year    = {2024},
+  doi     = {10.1016/j.heliyon.2024.e30739}
+}
+
+@article{ocona2024,
+  author  = {Simon, I. J. P. and Pfaff, K. and Navarre-Sitchler, A. and Crespo, J. and Holley, E. and Vanzin, G. and Guillen Gomez, M. N. and Ticona-Corrales, S. and Sharp, J. O.},
+  title   = {Geological and anthropogenic contributions of metal(loid)s in the artisanal and small-scale mining-impacted {Ocoña} watershed of {Arequipa, Peru}},
+  journal = {Applied Geochemistry},
+  volume  = {168},
+  pages   = {106028},
+  year    = {2024},
+  doi     = {10.1016/j.apgeochem.2024.106028}
+}
+
+% [NORMA/TÉCNICO] sin año de publicación en la página
+@misc{usgsMineDrainage,
+  author       = {{U.S. Geological Survey}},
+  title        = {Mine Drainage},
+  howpublished = {Water Resources Mission Area},
+  url          = {https://www.usgs.gov/mission-areas/water-resources/science/mine-drainage}
+}
+
+% [NORMA/TÉCNICO] 1994: se usa solo en la Introducción
+@book{faoWaterQuality,
+  author    = {Ayers, R. S. and Westcot, D. W.},
+  title     = {Water Quality for Agriculture},
+  series    = {FAO Irrigation and Drainage Paper 29 Rev. 1},
+  publisher = {Food and Agriculture Organization of the United Nations},
+  address   = {Roma},
+  year      = {1994},
+  url       = {https://www.fao.org/4/t0234e/t0234e00.htm}
+}
+
+% [NORMA] Año e ISBN copiados del P1: verificar antes de la entrega
+@book{whoDrinkingWater2026,
+  author    = {{World Health Organization}},
+  title     = {Guidelines for Drinking-water Quality: Fourth Edition Incorporating the First, Second and Third Addenda},
+  publisher = {World Health Organization},
+  address   = {Ginebra},
+  year      = {2026},
+  isbn      = {978-92-4-012122-5},
+  url       = {https://www.who.int/publications/i/item/9789240121225}
+}
+
+% [NORMA] 2017: norma peruana vigente, fuera de la regla de 7 años.
+% Valores verificados en el anexo del PDF oficial de SINIA (12 nov 2026):
+% pH 6,5-8,5 en A1 y D1; STD 1 000 mg/L en A1; turbiedad 5 UNT en A1.
+@misc{eca2017,
+  author       = {{Ministerio del Ambiente del Perú}},
+  title        = {Decreto Supremo {N.\textsuperscript{o}} 004-2017-{MINAM}: Aprueban Estándares de Calidad Ambiental ({ECA}) para Agua y establecen Disposiciones Complementarias},
+  howpublished = {Diario Oficial El Peruano},
+  month        = jun,
+  year         = {2017},
+  url          = {https://sinia.minam.gob.pe/sites/default/files/sinia/archivos/public/docs/ds-004-2017-minam.pdf}
+}
+
+% ---------- Estado del Arte: muestreo automático y minería [EdA] (verificados 12 nov 2026) ----------
+
+% Verificado en frontiersin.org (autores, título, vol. 9, art. 1072757).
+@article{khamis2023,
+  author  = {Khamis, K. and Ouellet, V. and Croghan, D. and Hernandez Gonzalez, L. M. and Packman, A. I. and Hannah, D. M. and Krause, S.},
+  title   = {The {Autobot-WQ}: A portable, low-cost autosampler to provide new insight into urban spatio-temporal water quality dynamics},
+  journal = {Frontiers in Built Environment},
+  volume  = {9},
+  pages   = {1072757},
+  year    = {2023},
+  doi     = {10.3389/fbuil.2023.1072757}
+}
+
+% Verificado en Crossref y PDF (par.nsf.gov).
+@article{neumann2023,
+  author  = {Neumann, K. C. and La, D. and Yoo, H. and Burkepile, D. E.},
+  title   = {Programmable Autonomous Water Samplers ({PAWS}): An inexpensive, adaptable and robust submersible system for time-integrated water sampling in freshwater and marine ecosystems},
+  journal = {HardwareX},
+  volume  = {13},
+  pages   = {e00392},
+  year    = {2023},
+  doi     = {10.1016/j.ohx.2022.e00392}
+}
+
+% Verificado en Crossref; contenido según Zenodo y página del proyecto (texto completo no leído).
+@article{deleon2025,
+  author  = {Deleon, E. and Brown, A. J. and Ladow, J. and Wardle, E. and Bauder, T.},
+  title   = {Programmable automated low-cost {IoT} water sampler},
+  journal = {HardwareX},
+  volume  = {23},
+  pages   = {e00693},
+  year    = {2025},
+  doi     = {10.1016/j.ohx.2025.e00693}
+}
+
+% Verificado en Crossref; contenido según resumen indexado (texto completo no leído).
+@article{bo2022,
+  author  = {Bo, L. and Liu, Y. and Zhang, Z. and Zhu, D. and Wang, Y.},
+  title   = {Research on an Online Monitoring System for Efficient and Accurate Monitoring of Mine Water},
+  journal = {IEEE Access},
+  volume  = {10},
+  pages   = {18743--18756},
+  year    = {2022},
+  doi     = {10.1109/ACCESS.2022.3151244}
+}
+
+% Verificado en el PDF (pp. 655-659).
+@inproceedings{yasutaka2024,
+  author    = {Yasutaka, T. and Furukawa, H. and Kuroki, K. and Fujita, T.},
+  title     = {Development of an un-powered remote monitoring system of mine waste water},
+  booktitle = {Proc. West Virginia Mine Drainage Task Force Symposium \& 15th International Mine Water Association Congress ({IMWA} 2024)},
+  editor    = {Kleinmann, B. and Skousen, J. and Wolkersdorfer, Ch.},
+  pages     = {655--659},
+  year      = {2024}
+}
+
+% Verificado en Crossref.
+@article{lopez2023,
+  author  = {L{\'o}pez-Ram{\'i}rez, G. A. and Arag{\'o}n-Zavala, A.},
+  title   = {Wireless Sensor Networks for Water Quality Monitoring: A Comprehensive Review},
+  journal = {IEEE Access},
+  volume  = {11},
+  pages   = {95120--95142},
+  year    = {2023},
+  doi     = {10.1109/ACCESS.2023.3308905}
+}

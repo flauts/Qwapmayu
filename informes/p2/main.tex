@@ -21,6 +21,7 @@
 \usepackage{graphicx}
 \usepackage{tikz}
 \usepackage{fancyhdr}
+\usepackage{cite}
 \usepackage{hyperref}
 
 \usetikzlibrary{
@@ -43,7 +44,7 @@
     linkcolor=teal,
     urlcolor=teal,
     citecolor=teal,
-    pdftitle={QawapMayu - Informe de Avance P2},
+    pdftitle={QawapMayu - Informe final P2},
     pdfauthor={Meza Torres, Murakami, Nieto y Tipula}
 }
 
@@ -57,12 +58,20 @@
 \pagestyle{fancy}
 \fancyhf{}
 \fancyhead[L]{\small\textcolor{navy}{QawapMayu}}
-\fancyhead[R]{\small Informe de Avance P2}
+\fancyhead[R]{\small Informe final P2}
 \fancyfoot[L]{\footnotesize Internet de las Cosas -- 2026-2}
 \fancyfoot[R]{\thepage}
 \setlength{\headheight}{15pt}
 
 \newcolumntype{Y}{>{\raggedright\arraybackslash}X}
+
+% Marcador visible para datos que solo puede aportar el equipo.
+% Ningún \pendiente debe quedar en la versión entregada.
+\newcommand{\pendiente}[1]{\textcolor{red}{\textbf{[PENDIENTE: #1]}}}
+
+% Nombres de archivo de evidencia con corte de línea en '_', '/' y '.'
+\newcommand{\ev}[1]{\path{#1}}
+\makeatletter\g@addto@macro\UrlBreaks{\do\_}\makeatother
 
 \newcommand{\nota}[1]{
     \begin{quote}
@@ -140,7 +149,7 @@
 
 \color{navy}
 
-{\large INTERNET DE LAS COSAS\hfill 2026-2}\par
+{\large INTERNET DE LAS COSAS (CS5055)\hfill 2026-2}\par
 
 \vspace{1.8cm}
 
@@ -154,7 +163,7 @@ Sistema modular de alerta temprana y muestreo automatizado para el monitoreo de 
 
 \vspace{0.8cm}
 
-{\Large Informe de Avance P2 (Noviembre 2026)\par}
+{\Large Informe final P2\par}
 
 \vspace{0.8cm}
 
@@ -163,8 +172,8 @@ Sistema modular de alerta temprana y muestreo automatizado para el monitoreo de 
         \vspace{4mm}
 
         \textbf{Actuador principal}\par
-        Sistema de Muestreo Automatizado de Emergencia\par
-        con bomba peristáltica y relé de un canal
+        Sistema de Muestreo Automatizado de Emergencia:\par
+        minibomba sumergible conmutada por un relé
 
         \vspace{4mm}
     }
@@ -172,7 +181,7 @@ Sistema modular de alerta temprana y muestreo automatizado para el monitoreo de 
 
 \vfill
 
-\textbf{Integrantes}\par
+\textbf{Grupo 5}\par
 Fabryzzio Jossue Meza Torres\par
 Mitsuo Murakami\par
 Sebastián Nieto\par
@@ -182,173 +191,33 @@ Jose Tipula\par
 
 \textbf{Docente:} Gabriel Andrés Arias Obregón\par
 \textbf{Aplicación objetivo:} Monitoreo de aguas bajo influencia minera en el Perú\par
-\textbf{Fecha:} Noviembre de 2026\par
-
-\vspace{0.8cm}
-
-{\small
-Este informe de avance P2 documenta la evolución tecnológica respecto al perfil de proyecto P1, la integración real del hardware en el banco de pruebas de laboratorio y la validación experimental ejecutada hasta la fecha.
-}
+\textbf{Fecha:} 13 de noviembre de 2026\par
 
 \end{titlepage}
 \hypersetup{pageanchor=true}
 
-% TODO P2: Secciones base de contexto (Introducción, Problemática, Marco Teórico y Estado del Arte) por integrar/actualizar en siguientes iteraciones.
+\tableofcontents
+\clearpage
 
-\section{Evolución Tecnológica y Cambios Respecto al Perfil P1}
+% Secciones obligatorias del P2 (indicaciones del docente).
+% El contenido conservado del P1 se ubica así:
+%   Objetivos y alcances        -> 01_introduccion
+%   Presupuesto y cronograma    -> 03_metodologia
+%   Matriz de validación        -> 05_resultados (meta P1 frente a lo medido)
+%   Limitaciones y trabajo futuro -> 07_conclusiones
+\input{secciones/01_introduccion}
+\input{secciones/02_estado_arte}
+\input{secciones/03_metodologia}
+\input{secciones/04_implementacion}
+\input{secciones/05_resultados}
+\input{secciones/06_mercado}
+\input{secciones/07_conclusiones}
 
-Durante la transición desde la formulación conceptual del Perfil de Proyecto P1 hacia la construcción e integración física del prototipo QawapMayu en el laboratorio, se ejecutaron ajustes de ingeniería orientados a garantizar la compatibilidad eléctrica con el microcontrolador ESP32 \cite{esp32}, estandarizar la telemetría sub-GHz en la banda asignada al grupo de trabajo y consolidar la seguridad operativa del sistema de muestreo automatizado. Todos los cambios descritos a continuación se encuentran implementados en el repositorio de firmware y verificados experimentalmente en el banco de pruebas.
+% TEMPORAL: \nocite{*} solo mientras las secciones no citan nada.
+% Se elimina al final para que la bibliografía contenga solo lo citado.
+\nocite{*}
 
-\subsection{Justificación de Cambios entre la Propuesta P1 y el Banco Construido}
+\bibliographystyle{IEEEtran}
+\bibliography{refs}
 
-\begin{enumerate}[label=\textbf{\alph*)}]
-    \item \textbf{Enlace de radio LoRa (de EBYTE E32 en 433 MHz a RAKwireless RAK3272S / RAK3172 en 923.5 MHz).}
-    En el perfil P1 se proyectó el uso de transceptores UART EBYTE E32 \cite{ebyteE32} en la banda de 433 MHz, cuya operación requería tres líneas digitales adicionales en el ESP32 para gestionar los modos de funcionamiento y el control de flujo por hardware: \texttt{M0} en \texttt{GPIO21}, \texttt{M1} en \texttt{GPIO22} y la señal de ocupación \texttt{AUX} en \texttt{GPIO19}. En la implementación real P2 se migró al módulo comercial \textbf{RAKwireless RAK3272S}, basado en el núcleo \textbf{RAK3172} con transceptor STM32WLE5CC y pila de firmware \textbf{RUI3} \cite{rak3172}, operando en modo punto a punto (LoRa P2P) sobre la frecuencia asignada de \textbf{923.5 MHz} (Grupo 5). La interfaz entre el ESP32 y el radio se realiza íntegramente mediante comandos AT sobre el puerto serie por hardware \texttt{UART2} (\texttt{Serial2} a 115200 bps, con \texttt{RX2} en \texttt{GPIO16} y \texttt{TX2} en \texttt{GPIO17}), alimentando el módulo directamente a 3.3 V desde el pin \texttt{3V3} del ESP32 sin necesidad de divisores de tensión en la línea de datos. La secuencia de inicialización configura el modo P2P (\texttt{AT+NWM=0}) y fija los parámetros de modulación mediante \texttt{AT+P2P=923500000:7:125:0:10:14} (\textit{Spreading Factor} SF7, ancho de banda de 125 kHz, \textit{Coding Rate} 4/5, preámbulo de 10 símbolos y potencia de transmisión de 14 dBm). La transmisión de la trama binaria de 27 bytes se ejecuta con \texttt{AT+PSEND=<hex>} en el nodo \texttt{QM01}, mientras que el gateway \texttt{GW01} permanece en escucha continua mediante \texttt{AT+PRECV=65534}. Esta arquitectura elimina la dependencia de los pines físicos \texttt{M0}, \texttt{M1} y \texttt{AUX}, liberando \texttt{GPIO19} y \texttt{GPIO22} en el nodo y reservando \texttt{GPIO21} como línea opcional de reinicio por hardware (\texttt{RST}). Además, el firmware RUI3 entrega de forma nativa el nivel de potencia recibida (\texttt{RSSI}, en dBm) y la relación señal a ruido (\texttt{SNR}, en dB) dentro de cada evento asíncrono \texttt{+EVT:RXP2P:<RSSI>:<SNR>:<payload>}, permitiendo registrar la calidad de enlace trama a trama sin instrumentación externa.
-
-    \item \textbf{Sensor óptico de turbidez y asignación de canales ADC (integración de TS-300B en GPIO35 y pH en GPIO32 con acondicionamiento resistivo).}
-    El diseño original contemplaba el sensor DFRobot SEN0189 \cite{turb} en \texttt{GPIO32} (\texttt{ADC1}). Para la implementación física se integró el módulo óptico analógico \textbf{TS-300B} \cite{ts300b} conectado al pin \textbf{\texttt{GPIO35}} (\texttt{ADC1\_CH7}), asignando el canal de pH (\textbf{PH-4502C}) a \textbf{\texttt{GPIO32}} (\texttt{ADC1\_CH4}) y dejando \texttt{GPIO4} libre. Dado que el acondicionador del sensor TS-300B se alimenta con 5 V (\texttt{VIN}) y entrega en agua clara una tensión analógica de hasta ${\sim}4.5\text{ V}$, su conexión directa excedería el límite máximo admisible por las entradas del ESP32 (3.3 V) \cite{esp32}. Por ello, se implementó un \textbf{divisor resistivo obligatorio de $10~\text{k}\Omega / 20~\text{k}\Omega$} ($R_{\text{sup}} = 10~\text{k}\Omega$ en serie con la salida del sensor y $R_{\text{inf}} = 20~\text{k}\Omega$ hacia \texttt{GND}), aplicando un factor de escala de $\times 2/3$ que sitúa la lectura de agua limpia alrededor de ${\sim}2340\text{ mV}$ en el pin del microcontrolador, dentro del rango de validez configurado en firmware ($300\text{ mV}$ a $3250\text{ mV}$). La asignación de los sensores en \texttt{ADC1} (\texttt{GPIO32}, \texttt{GPIO34} y \texttt{GPIO35}) garantiza que todos los canales analógicos del nodo operen sobre convertidores nativos independientes de la radiofrecuencia (Wi-Fi/BLE), eliminando cualquier riesgo de colisión o bloqueo en el conversor y dejando \texttt{GPIO4} disponible como entrada/salida de propósito general. De manera complementaria, el módulo de pH \textbf{PH-4502C}, alimentado a 5 V y leído en \textbf{\texttt{GPIO32}} (\texttt{ADC1}), se protegió con un divisor resistivo idéntico de $10~\text{k}\Omega / 20~\text{k}\Omega$ antes de su ingreso al ADC, mientras que el transmisor de sólidos disueltos totales (\textbf{TDS Keyestudio KS0429} \cite{tds}) se mantuvo en \textbf{\texttt{GPIO34}} (\texttt{ADC1}) con conexión directa por operar nativamente a 3.3 V con salida acotada entre $0$ y $2.3\text{ V}$.
-
-    \item \textbf{Sensor de temperatura 1-Wire (reasignación del DS18B20 de GPIO4 a GPIO33).}
-    En el perfil P1 la sonda impermeable de temperatura \textbf{DS18B20} \cite{ds18} estaba asignada al pin \texttt{GPIO4}. Durante el montaje y depuración en protoboard (Sesión S1 de laboratorio), el bus de datos 1-Wire con su resistencia \textit{pull-up} externa de $4.7~\text{k}\Omega$ a \texttt{3V3} quedó cableado físicamente sobre \textbf{\texttt{GPIO33}}. Al observarse inicialmente el valor centinela de desconexión ($-127.00\,^{\circ}\text{C}$) cuando el software interrogaba \texttt{GPIO4}, se tomó la decisión de ingeniería de unificar la asignación del DS18B20 en \textbf{\texttt{GPIO33}} en todo el repositorio de firmware y en el mapa de pines del nodo. Esta reubicación evitó recablear el bus 1-Wire ya estabilizado en la protoboard, dejó \texttt{GPIO4} libre como pin de propósito general y conservó la adquisición asíncrona no bloqueante con validación estricta de rango en $(-10, 60)\,^{\circ}\text{C}$ para la compensación térmica del canal de TDS, utilizando $25.0\,^{\circ}\text{C}$ por defecto cuando el sensor digital no se encuentra conectado.
-
-    \item \textbf{Actuador de muestreo, lógica del relé y protección contra transitorios inductivos.}
-    Se verificó experimentalmente en banco que el módulo de relé optoacoplado de 1 canal conectado en \textbf{\texttt{GPIO23}} opera con \textbf{lógica activa en bajo} (\texttt{RELE\_ACTIVO\_BAJO = true}): un nivel lógico \texttt{LOW} ($0\text{ V}$) energiza la bobina y cierra el contacto normalmente abierto (\texttt{NO}) que alimenta la bomba peristáltica de 12 V DC, mientras que un nivel \texttt{HIGH} ($3.3\text{ V}$) mantiene el circuito abierto. Para impedir activaciones espurias o bombeos involuntarios durante el reinicio del microcontrolador, la rutina de arranque (\texttt{setup()}) fuerza explícitamente el estado \texttt{HIGH} en \texttt{GPIO23} tanto antes como inmediatamente después de configurar el pin como salida (\texttt{pinMode(PIN\_RELE, OUTPUT)}), sincronizando además el indicador luminoso en \textbf{\texttt{GPIO2}} (activo en alto). Asimismo, en el lazo de potencia de 12 V DC se instaló un \textbf{diodo rectificador \textit{flyback} 1N4007} en paralelo inverso directamente entre los terminales de la bomba peristáltica (cátodo con franja hacia $+12\text{ V}$ y ánodo hacia el retorno conmutado), disipando la fuerza contraelectromotriz ($V_{\text{ind}} = -L\,di/dt$) generada al abrir el contacto del relé tras los $5000\text{ ms}$ de captura y evitando reinicios del ESP32 por acoplamiento electromagnético.
-
-    \item \textbf{Esquema de alimentación eléctrica (configuración de banco de laboratorio vs. arquitectura de campo).}
-    El perfil P1 definió la arquitectura energética objetivo para despliegue autónomo en campo, basada en una batería sellada de plomo-ácido de 12 V / 7 Ah y un convertidor conmutado reductor (\textit{buck} DC-DC LM2596) ajustado a 5 V. Para las sesiones de validación controlada del entregable P2 se adoptó un esquema de \textbf{alimentación de banco de laboratorio con separación de dominios}: la lógica del nodo \texttt{QM01} (ESP32, sensores analógicos/digitales, bobina del relé y transceptor RAK3272S a 3.3 V) y la del gateway \texttt{GW01} se alimentan mediante puertos USB independientes desde computador portátil, lo que permite capturar de forma continua las trazas serie de depuración y auditoría en ambos extremos. En paralelo, la etapa de potencia electromecánica de la bomba peristáltica se energiza mediante una \textbf{fuente \textit{switching} externa dedicada de 12 V DC} que incorpora un interruptor físico manual de corte en serie con el contacto \texttt{NO} del relé. La integración física de la batería de 12 V / 7 Ah y del regulador LM2596 queda documentada como trabajo futuro para la etapa de despliegue autónomo en campo.
-\end{enumerate}
-
-\nota{La trazabilidad de los cambios de pines, el enclavamiento persistente en memoria no volátil (NVS) y las condiciones de rearme manual en \texttt{GPIO25} se consolidan en la Tabla \ref{tab:evolucion_p1_p2}, asegurando la correspondencia exacta entre la documentación del informe P2 y el firmware ejecutado en las pruebas.}
-
-\subsection{Síntesis Comparativa: Perfil P1 vs. Implementación Real P2}
-
-{\small
-\begin{longtable}{p{2.9cm}p{3.6cm}p{4.2cm}p{4.5cm}}
-
-\caption{Comparativa técnica entre el Perfil de Proyecto P1 y la implementación real en banco P2}
-\label{tab:evolucion_p1_p2} \\
-
-\toprule
-Subsistema / Parámetro &
-Propuesta en Perfil P1 &
-Implementación Real P2 (Banco) &
-Justificación Técnica / Impacto \\
-\midrule
-\endfirsthead
-
-\toprule
-Subsistema / Parámetro &
-Propuesta en Perfil P1 &
-Implementación Real P2 (Banco) &
-Justificación Técnica / Impacto \\
-\midrule
-\endhead
-
-Transceptor LoRa y banda de operación &
-Módulo EBYTE E32 (UART) en banda de 433 MHz \cite{ebyteE32}. &
-Módulo RAKwireless RAK3272S / RAK3172 con firmware RUI3 en \textbf{923.5 MHz} (LoRa P2P, Grupo 5) \cite{rak3172}. &
-Operación en la frecuencia asignada de 923.5 MHz (SF7, BW 125 kHz, CR 4/5, preámbulo 10, 14 dBm) y reporte nativo de \texttt{RSSI} y \texttt{SNR} por paquete recibido. \\
-
-Interfaz de control del radio LoRa &
-UART en \texttt{GPIO16}/\texttt{GPIO17} más pines de control \texttt{M0} (\texttt{GPIO21}), \texttt{M1} (\texttt{GPIO22}) y \texttt{AUX} (\texttt{GPIO19}). &
-Comandos AT sobre \texttt{UART2} (\texttt{Serial2}, 115200 bps, \texttt{RX2=GPIO16}, \texttt{TX2=GPIO17}); \texttt{GPIO21} opcional (\texttt{RST}). &
-Elimina el manejo por hardware de \texttt{M0}/\texttt{M1}/\texttt{AUX}, liberando \texttt{GPIO19} y \texttt{GPIO22} y simplificando la máquina de transmisión con \texttt{AT+PSEND} y \texttt{AT+PRECV=65534}. \\
-
-Sensor de turbidez y canal ADC &
-DFRobot SEN0189 \cite{turb} conectado en \texttt{GPIO32} (\texttt{ADC1}). &
-Sensor óptico analógico \textbf{TS-300B} \cite{ts300b} en \textbf{\texttt{GPIO35}} (\texttt{ADC1\_CH7}) con divisor $10~\text{k}\Omega / 20~\text{k}\Omega$ ($\times 2/3$). &
-El divisor reduce la salida de $5\text{ V}$ (${\sim}4.5\text{ V}$ en agua clara) a ${\sim}2.34\text{ V}$ ($<3.3\text{ V}$). \texttt{ADC1} es nativo y libre de conflictos de RF; \texttt{GPIO4} queda libre. \\
-
-Acondicionamiento de pH y TDS &
-PH-4502C en \texttt{GPIO35} (\texttt{ADC1}) y TDS KS0429 \cite{tds} en \texttt{GPIO34} (\texttt{ADC1}). &
-PH-4502C en \textbf{\texttt{GPIO32}} con divisor resistivo $10~\text{k}\Omega / 20~\text{k}\Omega$; TDS KS0429 directo en \textbf{\texttt{GPIO34}} a 3.3 V. &
-Protege \texttt{GPIO32} frente a excursiones mayores a $3.3\text{ V}$ del módulo PH-4502C alimentado a 5 V, manteniendo la lectura directa de $0\text{--}2.3\text{ V}$ del sensor TDS. \\
-
-Sensor de temperatura 1-Wire &
-DS18B20 impermeable \cite{ds18} proyectado en \texttt{GPIO4} con \textit{pull-up} de $4.7~\text{k}\Omega$. &
-DS18B20 asignado a \textbf{\texttt{GPIO33}} con resistencia \textit{pull-up} externa de $4.7~\text{k}\Omega$ a \texttt{3V3}. &
-Consolida el cableado físico verificado en protoboard sin desmontar el bus 1-Wire, evita el centinela de desconexión ($-127\,^{\circ}\text{C}$) y deja \texttt{GPIO4} libre como pin de propósito general. \\
-
-Conmutación de bomba y protección &
-Relé de 1 canal en \texttt{GPIO23}, contacto \texttt{NO} y diodo \textit{flyback} en bomba de 12 V DC. &
-Relé en \textbf{\texttt{GPIO23}} confirmado como \textbf{activo en bajo} (\texttt{LOW} enciende, \texttt{HIGH} apaga), LED en \texttt{GPIO2} y diodo \textbf{1N4007}. &
-Pre-escritura de nivel \texttt{HIGH} en arranque para impedir disparos espurios y supresión efectiva de picos inductivos al cortar los $5000\text{ ms}$ de bombeo. \\
-
-Enclavamiento NVS y rearme manual &
-Persistencia de bloqueo tras captura y pulsador de rearme en \texttt{GPIO25}. &
-Tres espacios NVS separados (\texttt{"muestreo"}, \texttt{"cal"}, \texttt{"nodo"}) y pulsador en \textbf{\texttt{GPIO25}} (\texttt{INPUT\_PULLUP}, antirrebote $50\text{ ms}$). &
-Garantiza retención del estado \texttt{BLOQUEADO} o \texttt{FALLO} ante corte eléctrico y exige $\geq 3$ ciclos consecutivos normales ($15\text{ s}$) antes de autorizar el rearme a \texttt{ARMADO}. \\
-
-Esquema de alimentación eléctrica &
-Batería plomo-ácido 12 V / 7 Ah + regulador \textit{buck} DC-DC LM2596 a 5 V. &
-USB dual en banco para lógica (nodo y gateway) + fuente \textit{switching} externa de 12 V DC con interruptor físico para la bomba. &
-Aísla el dominio de potencia inductiva del motor durante la captura de logs por puerto serie en laboratorio; la batería y el LM2596 se reservan para despliegue en campo. \\
-
-\bottomrule
-\end{longtable}
-}
-
-\section{Metodología Actualizada}
-% TODO P2: Pendiente de redacción e integración de diagramas TikZ, tabla de hardware real, arquitectura modular de firmware y máquina de estados.
-\emph{Sección en preparación: integración de diagramas de bloques actualizados, tabla de especificaciones de hardware real, arquitectura modular de firmware (\texttt{comun/}) y máquina de estados finitos validada.}
-
-\section{Resultados y Validación Experimental}
-% TODO P2: Pendiente de redacción con evidencia de pruebas/ y bitacora.md.
-\emph{Sección en preparación: sistematización de curvas de respuesta de sensores, trazas temporales de captura y enclavamiento NVS, desempeño del enlace LoRa P2P a 923.5 MHz y resiliencia de la cola circular MQTT.}
-
-\section{Análisis de Mercado y Viabilidad Económica}
-% TODO P2: Pendiente de redacción (comparativa con muestreadores comerciales y presupuesto actualizado).
-\emph{Sección en preparación: comparativa técnico-económica frente a muestreadores automáticos comerciales, definición de nicho objetivo y presupuesto actualizado del prototipo.}
-
-\section{Conclusiones}
-% TODO P2: Pendiente de redacción al cierre de las pruebas de laboratorio.
-\emph{Sección en preparación: síntesis de hallazgos experimentales contrastados con los objetivos específicos del proyecto.}
-
-\begin{thebibliography}{99}
-\setlength{\itemsep}{1pt}
-\setlength{\parskip}{0pt}
-\small
-
-\bibitem{esp32}
-Espressif Systems,
-``ESP32-WROOM-32 Datasheet'',
-v3.8.
-\url{https://documentation.espressif.com/esp32-wroom-32_datasheet_en.html}.
-
-\bibitem{ebyteE32}
-Chengdu Ebyte Electronic Technology Co., Ltd.,
-``E32-433T20D LoRa UART Wireless Module'',
-ficha técnica del fabricante.
-\url{https://www.cdebyte.com/products/E32-433T20D}.
-
-\bibitem{rak3172}
-RAKwireless Technology Limited,
-``RAK3172 WisDuo LPWAN Module Datasheet \& RUI3 AT Command Manual'',
-documentación técnica oficial.
-\url{https://docs.rakwireless.com/product-categories/wisduo/rak3172-module/overview/}.
-
-\bibitem{turb}
-DFRobot,
-``Gravity: Analog Turbidity Sensor for Arduino (SEN0189)'',
-documentación técnica.
-\url{https://wiki.dfrobot.com/sen0189}.
-
-\bibitem{ts300b}
-Winsen / OEM,
-``TS-300B Analog Turbidity Sensor Module Technical Specification'',
-ficha técnica de instrumentación óptica para calidad de agua.
-
-\bibitem{tds}
-Keyestudio,
-``KS0429 Keyestudio TDS Meter V1.0'',
-documentación técnica del fabricante.
-\url{https://docs.keyestudio.com/projects/KS0429/en/latest/}.
-
-\bibitem{ds18}
-Analog Devices,
-``DS18B20: Programmable Resolution 1-Wire Digital Thermometer'',
-ficha técnica.
-\url{https://www.analog.com/en/products/ds18b20.html}.
-
-\end{thebibliography}
 \end{document}
