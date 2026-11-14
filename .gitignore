@@ -4,3 +4,4 @@ gateway/src/config.h
 *.tmp
 __pycache__/
 *.pyc
+.venv/

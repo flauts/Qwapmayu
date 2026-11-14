@@ -1,0 +1,809 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>QawapMayu · Telemetría hídrica MQTT</title>
+  <script>
+    window.__qawapVendorErrors = [];
+  </script>
+  <link
+    rel="stylesheet"
+    href="./vendor/leaflet.css"
+    onerror="window.__qawapVendorErrors.push('./vendor/leaflet.css')"
+  />
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <a href="#main-content" class="skip-link">Ir al contenido principal</a>
+
+  <div class="app-shell">
+    <aside id="app-sidebar" class="sidebar" aria-label="Menú lateral">
+      <div class="sidebar__head">
+        <div class="brand">
+          <svg
+            class="brand__mark"
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            fill="none"
+            aria-hidden="true"
+          >
+            <path
+              d="M3 10.5c2.2-2.2 4.3-2.2 6.5 0s4.3 2.2 6.5 0 3.2-1.8 5 0"
+              stroke="#0f5f73"
+              stroke-width="2"
+              stroke-linecap="round"
+            />
+            <path
+              d="M3 16c2.2-2.2 4.3-2.2 6.5 0s4.3 2.2 6.5 0 3.2-1.8 5 0"
+              stroke="#0f5f73"
+              stroke-width="2"
+              stroke-linecap="round"
+              opacity="0.55"
+            />
+            <circle cx="12" cy="5.5" r="1.75" fill="#0f5f73" />
+          </svg>
+          <div class="brand__copy">
+            <span class="brand__name">QawapMayu</span>
+            <span class="brand__sub">Telemetría hídrica LoRa</span>
+          </div>
+        </div>
+
+        <button
+          id="btn-menu-close"
+          class="icon-btn sidebar__close"
+          type="button"
+          aria-label="Cerrar menú"
+        >
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+            <path
+              d="M5 5l10 10M15 5L5 15"
+              stroke="currentColor"
+              stroke-width="1.6"
+              stroke-linecap="round"
+            />
+          </svg>
+        </button>
+      </div>
+
+      <nav class="sidebar__nav" aria-label="Navegación principal">
+        <button type="button" class="nav-item" data-view="monitoreo" aria-current="page">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+            <path
+              d="M2 8.5h2.4l1.7-4.5 2.7 7.5 1.8-4H14"
+              stroke="currentColor"
+              stroke-width="1.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
+          </svg>
+          <span>Monitoreo</span>
+        </button>
+
+        <button type="button" class="nav-item" data-view="eventos">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+            <path
+              d="M3 4.5h10M3 8h10M3 11.5h6.5"
+              stroke="currentColor"
+              stroke-width="1.5"
+              stroke-linecap="round"
+            />
+          </svg>
+          <span>Eventos</span>
+          <span id="nav-events-badge" class="nav-badge num" hidden>0</span>
+        </button>
+
+        <button type="button" class="nav-item" data-view="inspector">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+            <rect
+              x="2"
+              y="2.5"
+              width="12"
+              height="11"
+              rx="1.5"
+              stroke="currentColor"
+              stroke-width="1.5"
+            />
+            <path
+              d="M2 6h12M6 6v7.5"
+              stroke="currentColor"
+              stroke-width="1.5"
+            />
+          </svg>
+          <span>Inspector MQTT</span>
+        </button>
+
+        <button type="button" class="nav-item" data-view="conexion">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+            <path
+              d="M2.5 5h11M2.5 11h11"
+              stroke="currentColor"
+              stroke-width="1.5"
+              stroke-linecap="round"
+            />
+            <circle cx="6" cy="5" r="1.75" fill="#f1f5f7" stroke="currentColor" stroke-width="1.5" />
+            <circle cx="10.5" cy="11" r="1.75" fill="#f1f5f7" stroke="currentColor" stroke-width="1.5" />
+          </svg>
+          <span>Conexión</span>
+        </button>
+      </nav>
+
+      <div class="sidebar__footer">
+        <div class="conn-tray" aria-label="Estado de enlace MQTT">
+          <div class="conn-tray__row">
+            <span class="conn-tray__label">Broker</span>
+            <span id="sidebar-broker-pill" class="pill pill--neutral">Desconectado</span>
+          </div>
+          <code id="sidebar-broker-host" class="topic-slug conn-tray__host">localhost:9001</code>
+          <div class="conn-tray__row">
+            <span class="conn-tray__label">Gateway</span>
+            <span id="sidebar-gw-pill" class="pill pill--neutral">gw01 · esperando</span>
+          </div>
+          <button id="btn-sidebar-connect" class="btn btn--primary btn--full" type="button">
+            Conectar
+          </button>
+        </div>
+      </div>
+    </aside>
+
+    <header class="topbar">
+      <div class="topbar__left">
+        <button
+          id="btn-menu-toggle"
+          class="icon-btn menu-toggle"
+          type="button"
+          aria-expanded="false"
+          aria-controls="app-sidebar"
+          aria-label="Abrir menú de navegación"
+        >
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+            <path
+              d="M3.5 5.5h13M3.5 10h13M3.5 14.5h13"
+              stroke="currentColor"
+              stroke-width="1.6"
+              stroke-linecap="round"
+            />
+          </svg>
+        </button>
+        <h1 id="page-title" class="topbar__title">Monitoreo</h1>
+        <code id="active-sub-pill" class="sub-topic-code">qawapmayu/v1/+/+/+/+</code>
+      </div>
+
+      <div class="topbar__right">
+        <div id="broker-badge" class="pill pill--neutral" role="status">
+          <span class="status-dot" aria-hidden="true"></span>
+          <span id="broker-badge-text">MQTT: desconectado</span>
+        </div>
+
+        <button id="btn-topbar-connect" class="btn btn--sm" type="button">Conectar</button>
+      </div>
+    </header>
+
+    <main id="main-content" class="sheet" tabindex="-1">
+      <div id="sr-announcer" class="sr-only" aria-live="polite" aria-atomic="true"></div>
+
+      <div id="vendor-banner" class="alert-banner alert-banner--warn" role="status" hidden>
+        <div class="alert-banner__content">
+          <strong>Modo de respaldo activo:</strong>
+          <span id="vendor-banner-text"></span>
+        </div>
+        <button id="btn-dismiss-vendor" class="btn btn--sm" type="button">Ocultar</button>
+      </div>
+
+      <div id="connection-error-banner" class="alert-banner alert-banner--error" role="alert" hidden>
+        <div class="alert-banner__content">
+          <strong>Error de conexión MQTT:</strong>
+          <span id="connection-error-text"></span>
+        </div>
+      </div>
+
+      <!-- Vista 1: Monitoreo -->
+      <section id="view-monitoreo" class="view-section" aria-label="Monitoreo en tiempo real">
+        <div id="monitoreo-sub-bar" class="monitoreo-sub-bar">
+          <div class="monitoreo-sub-bar__row">
+            <label class="monitoreo-sub-bar__label" for="monitoreo-station-scope">Suscripción MQTT</label>
+            <select id="monitoreo-station-scope" class="input input--sm input--mono monitoreo-sub-bar__select">
+              <option value="qawapmayu/v1/+/+/+/+">qawapmayu/v1/+/+/+/+</option>
+              <option value="qawapmayu/v1/barranco/#">qawapmayu/v1/barranco/#</option>
+              <option value="qawapmayu/v1/chorrillos/#">qawapmayu/v1/chorrillos/#</option>
+            </select>
+          </div>
+          <div class="monitoreo-sub-bar__meta">
+            <span>Alcance:</span>
+            <strong id="monitoreo-active-desc" class="monitoreo-sub-bar__desc">Todas las estaciones</strong>
+            <code id="monitoreo-active-topic" class="topic-slug">qawapmayu/v1/+/+/+/+</code>
+          </div>
+        </div>
+
+        <div id="monitoreo-coverage" class="coverage-split">
+          <div class="coverage-left">
+            <article class="panel panel--stations">
+              <header class="panel__header">
+                <h2>Estaciones</h2>
+                <span id="station-count" class="panel__meta num">0 estaciones</span>
+              </header>
+
+              <div id="stations-grid" class="station-list">
+                <div class="empty-state">
+                  <p class="empty-state__title">Sin estaciones descubiertas</p>
+                  <p class="empty-state__desc">
+                    Conecta al broker MQTT para recibir mensajes retenidos y telemetría desde
+                    <code class="topic-slug">qawapmayu/v1/+/+/+/+</code>.
+                  </p>
+                </div>
+              </div>
+            </article>
+
+            <article class="panel panel--summary" aria-label="Resumen operativo">
+              <div class="summary-strip">
+                <div class="summary-cell">
+                  <span class="summary-cell__label">En línea</span>
+                  <strong id="kpi-online" class="summary-cell__val num">0 / 0</strong>
+                  <span id="kpi-online-sub" class="summary-cell__sub">Esperando metadatos</span>
+                </div>
+                <div class="summary-cell">
+                  <span class="summary-cell__label">En alerta / muestreo</span>
+                  <strong id="kpi-alerts" class="summary-cell__val num">0</strong>
+                  <span id="kpi-alerts-sub" class="summary-cell__sub">Sin alertas</span>
+                </div>
+                <div class="summary-cell">
+                  <span class="summary-cell__label">Mensajes MQTT</span>
+                  <strong id="kpi-messages" class="summary-cell__val num">0</strong>
+                  <span id="kpi-messages-sub" class="summary-cell__sub">0 retenidos</span>
+                </div>
+              </div>
+            </article>
+          </div>
+
+          <article class="panel panel--map coverage-right">
+            <header class="panel__header panel__header--wrap">
+              <h2>Mapa de cobertura</h2>
+              <div class="map-toolbar">
+                <div class="map-legend" aria-label="Leyenda de estados">
+                  <span class="legend-item"><i class="legend-dot legend-dot--armado" aria-hidden="true"></i>Armado</span>
+                  <span class="legend-item"><i class="legend-dot legend-dot--muestreando" aria-hidden="true"></i>Muestreo</span>
+                  <span class="legend-item"><i class="legend-dot legend-dot--fallo" aria-hidden="true"></i>Fallo</span>
+                  <span class="legend-item"><i class="legend-dot legend-dot--offline" aria-hidden="true"></i>Offline</span>
+                </div>
+                <span id="map-mode-badge" class="pill pill--neutral" hidden>Esquema offline</span>
+                <button id="btn-fit-map" class="btn btn--sm" type="button">Centrar</button>
+              </div>
+            </header>
+
+            <div id="map-container" class="map-container" aria-label="Mapa de cobertura de estaciones QawapMayu"></div>
+          </article>
+        </div>
+
+        <section id="monitoreo-telemetry" class="panel telemetry-tray" aria-label="Estación seleccionada">
+          <header class="telemetry-tray__header">
+            <div class="telemetry-tray__identity">
+              <div class="telemetry-tray__title-row">
+                <h2 id="selected-station-name" class="telemetry-tray__title">Estación seleccionada</h2>
+                <code id="selected-station-slug" class="topic-slug" hidden></code>
+              </div>
+              <p id="selected-station-link" class="telemetry-tray__link num">
+                Selecciona una estación en la lista o el mapa para inspeccionar su enlace LoRa y series.
+              </p>
+            </div>
+
+            <div class="telemetry-tray__controls">
+              <label class="sr-only" for="station-select">Estación seleccionada</label>
+              <select id="station-select" class="input input--sm" disabled>
+                <option value="">Sin estaciones</option>
+              </select>
+
+              <div class="segmented" role="group" aria-label="Modo de gráfica">
+                <button type="button" id="btn-mode-single" class="seg-btn" data-chart-mode="single" aria-pressed="true">
+                  1 curva
+                </button>
+                <button type="button" id="btn-mode-quad" class="seg-btn" data-chart-mode="quad" aria-pressed="false">
+                  4 curvas
+                </button>
+              </div>
+
+              <span id="chart-samples-badge" class="panel__meta num">0 / 40 muestras</span>
+            </div>
+          </header>
+
+          <div id="charts-empty" class="empty-state">
+            <p class="empty-state__title">Sin estación seleccionada</p>
+            <p class="empty-state__desc">
+              Las series de pH, TDS, turbidez y temperatura aparecerán cuando lleguen tramas
+              <code class="topic-slug">telemetria</code> desde las estaciones.
+            </p>
+          </div>
+
+          <div id="charts-tray-content" class="telemetry-tray__body" hidden>
+            <div id="metric-kpi-strip" class="kpis" role="tablist" aria-label="Canales de telemetría">
+              <button
+                type="button"
+                id="kpi-tab-ph"
+                class="kpi"
+                role="tab"
+                data-metric="ph"
+                aria-selected="true"
+                aria-controls="focus-chart-panel"
+              >
+                <span class="kpi-label">pH</span>
+                <span class="kpi-value num">
+                  <span id="kpi-val-ph"></span>
+                  <small id="kpi-unit-ph">u.pH</small>
+                </span>
+                <span id="kpi-hint-ph" class="kpi-hint">Rango 6.5–8.5</span>
+              </button>
+
+              <button
+                type="button"
+                id="kpi-tab-tds"
+                class="kpi"
+                role="tab"
+                data-metric="tds"
+                aria-selected="false"
+                aria-controls="focus-chart-panel"
+                tabindex="-1"
+              >
+                <span class="kpi-label">TDS</span>
+                <span class="kpi-value num">
+                  <span id="kpi-val-tds"></span>
+                  <small id="kpi-unit-tds">mg/L</small>
+                </span>
+                <span id="kpi-hint-tds" class="kpi-hint">Base +100 mg/L</span>
+              </button>
+
+              <button
+                type="button"
+                id="kpi-tab-it"
+                class="kpi"
+                role="tab"
+                data-metric="it"
+                aria-selected="false"
+                aria-controls="focus-chart-panel"
+                tabindex="-1"
+              >
+                <span class="kpi-label">Turbidez (IT)</span>
+                <span class="kpi-value num">
+                  <span id="kpi-val-it"></span>
+                  <small id="kpi-unit-it">NTU</small>
+                </span>
+                <span id="kpi-hint-it" class="kpi-hint">Máx. 0.200</span>
+              </button>
+
+              <button
+                type="button"
+                id="kpi-tab-temp"
+                class="kpi"
+                role="tab"
+                data-metric="temp"
+                aria-selected="false"
+                aria-controls="focus-chart-panel"
+                tabindex="-1"
+              >
+                <span class="kpi-label">Temperatura</span>
+                <span class="kpi-value num">
+                  <span id="kpi-val-temp"></span>
+                  <small id="kpi-unit-temp">°C</small>
+                </span>
+                <span id="kpi-hint-temp" class="kpi-hint">Sonda térmica</span>
+              </button>
+            </div>
+
+            <div id="charts-single-layout" class="focus-activity-row">
+              <div id="focus-chart-panel" class="chart-card chart-card--focus" role="tabpanel" aria-labelledby="kpi-tab-ph">
+                <div class="chart-head">
+                  <div class="chart-head__title">
+                    <h3 id="focus-chart-title">pH</h3>
+                    <span id="focus-chart-hint" class="panel__meta">Rango normal 6.5–8.5 u.pH</span>
+                  </div>
+                  <span id="focus-chart-latest" class="chart-latest num"></span>
+                </div>
+                <div class="chart-wrap chart-wrap--focus">
+                  <canvas id="chart-focus"></canvas>
+                  <div id="chart-fallback-focus" class="chart-fallback" hidden></div>
+                </div>
+              </div>
+
+              <div class="activity-card">
+                <div class="chart-head">
+                  <h3>Actividad reciente</h3>
+                  <button type="button" id="btn-view-all-events" class="card-link">
+                    Ver bitácora completa
+                  </button>
+                </div>
+                <div id="recent-events-list" class="recent-events">
+                  <div class="empty-state empty-state--compact">
+                    <p class="empty-state__desc">Sin transiciones ni alertas recientes.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div id="charts-grid" class="charts-grid" hidden>
+              <div class="chart-card">
+                <div class="chart-head">
+                  <h3>pH</h3>
+                  <span id="chart-latest-ph" class="chart-latest num"></span>
+                </div>
+                <div class="chart-wrap">
+                  <canvas id="chart-ph"></canvas>
+                  <div id="chart-fallback-ph" class="chart-fallback" hidden></div>
+                </div>
+              </div>
+
+              <div class="chart-card">
+                <div class="chart-head">
+                  <h3>TDS (mg/L)</h3>
+                  <span id="chart-latest-tds" class="chart-latest num"></span>
+                </div>
+                <div class="chart-wrap">
+                  <canvas id="chart-tds"></canvas>
+                  <div id="chart-fallback-tds" class="chart-fallback" hidden></div>
+                </div>
+              </div>
+
+              <div class="chart-card">
+                <div class="chart-head">
+                  <h3>Turbidez (IT)</h3>
+                  <span id="chart-latest-it" class="chart-latest num"></span>
+                </div>
+                <div class="chart-wrap">
+                  <canvas id="chart-it"></canvas>
+                  <div id="chart-fallback-it" class="chart-fallback" hidden></div>
+                </div>
+              </div>
+
+              <div class="chart-card">
+                <div class="chart-head">
+                  <h3>Temperatura (°C)</h3>
+                  <span id="chart-latest-temp" class="chart-latest num"></span>
+                </div>
+                <div class="chart-wrap">
+                  <canvas id="chart-temp"></canvas>
+                  <div id="chart-fallback-temp" class="chart-fallback" hidden></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+      </section>
+
+      <!-- Vista 2: Eventos -->
+      <section id="view-eventos" class="view-section" aria-label="Registro de eventos FSM" hidden>
+        <article id="lwt-panel" class="panel lwt-panel" aria-label="Estado LWT, enlace y sordera">
+          <header class="panel__header panel__header--wrap">
+            <h2>Estado LWT, enlace y sordera</h2>
+            <span id="lwt-panel-badge" class="pill pill--neutral">Esperando LWT</span>
+          </header>
+
+          <div class="lwt-panel__body">
+            <div class="lwt-summary-grid">
+              <div class="lwt-summary-card">
+                <div class="lwt-summary-card__head">
+                  <span class="lwt-summary-card__title">Gateway LoRa (<span id="lwt-gw-id">gw01</span>)</span>
+                  <span id="lwt-gw-state-pill" class="pill pill--neutral">Esperando</span>
+                </div>
+                <p id="lwt-gw-message" class="lwt-summary-card__status">
+                  Esperando publicación LWT del gateway.
+                </p>
+                <div class="lwt-summary-card__foot">
+                  <span id="lwt-gw-origin" class="lwt-summary-card__origin num">Sin mensajes</span>
+                  <code id="lwt-gw-topic" class="lwt-summary-card__topic">qawapmayu/v1/gw/gw01/conexion</code>
+                </div>
+              </div>
+
+              <div class="lwt-summary-card">
+                <div class="lwt-summary-card__head">
+                  <span class="lwt-summary-card__title">Radio RX / Sordera</span>
+                  <span id="lwt-diag-pill" class="pill pill--neutral">Sin diagnóstico</span>
+                </div>
+                <p id="lwt-diag-motivo" class="lwt-summary-card__status">
+                  Esperando diagnóstico de radio LoRa.
+                </p>
+                <div class="lwt-summary-card__foot">
+                  <span id="lwt-diag-retries" class="lwt-summary-card__origin num">Reintentos: 0</span>
+                  <code id="lwt-diag-topic" class="lwt-summary-card__topic">qawapmayu/v1/gw/gw01/diagnostico</code>
+                </div>
+              </div>
+            </div>
+
+            <div class="lwt-presence-wrap">
+              <div class="lwt-presence-wrap__head">
+                <h3>Entidades y transporte</h3>
+                <span id="lwt-presence-count" class="panel__meta num">0 entidades</span>
+              </div>
+              <div id="lwt-presence-list" class="lwt-presence-table"></div>
+            </div>
+
+            <details id="lwt-msg-details" class="lwt-msg-details">
+              <summary class="lwt-msg-details__summary">Personalizar mensaje cuando cae por LWT</summary>
+              <form id="lwt-custom-msg-form" class="lwt-msg-form" autocomplete="off">
+                <label class="sr-only" for="lwt-custom-msg-input">Mensaje mostrado ante LWT</label>
+                <div class="lwt-msg-form__row">
+                  <input
+                    id="lwt-custom-msg-input"
+                    class="input input--sm"
+                    type="text"
+                    maxlength="120"
+                  />
+                  <button class="btn btn--sm btn--primary" type="submit">Guardar</button>
+                </div>
+                <p class="field-hint">
+                  Define el texto mostrado en el tablero cuando el broker entrega <code>fuera_de_linea</code>.
+                </p>
+              </form>
+            </details>
+          </div>
+        </article>
+
+        <div class="view-toolbar">
+          <div class="view-toolbar__search">
+            <label class="sr-only" for="event-filter">Filtrar eventos</label>
+            <input
+              id="event-filter"
+              class="input input--sm"
+              type="search"
+              placeholder="Filtrar por estación, estado o anomalía..."
+            />
+          </div>
+          <div class="view-toolbar__actions">
+            <span id="event-count" class="panel__meta num">0 eventos</span>
+            <button id="btn-clear-events" class="btn btn--sm" type="button">Limpiar</button>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div id="event-log-list" class="event-list">
+            <div class="empty-state empty-state--compact">
+              <p class="empty-state__desc">Aún no se registran eventos de captura ni cambios de estado.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Vista 3: Inspector MQTT -->
+      <section id="view-inspector" class="view-section" aria-label="Inspector de mensajes MQTT" hidden>
+        <div class="inspector-sub-bar">
+          <form id="inspector-sub-form" class="topic-combobox topic-combobox--inspector" autocomplete="off">
+            <label class="inspector-sub-label" for="inspector-sub-input">Suscripción MQTT</label>
+            <div class="topic-combobox__field">
+              <input
+                id="inspector-sub-input"
+                class="input input--sm input--mono topic-combobox__input"
+                type="text"
+                value="qawapmayu/v1/#"
+                autocomplete="off"
+                spellcheck="false"
+                placeholder="Escribe o elige un tópico (+ / #)..."
+                role="combobox"
+                aria-autocomplete="list"
+                aria-expanded="false"
+                aria-controls="inspector-topic-menu"
+              />
+              <button
+                id="btn-inspector-dropdown"
+                class="topic-combobox__toggle"
+                type="button"
+                aria-expanded="false"
+                aria-controls="inspector-topic-menu"
+                aria-label="Mostrar tópicos sugeridos"
+              >
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                  <path
+                    d="M4 6l4 4 4-4"
+                    stroke="currentColor"
+                    stroke-width="1.6"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  />
+                </svg>
+              </button>
+            </div>
+            <div class="topic-combobox__actions">
+              <button id="btn-inspector-subscribe" class="btn btn--sm btn--primary" type="submit">
+                Suscribir
+              </button>
+              <span id="inspector-sub-status" class="pill pill--neutral">Sin conectar</span>
+            </div>
+            <div
+              id="inspector-topic-menu"
+              class="topic-menu"
+              role="listbox"
+              aria-label="Tópicos sugeridos para Inspector MQTT"
+              hidden
+            ></div>
+          </form>
+
+          <p id="inspector-sub-error" class="inspector-sub-error" role="alert" hidden></p>
+        </div>
+
+        <div class="view-toolbar">
+          <div class="view-toolbar__search">
+            <label class="sr-only" for="inspector-filter">Filtrar tópicos o payload</label>
+            <input
+              id="inspector-filter"
+              class="input input--sm"
+              type="search"
+              placeholder="Filtrar por tópico, canal o payload..."
+            />
+          </div>
+          <div class="view-toolbar__actions">
+            <span id="inspector-count" class="panel__meta num">0 msgs</span>
+            <button id="btn-pause-inspector" class="btn btn--sm" type="button" aria-pressed="false">
+              Pausar
+            </button>
+            <button id="btn-clear-inspector" class="btn btn--sm" type="button">Limpiar</button>
+          </div>
+        </div>
+
+        <div
+          tabindex="0"
+          role="region"
+          aria-labelledby="inspector-table-caption"
+          class="table-wrapper"
+        >
+          <table class="mqtt-table">
+            <caption id="inspector-table-caption" class="sr-only">
+              Tráfico MQTT en vivo y mensajes retenidos (máximo 1000 filas)
+            </caption>
+            <thead>
+              <tr>
+                <th scope="col">Hora</th>
+                <th scope="col">Origen</th>
+                <th scope="col">Tópico</th>
+                <th scope="col">Payload</th>
+              </tr>
+            </thead>
+            <tbody id="inspector-tbody">
+              <tr>
+                <td colspan="4" class="mqtt-table__empty">Sin tráfico MQTT recibido todavía.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div id="inspector-pagination" class="pagination-bar" aria-label="Paginación de mensajes MQTT">
+          <div class="pagination-bar__size">
+            <label for="inspector-page-size">Filas por página</label>
+            <select id="inspector-page-size" class="input input--sm">
+              <option value="25" selected>25</option>
+              <option value="50">50</option>
+              <option value="100">100</option>
+            </select>
+          </div>
+          <span id="inspector-page-info" class="pagination-bar__info num">0 mensajes</span>
+          <div class="pagination-bar__controls">
+            <button id="btn-inspector-prev" class="btn btn--sm" type="button" disabled>Anterior</button>
+            <span id="inspector-page-label" class="pagination-bar__page num">Página 1 de 1</span>
+            <button id="btn-inspector-next" class="btn btn--sm" type="button" disabled>Siguiente</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Vista 4: Conexión -->
+      <section id="view-conexion" class="view-section" aria-label="Configuración de conexión y diagnóstico" hidden>
+        <div class="settings-layout">
+          <div class="settings-row">
+            <div class="settings-row__info">
+              <h2>Broker WebSockets</h2>
+              <p class="settings-desc">
+                Dirección del broker MQTT sobre WebSockets para recibir telemetría de estaciones y estado LWT del gateway.
+              </p>
+              <p id="settings-broker-status" class="settings-status">Estado: desconectado</p>
+            </div>
+
+            <div class="settings-row__panel">
+              <form id="connect-form" class="settings-form" autocomplete="off">
+                <div class="field">
+                  <label for="broker-url">URL WebSocket</label>
+                  <input
+                    id="broker-url"
+                    class="input input--form"
+                    type="text"
+                    list="broker-url-presets"
+                    placeholder="ws://localhost:9001"
+                    spellcheck="false"
+                  />
+                  <datalist id="broker-url-presets">
+                    <option value="ws://localhost:9001"></option>
+                    <option value="wss://broker.emqx.io:8084/mqtt"></option>
+                  </datalist>
+                  <div id="broker-presets" class="field__presets" role="group" aria-label="Perfiles de broker">
+                    <span class="field__hint">Perfiles:</span>
+                    <button
+                      id="preset-local-broker"
+                      type="button"
+                      class="btn btn--ghost btn--sm preset-btn"
+                      data-preset-url="ws://localhost:9001"
+                    >
+                      Red local: <code class="topic-slug">ws://localhost:9001</code>
+                    </button>
+                    <button
+                      id="preset-emqx-broker"
+                      type="button"
+                      class="btn btn--ghost btn--sm preset-btn"
+                      data-preset-url="wss://broker.emqx.io:8084/mqtt"
+                    >
+                      Público TLS: <code class="topic-slug">wss://broker.emqx.io:8084/mqtt</code>
+                    </button>
+                  </div>
+                </div>
+
+                <div class="settings-actions">
+                  <button id="btn-connect" class="btn btn--primary btn--form" type="submit">
+                    Conectar
+                  </button>
+                  <button id="btn-disconnect" class="btn btn--form" type="button" disabled>
+                    Desconectar
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+
+          <div class="settings-row">
+            <div class="settings-row__info">
+              <h2>Distrito y diagnóstico</h2>
+              <p class="settings-desc">
+                Controla el filtro wildcard MQTT por distrito, supervisa el último testamento LWT de gw01 y verifica las librerías locales offline.
+              </p>
+            </div>
+
+            <div class="settings-row__panel">
+              <div class="settings-diag">
+                <div class="field">
+                  <label for="zone-filter">Filtro de zona (suscripción wildcard)</label>
+                  <select id="zone-filter" class="input input--form">
+                    <option value="qawapmayu/v1/+/+/+/+">qawapmayu/v1/+/+/+/+</option>
+                    <option value="qawapmayu/v1/barranco/#">qawapmayu/v1/barranco/#</option>
+                    <option value="qawapmayu/v1/chorrillos/#">qawapmayu/v1/chorrillos/#</option>
+                  </select>
+                </div>
+
+                <div class="diag-grid">
+                  <div class="diag-item">
+                    <span class="diag-item__label">Gateway LoRa (LWT)</span>
+                    <div id="gw-badge" class="pill pill--neutral" role="status">
+                      <span class="status-dot" aria-hidden="true"></span>
+                      <span id="gw-badge-text">gw01: esperando LWT</span>
+                    </div>
+                  </div>
+
+                  <div class="diag-item">
+                    <span class="diag-item__label">Suscripciones QoS 1</span>
+                    <div class="diag-codes">
+                      <code id="settings-active-sub" class="topic-slug">qawapmayu/v1/+/+/+/+</code>
+                      <code class="topic-slug">qawapmayu/v1/gw/+/+</code>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="diag-vendor">
+                  <span class="diag-item__label">Dependencias locales offline</span>
+                  <ul id="vendor-health-list" class="vendor-list"></ul>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script
+    defer
+    src="./vendor/mqtt.min.js"
+    onerror="window.__qawapVendorErrors.push('./vendor/mqtt.min.js')"
+  ></script>
+  <script
+    defer
+    src="./vendor/leaflet.js"
+    onerror="window.__qawapVendorErrors.push('./vendor/leaflet.js')"
+  ></script>
+  <script
+    defer
+    src="./vendor/chart.umd.min.js"
+    onerror="window.__qawapVendorErrors.push('./vendor/chart.umd.min.js')"
+  ></script>
+  <script defer src="./app.js"></script>
+</body>
+</html>
