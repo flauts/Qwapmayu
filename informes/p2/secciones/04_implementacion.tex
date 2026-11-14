@@ -42,13 +42,11 @@ En las primeras pruebas, el ESP32 se desconectaba del puerto USB del computador 
 % Radio, relé y E/S (derecha)
 \node[mod] (rak)  at (6.9, 3.0)  {RAK3272S\\(3.3 V desde el ESP32)};
 \node[mod] (rele) at (6.9, 0.6)  {Relé, canal 2 de 2\\(bobina a 5 V del HW-131, 220 $\mu$F)};
-\node[mod] (btn)  at (6.9,-1.8)  {Pulsador de rearme\\(desconectado al 12 nov)};
 \node[mod] (led)  at (6.9,-3.4)  {LED testigo};
 
 \draw[arr] ($(esp.east |- rak)+(0,0.25)$) -- node[pin, above]{GPIO17 (TX2) $\to$ RX} ($(rak.west)+(0,0.25)$);
 \draw[arr] ($(rak.west)+(0,-0.25)$) -- node[pin, below]{GPIO16 (RX2) $\gets$ TX} ($(esp.east |- rak)+(0,-0.25)$);
 \draw[arr] (esp.east |- rele) -- node[pin, above]{GPIO23} (rele);
-\draw[arr, dashed] (btn) -- node[pin, above]{GPIO25} (esp.east |- btn);
 \draw[arr] (esp.east |- led) -- node[pin, above]{GPIO2} (led);
 
 % Potencia
@@ -69,7 +67,7 @@ En las primeras pruebas, el ESP32 se desconectaba del puerto USB del computador 
 \subsection{Firmware del nodo QM01}
 \label{sec:fw_nodo}
 
-El firmware del nodo es un solo lazo que nunca se bloquea (Fig.~\ref{fig:flujo_nodo}). En cada vuelta alimenta al \textit{watchdog}, atiende el puerto serie y el pulsador, supervisa el tiempo de la bomba y evalúa la solicitud de rearme. Cada 5~s, medidos sin deriva acumulada, ejecuta un ciclo de adquisición. Mientras la bomba funciona no se leen sensores ni se usa el radio: el lazo solo vigila el corte de la bomba.
+El firmware del nodo es un solo lazo que nunca se bloquea (Fig.~\ref{fig:flujo_nodo}). En cada vuelta alimenta al \textit{watchdog}, atiende los comandos del puerto serie, supervisa el tiempo de la bomba y evalúa la solicitud de rearme. Cada 5~s, medidos sin deriva acumulada, ejecuta un ciclo de adquisición. Mientras la bomba funciona no se leen sensores ni se usa el radio: el lazo solo vigila el corte de la bomba.
 
 \begin{figure}[htbp]
 \centering
@@ -82,7 +80,7 @@ El firmware del nodo es un solo lazo que nunca se bloquea (Fig.~\ref{fig:flujo_n
 ]
 \node[term] (ini) {Encendido};
 \node[pb, below=of ini] (setup) {Relé OFF; abrir NVS; recuperar estado (Fig.~\ref{fig:fsm}); configurar RAK; armar TWDT 5000 ms};
-\node[pb, below=of setup] (base) {Alimentar \textit{watchdog}; leer teclado y pulsador; supervisar bomba; atender rearme};
+\node[pb, below=of setup] (base) {Alimentar \textit{watchdog}; leer comandos serie; supervisar bomba; atender rearme};
 \node[dc, below=of base] (ta) {¿Pasaron 5 s?};
 \node[dc, below=9mm of ta] (mue) {¿Estado = MUESTREANDO?};
 \node[pb, below=9mm of mue] (leer) {Leer sensores: mediana de 31 muestras; DS18B20 asíncrono; validez por canal};

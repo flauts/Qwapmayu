@@ -118,7 +118,7 @@ Temperatura & DS18B20 en GPIO4 & DS18B20~\cite{ds18} en GPIO32, pull-up 4.7 k$\O
 Actuador & Bomba peristáltica 12 V & Minibomba sumergible de 3--5 V (prestada) conmutada por un canal de un módulo de relé de 2 canales, activo en bajo (GPIO23), con la bobina alimentada desde el HW-131 y un capacitor de 220~$\mu$F & El agua atraviesa la bomba; el volumen depende del tiempo y de la geometría. En el ensayo integral la bomba va fuera del agua (Sección~\ref{sec:armado}). \\
 Manguera & 3 mm DI, 1.0 m & 6.5 mm DI, 70 cm; en el ensayo integral, salida en la pared del recipiente con acople rápido & Volumen interno $\approx 23$ mL (Sección~\ref{sec:res_dosif}); la bomba se alimenta por gravedad. \\
 Energía & Batería 12 V 7 Ah y convertidor buck & Bomba desde un módulo HW-131 con fuente de 8 V 2 A; nodo por USB del computador & Validación solo en banco; la autonomía no se evaluó. \\
-Rearme & Pulsador en GPIO25 & Pulsador desconectado; rearme con la tecla \texttt{r} por puerto serie & Exige 3 ciclos normales; no comprueba el frasco. \\
+Rearme & Pulsador en GPIO25 & Comando \texttt{r} por el puerto serie, sin pulsador & Exige 3 ciclos normales; no comprueba el frasco; requiere una computadora conectada. \\
 Histéresis & ``Se aplicará'' & Reemplazada por un antirrebote por persistencia & 3 ciclos para disparar y 3 normales para rearmar; la banda por amplitud queda como mejora. \\
 Watchdog & Mencionado en el pseudocódigo & TWDT de 5000 ms en el nodo; no en el gateway & Un cuelgue reinicia el nodo; durante el bombeo arranca en FALLO. \\
 Reinicio durante bombeo & El perfil se contradice (BLOQUEADO o FALLO) & Arranca en FALLO & Volumen desconocido; requiere revisión manual. \\

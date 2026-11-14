@@ -92,6 +92,6 @@ El detalle de cada prueba (logs, horas, cifras, commits) está en `docs/contexto
 - ~~Ensayo integral~~ hecho el 13 nov (ver bitácora): 3 sensores (pH devuelto), turbidez con maicena, bomba con agua (100 mL, medido por el equipo), LoRa, MQTT y tablero propio, rearme.
 - Confirmar que el gateway quedó con firmware sin `-DPRUEBA_SORDERA`.
 - Commit de los 4 archivos `pruebas/sensores_20261112_*_ph_min_180.*`. Push tras auditar secretos en el historial.
-- Decidir el pulsador de GPIO25 (reconectar y probar, o declarar rearme por teclado).
+- ~~Pulsador GPIO25~~: decidido el 13 nov, se elimina del hardware; rearme por comando serie `r` (el firmware sigue leyendo GPIO25 sin efecto).
 - Nombre y ubicación del video de la prueba B del watchdog (no está en la laptop).
 - Informe final y presentación con componentes reales, presupuesto real (por levantar con el usuario) y fecha de portada corregida.
