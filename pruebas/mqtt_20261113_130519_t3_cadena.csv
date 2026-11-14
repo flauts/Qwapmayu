@@ -1,0 +1,20 @@
+ts_local_iso,topico,zona,sitio,nodo,canal,retain,payload
+2026-11-13T13:05:19.556-05:00,qawapmayu/v1/gw/gw01/conexion,gw,gw01,gw01,conexion,1,en_linea
+2026-11-13T13:05:19.556-05:00,qawapmayu/v1/barranco/utec/qm01/meta,barranco,utec,qm01,meta,1,"{""nombre"":""Estación UTEC"",""zona"":""barranco"",""lat"":-12.1352,""lon"":-77.0221,""simulado"":false}"
+2026-11-13T13:05:19.556-05:00,qawapmayu/v1/barranco/bajada-banos/qm02/conexion,barranco,bajada-banos,qm02,conexion,1,en_linea
+2026-11-13T13:05:19.556-05:00,qawapmayu/v1/barranco/bajada-banos/qm02/meta,barranco,bajada-banos,qm02,meta,1,"{""nombre"": ""Bajada de Baños"", ""zona"": ""barranco"", ""lat"": -12.1497, ""lon"": -77.0225, ""simulado"": true}"
+2026-11-13T13:05:19.556-05:00,qawapmayu/v1/barranco/bajada-banos/qm02/telemetria,barranco,bajada-banos,qm02,telemetria,1,"{""ts"": 1794593119435, ""ph"": 7.28, ""tds"": 202, ""it"": 0.053, ""temp"": 22.7, ""validez"": 15, ""anomalias"": 0, ""estado"": ""ARMADO"", ""evento"": 0, ""seq"": 6, ""boot"": 1, ""rssi"": -63, ""snr"": 8, ""pdr"": 100.0}"
+2026-11-13T13:05:19.556-05:00,qawapmayu/v1/barranco/bajada-banos/qm02/enlace,barranco,bajada-banos,qm02,enlace,1,"{""rssi"": -63, ""snr"": 8, ""pdr"": 100.0, ""seq"": 6, ""boot"": 1}"
+2026-11-13T13:05:19.557-05:00,qawapmayu/v1/barranco/bajada-banos/qm02/estado,barranco,bajada-banos,qm02,estado,1,"{""estado"": ""ARMADO"", ""anomalias"": 0, ""ts"": 1794593094435}"
+2026-11-13T13:05:19.557-05:00,qawapmayu/v1/chorrillos/pantanos-villa/qm03/conexion,chorrillos,pantanos-villa,qm03,conexion,1,en_linea
+2026-11-13T13:05:19.557-05:00,qawapmayu/v1/chorrillos/pantanos-villa/qm03/meta,chorrillos,pantanos-villa,qm03,meta,1,"{""nombre"": ""Pantanos de Villa"", ""zona"": ""chorrillos"", ""lat"": -12.2097, ""lon"": -76.9894, ""simulado"": true}"
+2026-11-13T13:05:19.557-05:00,qawapmayu/v1/chorrillos/pantanos-villa/qm03/telemetria,chorrillos,pantanos-villa,qm03,telemetria,1,"{""ts"": 1794593119435, ""ph"": 7.63, ""tds"": 422, ""it"": 0.082, ""temp"": 23.9, ""validez"": 15, ""anomalias"": 0, ""estado"": ""ARMADO"", ""evento"": 0, ""seq"": 6, ""boot"": 1, ""rssi"": -72, ""snr"": 7, ""pdr"": 100.0}"
+2026-11-13T13:05:19.557-05:00,qawapmayu/v1/chorrillos/pantanos-villa/qm03/enlace,chorrillos,pantanos-villa,qm03,enlace,1,"{""rssi"": -72, ""snr"": 7, ""pdr"": 100.0, ""seq"": 6, ""boot"": 1}"
+2026-11-13T13:05:19.557-05:00,qawapmayu/v1/chorrillos/pantanos-villa/qm03/estado,chorrillos,pantanos-villa,qm03,estado,1,"{""estado"": ""ARMADO"", ""anomalias"": 0, ""ts"": 1794593094435}"
+2026-11-13T13:05:24.436-05:00,qawapmayu/v1/barranco/bajada-banos/qm02/telemetria,barranco,bajada-banos,qm02,telemetria,0,"{""ts"": 1794593124435, ""ph"": 7.36, ""tds"": 208, ""it"": 0.034, ""temp"": 22.6, ""validez"": 15, ""anomalias"": 0, ""estado"": ""ARMADO"", ""evento"": 0, ""seq"": 7, ""boot"": 1, ""rssi"": -60, ""snr"": 9, ""pdr"": 100.0}"
+2026-11-13T13:05:24.436-05:00,qawapmayu/v1/barranco/bajada-banos/qm02/enlace,barranco,bajada-banos,qm02,enlace,0,"{""rssi"": -60, ""snr"": 9, ""pdr"": 100.0, ""seq"": 7, ""boot"": 1}"
+2026-11-13T13:05:24.437-05:00,qawapmayu/v1/chorrillos/pantanos-villa/qm03/telemetria,chorrillos,pantanos-villa,qm03,telemetria,0,"{""ts"": 1794593124435, ""ph"": 7.61, ""tds"": 414, ""it"": 0.074, ""temp"": 24.08, ""validez"": 15, ""anomalias"": 0, ""estado"": ""ARMADO"", ""evento"": 0, ""seq"": 7, ""boot"": 1, ""rssi"": -70, ""snr"": 6, ""pdr"": 100.0}"
+2026-11-13T13:05:24.437-05:00,qawapmayu/v1/chorrillos/pantanos-villa/qm03/enlace,chorrillos,pantanos-villa,qm03,enlace,0,"{""rssi"": -70, ""snr"": 6, ""pdr"": 100.0, ""seq"": 7, ""boot"": 1}"
+2026-11-13T13:05:28.750-05:00,qawapmayu/v1/gw/gw01/conexion,gw,gw01,gw01,conexion,0,fuera_de_linea
+2026-11-13T13:05:28.768-05:00,qawapmayu/v1/gw/gw01/conexion,gw,gw01,gw01,conexion,0,en_linea
+2026-11-13T13:05:28.820-05:00,qawapmayu/v1/barranco/utec/qm01/meta,barranco,utec,qm01,meta,0,"{""nombre"":""Estación UTEC"",""zona"":""barranco"",""lat"":-12.1352,""lon"":-77.0221,""simulado"":false}"
