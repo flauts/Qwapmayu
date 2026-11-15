@@ -11,18 +11,28 @@
 // Grupo 5 -> 923.5 MHz (formato del lab: 923X00000, X = numero de grupo).
 // Misma configuracion usada en el LAB 4. Si el BW "125" da AT_PARAM_ERROR, probar "0".
 #ifndef LORA_SF
-#define LORA_SF 7
+#define LORA_SF 12
+#endif
+
+#ifndef LORA_BW
+#define LORA_BW 0
+#endif
+
+#ifndef LORA_TX_POWER
+#define LORA_TX_POWER 22
 #endif
 
 #define _RAK_STR(x) #x
 #define RAK_STR(x)  _RAK_STR(x)
-#define P2P_CONFIG  "923500000:" RAK_STR(LORA_SF) ":125:0:10:14"
+#define P2P_CONFIG  "923500000:" RAK_STR(LORA_SF) ":" RAK_STR(LORA_BW) ":0:10:" RAK_STR(LORA_TX_POWER)
 
 // Timeout de fin de transmision (TXP2P) derivado del SF configurado con margen.
 // En SF7 el ToA de 27 bytes es ~60 ms; cada incremento de SF duplica el tiempo en aire.
+// En SF12 el ToA es ~1650 ms; se acota a 3500 ms para no exceder el WDT de 5000 ms del nodo.
 static inline uint32_t rak_timeout_tx_ms(uint8_t sf) {
   uint8_t shift = (sf >= 7 && sf <= 12) ? (sf - 7) : 0;
-  return (160UL << shift) + 150UL;
+  uint32_t t = (160UL << shift) + 150UL;
+  return (t > 3500UL) ? 3500UL : t;
 }
 
 static bool rak_eco = true;  // imprime lo que responde el RAK en Serial
