@@ -90,11 +90,11 @@
       key: 'it',
       label: 'Turbidez (IT)',
       shortLabel: 'IT',
-      unit: 'NTU',
+      unit: '',
       decimals: 3,
       valBit: VAL_TURB,
       anoBit: ANO_TURB,
-      hint: 'Máximo esperado 0.200 NTU',
+      hint: 'Índice relativo (IT) · umbral 0.200',
       kpiHint: 'Máx. 0.200',
       suggestedMin: 0,
       suggestedMax: 0.35,
@@ -284,7 +284,7 @@
     nodes: new Map(),
     selectedKey: null,
     activeMetric: 'ph',
-    chartMode: 'single',
+    chartMode: 'quad',
     events: [],
     seenEventKeys: new Set(),
     inspectorClient: null,
@@ -457,6 +457,7 @@
     }
 
     closeMobileDrawer(false);
+    renderStatusBanner();
 
     if (viewName === 'monitoreo') {
       window.requestAnimationFrame(() => {
@@ -753,15 +754,15 @@
     }
     switch (node.estado) {
       case 'ARMADO':
-        return { text: 'ARMADO', pillClass: 'pill--ok', pinClass: 'armado' };
+        return { text: 'Armado', pillClass: 'pill--ok', pinClass: 'armado' };
       case 'MUESTREANDO':
-        return { text: 'MUESTREANDO', pillClass: 'pill--accent', pinClass: 'muestreando' };
+        return { text: 'Muestreando', pillClass: 'pill--accent', pinClass: 'muestreando' };
       case 'CAPTURA_ESTIMADA':
-        return { text: 'CAPTURA_ESTIMADA', pillClass: 'pill--warn', pinClass: 'captura' };
+        return { text: 'Captura estimada', pillClass: 'pill--warn', pinClass: 'captura' };
       case 'BLOQUEADO':
-        return { text: 'BLOQUEADO', pillClass: 'pill--bad', pinClass: 'bloqueado' };
+        return { text: 'Bloqueado', pillClass: 'pill--bad', pinClass: 'bloqueado' };
       case 'FALLO':
-        return { text: 'FALLO', pillClass: 'pill--bad', pinClass: 'fallo' };
+        return { text: 'Fallo', pillClass: 'pill--bad', pinClass: 'fallo' };
       default:
         return {
           text: node.hasTelemetry ? 'Activo' : 'Esperando datos',
@@ -1861,6 +1862,269 @@
       sidebarGwPill.className = 'pill ' + pillClass;
       sidebarGwPill.textContent = compactLabel;
     }
+
+    renderStatusBanner();
+  }
+
+
+  /* ---------- Status Banner (LWT, sordera, broker, capturas) ---------- */
+
+  const BANNER_RECOVERY_MS = 8000;
+  const BANNER_AUTOHIDE_MS = 10000;
+  const bannerState = {
+    prevLinkBad: false,
+    recoveryUntil: 0,
+    recoveryDetail: '',
+    recoveryTimerId: null,
+    action: null,
+    signature: '',
+    shownSig: '',
+    dismissedSig: '',
+    dismissTimerId: null,
+  };
+
+  function formatZoneName(zona) {
+    const z = String(zona || '').trim().replace(/[-_]+/g, ' ');
+    return z ? z.charAt(0).toUpperCase() + z.slice(1) : '';
+  }
+
+  // Nodos que llegan por LoRa a través del gateway (meta con simulado:false), agrupados por zona.
+  function describeNodesBehindGateway() {
+    const byZone = new Map();
+    for (const st of getAvailableStations()) {
+      if (st.simulado) continue;
+      const zone = formatZoneName(st.displayZona || st.zona) || 'zona sin definir';
+      if (!byZone.has(zone)) byZone.set(zone, []);
+      byZone.get(zone).push(st.nombre || st.nodo);
+    }
+    if (byZone.size === 0) return '';
+    return Array.from(byZone.entries())
+      .map(([zone, names]) => names.join(', ') + ' (' + zone + ')')
+      .join(' · ');
+  }
+
+  function collectStatusConditions(now) {
+    const out = [];
+    const gwId = state.gwId || 'gw01';
+
+    if (!state.connected) {
+      if (state.connecting) {
+        out.push({
+          level: 'info',
+          title: 'Conectando al broker MQTT…',
+          detail: parseHostLabel(state.brokerUrl),
+        });
+      } else if (!state.lastErrorText) {
+        out.push({
+          level: 'error',
+          title: 'Sin conexión con el broker MQTT',
+          detail: 'No llegan datos nuevos; lo que ves son los últimos valores conocidos.',
+          action: 'connect',
+        });
+      }
+      return out;
+    }
+
+    const isSordera =
+      state.gwDiag.sordera ||
+      state.gwDiag.estado === 'sordera_rearmando' ||
+      state.gwDiag.estado === 'sordera_reinicio';
+
+    if (state.gwOnline === false) {
+      out.push({
+        level: 'error',
+        link: true,
+        title: 'Gateway ' + gwId + ' fuera de línea (LWT)',
+        detail: (() => {
+          const behind = describeNodesBehindGateway();
+          return (
+            state.lwtCustomMessage +
+            (behind ? ' · Sin datos de: ' + behind : '') +
+            (state.gwLwtTsMs ? ' · ' + formatClockTime(state.gwLwtTsMs) : '')
+          );
+        })(),
+      });
+    }
+
+    if (isSordera) {
+      const reboot = state.gwDiag.estado === 'sordera_reinicio';
+      out.push({
+        level: reboot ? 'error' : 'warn',
+        link: true,
+        title: reboot
+          ? gwId + ' se reinicia por sordera de radio'
+          : gwId + ' no oye tramas LoRa · rearmando radio (' + (state.gwDiag.reintentosRx || 0) + '/3)',
+        detail: (() => {
+          const behind = describeNodesBehindGateway();
+          return (
+            humanizeSorderaMotivo(state.gwDiag.motivo, state.gwDiag) +
+            (behind ? ' · Sin datos nuevos de: ' + behind : '')
+          );
+        })(),
+      });
+    }
+
+    for (const ent of state.lwtEntities.values()) {
+      if (ent.kind !== 'node' || ent.online) continue;
+      out.push({
+        level: 'error',
+        link: true,
+        title:
+          ent.label +
+          (formatZoneName(String(ent.key).split('/')[0])
+            ? ' (' + formatZoneName(String(ent.key).split('/')[0]) + ')'
+            : '') +
+          ' fuera de línea (LWT)',
+        detail:
+          state.lwtCustomMessage +
+          ' · ' +
+          (ent.simulado ? 'Simulada, directo por MQTT' : 'Hardware, vía LoRa ' + gwId) +
+          (ent.tsMs ? ' · ' + formatClockTime(ent.tsMs) : ''),
+      });
+    }
+
+    if (state.gwDiag.estado === 'nodo_silencio' && !isSordera) {
+      out.push({
+        level: 'warn',
+        link: true,
+        title: 'Sin tramas del nodo' + (state.gwDiag.nodo ? ' ' + state.gwDiag.nodo : ''),
+        detail: humanizeSorderaMotivo(state.gwDiag.motivo, state.gwDiag),
+      });
+    }
+
+    for (const node of getSortedNodes()) {
+      if (!isNodeOnline(node, now)) continue;
+      const name = node.nombre || node.nodo;
+      if (node.estado === 'FALLO' || node.estado === 'BLOQUEADO') {
+        out.push({
+          level: node.estado === 'FALLO' ? 'error' : 'warn',
+          title: name + ': ' + (node.estado === 'FALLO' ? 'fallo del nodo' : 'nodo bloqueado'),
+          detail:
+            node.estado === 'FALLO'
+              ? 'La bomba no actuará hasta rearmar el nodo.'
+              : 'Captura bloqueada hasta rearmar el nodo.',
+        });
+      } else if (node.estado === 'MUESTREANDO') {
+        out.push({
+          level: 'info',
+          title: name + ': captura de muestra en curso',
+          detail: 'La bomba está llenando el frasco.',
+        });
+      } else if (node.estado === 'CAPTURA_ESTIMADA') {
+        out.push({
+          level: 'info',
+          title: name + ': muestra capturada',
+          detail: 'Volumen estimado por tiempo de bombeo. Rearmar el nodo para volver a vigilar.',
+        });
+      } else if (node.anomalias > 0) {
+        out.push({
+          level: 'warn',
+          title: name + ': anomalía detectada',
+          detail: describeAnomalias(node.anomalias).join(' · '),
+        });
+      }
+    }
+
+    const rank = { error: 0, warn: 1, info: 2 };
+    out.sort((a, b) => rank[a.level] - rank[b.level]);
+    return out;
+  }
+
+  function renderStatusBanner() {
+    const banner = getEl('status-banner');
+    if (!banner) return;
+    const iconEl = getEl('status-banner-icon');
+    const titleEl = getEl('status-banner-title');
+    const detailEl = getEl('status-banner-detail');
+    const moreEl = getEl('status-banner-more');
+    const actionBtn = getEl('btn-status-banner-action');
+    const now = Date.now();
+
+    const conditions = collectStatusConditions(now);
+    const linkBad = state.connected && conditions.some((c) => c.link);
+
+    if (bannerState.prevLinkBad && !linkBad && state.connected) {
+      bannerState.recoveryUntil = now + BANNER_RECOVERY_MS;
+      bannerState.recoveryDetail = 'Gateway y estaciones vuelven a estar en línea · ' + formatClockTime(now);
+      if (bannerState.recoveryTimerId) window.clearTimeout(bannerState.recoveryTimerId);
+      bannerState.recoveryTimerId = window.setTimeout(renderStatusBanner, BANNER_RECOVERY_MS + 50);
+    }
+    bannerState.prevLinkBad = linkBad;
+
+    let view = null;
+    if (conditions.length > 0) {
+      const top = conditions[0];
+      view = {
+        level: top.level,
+        title: top.title,
+        detail: top.detail,
+        more: conditions.length - 1,
+        action: top.action || (state.activeView === 'eventos' ? null : 'detail'),
+      };
+    } else if (now < bannerState.recoveryUntil) {
+      view = {
+        level: 'ok',
+        title: 'Enlace recuperado',
+        detail: bannerState.recoveryDetail,
+        more: 0,
+        action: null,
+      };
+    }
+
+    if (!view) {
+      banner.hidden = true;
+      bannerState.signature = '';
+      bannerState.shownSig = '';
+      bannerState.dismissedSig = '';
+      if (bannerState.dismissTimerId) window.clearTimeout(bannerState.dismissTimerId);
+      return;
+    }
+
+    // Se oculta solo tras 10 s; vuelve a aparecer únicamente si cambia el aviso.
+    // (La condición sigue visible en la barra lateral y en Eventos.)
+    const contentSig = [view.level, view.title, view.detail, view.more].join('|');
+    if (contentSig === bannerState.dismissedSig) {
+      banner.hidden = true;
+      bannerState.signature = '';
+      return;
+    }
+    if (contentSig !== bannerState.shownSig) {
+      bannerState.shownSig = contentSig;
+      if (bannerState.dismissTimerId) window.clearTimeout(bannerState.dismissTimerId);
+      bannerState.dismissTimerId = window.setTimeout(() => {
+        bannerState.dismissedSig = contentSig;
+        renderStatusBanner();
+      }, BANNER_AUTOHIDE_MS);
+    }
+
+    const signature = [view.level, view.title, view.detail, view.more, view.action].join('|');
+    if (signature === bannerState.signature && !banner.hidden) return;
+    bannerState.signature = signature;
+
+    banner.className = 'alert-banner status-banner status-banner--' + view.level;
+    banner.setAttribute('role', view.level === 'error' ? 'alert' : 'status');
+    if (iconEl) iconEl.textContent = { error: '!', warn: '!', info: 'i', ok: '✓' }[view.level];
+    if (titleEl) titleEl.textContent = view.title;
+    if (detailEl) detailEl.textContent = view.detail || '';
+    if (moreEl) {
+      moreEl.hidden = view.more <= 0;
+      moreEl.textContent = '+' + view.more + (view.more === 1 ? ' aviso más' : ' avisos más');
+    }
+    bannerState.action = view.action;
+    if (actionBtn) {
+      actionBtn.hidden = !view.action;
+      actionBtn.textContent = view.action === 'connect' ? 'Conectar' : 'Ver detalle';
+    }
+    banner.hidden = false;
+  }
+
+  function onStatusBannerAction() {
+    if (bannerState.action === 'connect') {
+      const btn = getEl('btn-topbar-connect');
+      if (btn) btn.click();
+    } else if (bannerState.action === 'detail') {
+      switchView('eventos');
+    }
   }
 
   /* ---------- Render Pipeline ---------- */
@@ -1916,7 +2180,7 @@
         (isAnom ? ' metric-chip--anom' : '')
     );
     chip.appendChild(createEl('span', 'metric-chip__label', label));
-    const formatted = missing ? MISSING_MARK : formatNumber(val, decimals) + ' ' + unit;
+    const formatted = missing ? MISSING_MARK : formatNumber(val, decimals) + (unit ? ' ' + unit : '');
     chip.appendChild(createEl('span', 'metric-chip__val', formatted));
     return chip;
   }
@@ -2021,7 +2285,7 @@
           'IT',
           node.it,
           3,
-          'NTU',
+          '',
           Boolean(node.validez & VAL_TURB),
           Boolean(node.anomalias & ANO_TURB)
         )
@@ -2209,7 +2473,7 @@
     const tdsText =
       node.validez & VAL_TDS && node.tds !== null ? formatNumber(node.tds, 0) + ' mg/L' : MISSING_MARK;
     const itText =
-      node.validez & VAL_TURB && node.it !== null ? formatNumber(node.it, 3) + ' NTU' : MISSING_MARK;
+      node.validez & VAL_TURB && node.it !== null ? formatNumber(node.it, 3) : MISSING_MARK;
     const tempText =
       node.validez & VAL_TEMP && node.temp !== null ? formatNumber(node.temp, 2) + ' °C' : MISSING_MARK;
 
@@ -2575,6 +2839,7 @@
   }
 
   function updateMetricTabAttributes() {
+    return; // las 4 curvas se muestran siempre; los KPI ya no son pestañas
     for (const metric of METRIC_ORDER) {
       const tab = getEl('kpi-tab-' + metric);
       if (!tab) continue;
@@ -2643,7 +2908,7 @@
       }
       if (linkEl) {
         linkEl.textContent =
-          'Selecciona una estación en la lista o el mapa para inspeccionar su enlace LoRa y series.';
+          'Selecciona una estación en la lista o el mapa para ver su enlace LoRa y sus series.';
       }
       if (samplesEl) samplesEl.textContent = '0 / ' + MAX_SAMPLES + ' muestras';
       if (emptyEl) emptyEl.hidden = false;
@@ -2659,22 +2924,35 @@
     }
 
     if (linkEl) {
-      const rssiStr = node.rssi !== null ? node.rssi + ' dBm' : MISSING_MARK;
-      const snrStr = node.snr !== null ? node.snr + ' dB' : MISSING_MARK;
-      const pdrStr = node.pdr !== null ? formatNumber(node.pdr, 1) + ' %' : MISSING_MARK;
-      const seqStr = node.seq !== null ? '#' + node.seq : MISSING_MARK;
-      const bootStr = node.boot !== null ? 'boot ' + node.boot : '';
-      linkEl.textContent =
-        badge.text +
-        ' · RSSI ' +
-        rssiStr +
-        ' · SNR ' +
-        snrStr +
-        ' · PDR ' +
-        pdrStr +
-        ' · Trama ' +
-        seqStr +
-        (bootStr ? ' (' + bootStr + ')' : '');
+      linkEl.textContent = '';
+      linkEl.appendChild(createEl('span', 'pill ' + badge.pillClass, badge.text));
+      const addChip = (label, value, hint) => {
+        const chip = createEl('span', 'link-chip');
+        chip.title = hint;
+        chip.appendChild(createEl('span', 'link-chip__label', label));
+        chip.appendChild(createEl('span', 'link-chip__val', value));
+        linkEl.appendChild(chip);
+      };
+      addChip(
+        'RSSI',
+        node.rssi !== null ? node.rssi + ' dBm' : MISSING_MARK,
+        'Potencia con la que llega la señal LoRa al gateway (más cercano a 0 es mejor)'
+      );
+      addChip(
+        'SNR',
+        node.snr !== null ? node.snr + ' dB' : MISSING_MARK,
+        'Relación señal/ruido del enlace LoRa'
+      );
+      addChip(
+        'PDR',
+        node.pdr !== null ? formatNumber(node.pdr, 1) + ' %' : MISSING_MARK,
+        'Porcentaje de tramas que llegaron (Packet Delivery Ratio)'
+      );
+      addChip(
+        'Trama',
+        node.seq !== null ? '#' + node.seq : MISSING_MARK,
+        'Número de secuencia de la última trama recibida'
+      );
     }
 
     if (samplesEl) {
@@ -2915,7 +3193,7 @@
 
     if (latestEl) {
       latestEl.textContent = isValid
-        ? formatNumber(node[meta.key], meta.decimals) + ' ' + meta.unit
+        ? formatNumber(node[meta.key], meta.decimals) + (meta.unit ? ' ' + meta.unit : '')
         : MISSING_MARK;
       latestEl.classList.toggle('chart-latest--anom', isAnom);
     }
@@ -3001,7 +3279,7 @@
                 if (typeof v !== 'number' || !Number.isFinite(v)) {
                   return meta.shortLabel + ': ' + MISSING_MARK;
                 }
-                return meta.shortLabel + ': ' + v.toFixed(meta.decimals) + ' ' + meta.unit;
+                return meta.shortLabel + ': ' + v.toFixed(meta.decimals) + (meta.unit ? ' ' + meta.unit : '');
               },
             },
           },
@@ -3792,6 +4070,9 @@
       stationSelect.addEventListener('change', (evt) => selectStation(evt.target.value));
     }
 
+    const bannerBtn = getEl('btn-status-banner-action');
+    if (bannerBtn) bannerBtn.addEventListener('click', onStatusBannerAction);
+
     const btnFitMap = getEl('btn-fit-map');
     if (btnFitMap) btnFitMap.addEventListener('click', fitMapToStations);
 
@@ -3800,11 +4081,6 @@
     const btnModeQuad = getEl('btn-mode-quad');
     if (btnModeQuad) btnModeQuad.addEventListener('click', () => setChartMode('quad'));
 
-    for (const metric of METRIC_ORDER) {
-      const tab = getEl('kpi-tab-' + metric);
-      if (tab) tab.addEventListener('click', () => setActiveMetric(metric));
-    }
-    wireMetricKeyboardNavigation();
 
     const btnAllEvents = getEl('btn-view-all-events');
     if (btnAllEvents) btnAllEvents.addEventListener('click', () => switchView('eventos'));

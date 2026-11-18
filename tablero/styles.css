@@ -2572,3 +2572,291 @@ samp {
     transform: none;
   }
 }
+
+/* ==========================================================================
+   Revisión de interfaz (nov 2026): banner de estado, resumen arriba,
+   chips de enlace y lenguaje más simple
+   ========================================================================== */
+
+/* ---------- Banner de estado global (LWT, sordera, broker, capturas) ---------- */
+
+.status-banner {
+  justify-content: flex-start;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  border-width: 1px;
+}
+
+.status-banner__icon {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 999px;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1;
+  color: #fff;
+  background: currentColor;
+}
+
+.status-banner__body {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+
+.status-banner__title {
+  font-size: 14px;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.status-banner__detail {
+  font-size: 13px;
+  opacity: 0.88;
+  overflow-wrap: anywhere;
+}
+
+.status-banner__more {
+  flex: 0 0 auto;
+  font-size: 12px;
+  font-weight: 500;
+  white-space: nowrap;
+  opacity: 0.85;
+}
+
+.status-banner .btn {
+  flex: 0 0 auto;
+  background: rgba(255, 255, 255, 0.7);
+}
+
+.status-banner--error {
+  background: var(--pill-negative-bg);
+  color: var(--pill-negative-ink);
+  border-color: #f5b8b4;
+  border-left: 4px solid var(--negative);
+}
+
+.status-banner--warn {
+  background: var(--pill-warning-bg);
+  color: var(--pill-warning-ink);
+  border-color: #f3d98c;
+  border-left: 4px solid #d99a1c;
+}
+
+.status-banner--info {
+  background: var(--accent-soft);
+  color: var(--pill-accent-ink);
+  border-color: #b9d8e0;
+  border-left: 4px solid var(--accent);
+}
+
+.status-banner--ok {
+  background: var(--pill-positive-bg);
+  color: var(--pill-positive-ink);
+  border-color: #a8e3bd;
+  border-left: 4px solid var(--positive);
+}
+
+.status-banner--error .status-banner__icon {
+  background: var(--negative);
+}
+.status-banner--warn .status-banner__icon {
+  background: #b7791f;
+}
+.status-banner--info .status-banner__icon {
+  background: var(--accent);
+}
+.status-banner--ok .status-banner__icon {
+  background: var(--positive);
+}
+
+.status-banner--error:not([hidden]) .status-banner__icon {
+  animation: status-pulse 1.8s ease-out infinite;
+}
+
+@keyframes status-pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(196, 36, 42, 0.45);
+  }
+  70%,
+  100% {
+    box-shadow: 0 0 0 9px rgba(196, 36, 42, 0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .status-banner--error:not([hidden]) .status-banner__icon {
+    animation: none;
+  }
+}
+
+@media (max-width: 860px) {
+  .status-banner {
+    flex-wrap: wrap;
+  }
+  .status-banner__body {
+    flex-basis: calc(100% - 40px);
+  }
+}
+
+/* ---------- Navegación: separador "Avanzado" ---------- */
+
+.nav-group-label {
+  margin: 14px 10px 4px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--faint);
+}
+
+/* ---------- Monitoreo: resumen arriba, filtro dentro del panel ---------- */
+
+.panel--summary .summary-cell {
+  padding: 14px 18px;
+}
+
+.panel--stations .monitoreo-sub-bar {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 4px;
+  padding: 10px 16px;
+  border: 0;
+  border-bottom: 1px solid var(--rule);
+  border-radius: 0;
+  background: var(--surface-muted);
+}
+
+.panel--stations .monitoreo-sub-bar__row {
+  flex-wrap: nowrap;
+}
+
+@media (max-width: 860px) {
+  .panel--stations .monitoreo-sub-bar__row {
+    flex-wrap: wrap;
+  }
+}
+
+/* ---------- Estación seleccionada: chips de enlace ---------- */
+
+.telemetry-tray__link {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 8px;
+  margin-top: 6px;
+}
+
+.link-chip {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 5px;
+  padding: 2px 8px;
+  border: 1px solid var(--rule);
+  border-radius: 999px;
+  background: var(--raised);
+  font-size: 12px;
+  cursor: help;
+}
+
+.link-chip__label {
+  color: var(--muted);
+}
+
+.link-chip__val {
+  font-weight: 600;
+  color: var(--text);
+}
+
+/* ---------- Texto de apoyo en paneles ---------- */
+
+.panel__title-block {
+  min-width: 0;
+}
+
+.panel__title-block h2 {
+  margin: 0;
+}
+
+.panel__lead {
+  margin: 2px 0 0;
+  font-size: 12.5px;
+  line-height: 1.4;
+  color: var(--muted);
+  max-width: 62ch;
+}
+
+/* ---------- Conexión: detalles técnicos plegados ---------- */
+
+.settings-row__panel > .lwt-msg-details {
+  margin-top: 12px;
+}
+
+.lwt-msg-details .settings-diag {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+/* ---------- Telemetría: 4 curvas a la vez (2×2 en laptop) ---------- */
+
+.kpi {
+  cursor: default;
+}
+
+.activity-card--row {
+  border-top: 1px solid var(--rule);
+}
+
+.charts-grid .chart-wrap {
+  height: 210px;
+}
+
+/* ---------- Banner de estado flotante ---------- */
+
+.status-banner {
+  position: fixed;
+  top: 56px;
+  left: calc(228px + (100vw - 228px) / 2);
+  transform: translateX(-50%);
+  z-index: 1100;
+  width: min(880px, calc(100vw - 228px - 32px));
+  margin: 0;
+  box-shadow: 0 8px 24px rgba(19, 20, 22, 0.18), 0 1px 3px rgba(19, 20, 22, 0.12);
+  animation: status-banner-in 220ms var(--ease-out);
+}
+
+@keyframes status-banner-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -10px);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .status-banner {
+    animation: none;
+  }
+}
+
+@media (max-width: 860px) {
+  .status-banner {
+    left: 8px;
+    right: 8px;
+    width: auto;
+    transform: none;
+    top: 56px;
+    animation: none;
+  }
+}
